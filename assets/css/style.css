@@ -1,0 +1,404 @@
+/* ================================================================
+   TLP ANALYTICS — TEMA VISUAL
+   Paleta baseada na marca TLP (laranja #FF6A00, vermelho #E8391D,
+   dourado #FFB020) sobre fundo escuro.
+   O token __BACKGROUND_IMAGE__ é substituído em runtime (app.py)
+   pela imagem de fundo em base64.
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --tlp-orange: #FF6A00;
+    --tlp-orange-light: #FF8A3D;
+    --tlp-red: #E8391D;
+    --tlp-gold: #FFB020;
+    --tlp-bg: __TLP_BG__;
+    --tlp-surface: __TLP_SURFACE__;
+    --tlp-card: __TLP_CARD__;
+    --tlp-card-border: __TLP_CARD_BORDER__;
+    --tlp-sidebar: __TLP_SIDEBAR__;
+    --tlp-sidebar-overlay-1: __TLP_SIDEBAR_OVERLAY_1__;
+    --tlp-sidebar-overlay-2: __TLP_SIDEBAR_OVERLAY_2__;
+    --tlp-sidebar-text-muted: __TLP_SIDEBAR_TEXT_MUTED__;
+    --tlp-text: __TLP_TEXT__;
+    --tlp-text-muted: __TLP_TEXT_MUTED__;
+}
+
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+    font-family: 'Poppins', sans-serif;
+    color: var(--tlp-text);
+}
+
+/* Fundo geral: área de conteúdo clara e limpa (sem textura de imagem) */
+[data-testid="stAppViewContainer"] {
+    background-color: var(--tlp-bg);
+    background-image: radial-gradient(circle at top right, rgba(255,106,0,0.05), transparent 45%);
+    background-attachment: fixed;
+}
+
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+/* ================= SIDEBAR ================= */
+[data-testid="stSidebar"] {
+    background-color: var(--tlp-sidebar);
+    background-image:
+        linear-gradient(180deg, var(--tlp-sidebar-overlay-1) 0%, var(--tlp-sidebar-overlay-2) 100%),
+        url("__BACKGROUND_IMAGE__");
+    background-size: cover;
+    background-position: left bottom;
+    border-right: 1px solid var(--tlp-card-border);
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 0.5rem;
+}
+
+/* Textos padrão da sidebar (labels, captions) sobre fundo escuro */
+[data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {
+    color: var(--tlp-sidebar-text-muted);
+}
+
+.tlp-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 8px 12px 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+}
+
+.tlp-sidebar-user .tlp-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--tlp-orange);
+    background-image: linear-gradient(135deg, var(--tlp-red), var(--tlp-gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.tlp-sidebar-user .tlp-sidebar-user-name {
+    color: #F5F6F8;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.tlp-sidebar-logo {
+    display: flex;
+    justify-content: center;
+    padding: 18px 10px 6px 10px;
+}
+
+.tlp-sidebar-caption {
+    text-align: center;
+    color: var(--tlp-text-muted);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+
+/* streamlit-option-menu já é estilizado via parâmetro `styles` no Python,
+   estas regras cobrem detalhes finos que o parâmetro não alcança. */
+[data-testid="stSidebar"] hr {
+    border-color: var(--tlp-card-border);
+}
+
+/* ================= TÍTULOS DE SEÇÃO ================= */
+h1, h2, h3, h4 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: var(--tlp-text);
+}
+
+.tlp-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 8px 0;
+}
+
+.tlp-section-title .bar {
+    width: 4px;
+    height: 18px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--tlp-red), var(--tlp-gold));
+}
+
+.tlp-section-title h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.tlp-section-sub {
+    color: var(--tlp-text-muted);
+    font-size: 12px;
+    margin: -6px 0 10px 12px;
+}
+
+/* ================= KPI CARDS ================= */
+.kpi-card {
+    background: var(--tlp-card);
+    border: 1px solid var(--tlp-card-border);
+    border-left: 3px solid var(--tlp-orange);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 4px 0;
+    min-height: 92px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(20, 20, 30, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(255, 106, 0, 0.15);
+    border-color: var(--tlp-orange);
+}
+
+.kpi-card .kpi-title-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.kpi-card .kpi-icon {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--kpi-color, var(--tlp-orange)) 16%, transparent);
+}
+
+.kpi-card .kpi-title {
+    margin: 0;
+    font-size: 10.5px;
+    color: var(--tlp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.kpi-card .kpi-value {
+    margin: 4px 0 0 0;
+    font-size: 23px;
+    font-weight: 800;
+    color: var(--tlp-text);
+    line-height: 1.1;
+}
+
+.kpi-card .kpi-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 10.5px;
+    color: var(--tlp-text-muted);
+}
+
+/* ================= HEADER (topo) ================= */
+.tlp-header {
+    background: __TLP_HEADER_GRADIENT__;
+    border: 1px solid var(--tlp-card-border);
+    border-radius: 16px;
+    padding: 16px 22px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+}
+
+.tlp-header::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--tlp-red), var(--tlp-orange), var(--tlp-gold));
+}
+
+.tlp-header h2, .tlp-header span {
+    color: #FFFFFF !important;
+}
+
+.tlp-extracao-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.18);
+    color: #FFFFFF;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.tlp-extracao-badge svg {
+    width: 13px;
+    height: 13px;
+    stroke: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.tlp-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tlp-header-bell {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.tlp-header-bell svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--tlp-orange);
+}
+
+.tlp-header-bell .tlp-badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--tlp-red);
+    border: 2px solid #fff;
+}
+
+.tlp-header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tlp-header-avatar svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--tlp-orange);
+}
+
+/* ================= GRÁFICOS (Plotly) — moldura com leve glow de marca ================= */
+[data-testid="stPlotlyChart"] {
+    background: var(--tlp-card);
+    border: 1px solid var(--tlp-card-border);
+    border-radius: 14px;
+    padding: 10px 6px 4px 6px;
+    box-shadow: 0 2px 14px rgba(255, 106, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-testid="stPlotlyChart"]::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--tlp-red), var(--tlp-orange), var(--tlp-gold), #7B8CDE);
+    opacity: 0.85;
+}
+
+/* ================= TABELAS / DATAFRAMES ================= */
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--tlp-card-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* ================= BOTÕES ================= */
+.stButton > button, .stDownloadButton > button {
+    background: linear-gradient(120deg, var(--tlp-red), var(--tlp-orange));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: filter 0.15s ease;
+}
+
+.stButton > button:hover, .stDownloadButton > button:hover {
+    filter: brightness(1.12);
+    color: white;
+}
+
+/* ================= INPUTS / SELECT ================= */
+[data-testid="stSelectbox"] label, [data-testid="stTextInput"] label {
+    color: var(--tlp-text-muted);
+    font-size: 13px;
+}
+
+/* ================= EXPANDER ================= */
+[data-testid="stExpander"] {
+    border: 1px solid var(--tlp-card-border);
+    border-radius: 10px;
+    background: var(--tlp-surface);
+}
+
+/* ================= SCROLLBAR ================= */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--tlp-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--tlp-card-border);
+    border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--tlp-orange);
+}
+
+/* ================= DIVIDER ================= */
+hr {
+    border-color: var(--tlp-card-border) !important;
+    margin: 10px 0 !important;
+}
+
+/* ================= ESPAÇAMENTO GERAL MAIS COMPACTO ================= */
+[data-testid="stVerticalBlock"] {
+    gap: 0.5rem;
+}
+
+.block-container {
+    padding-top: 1.5rem !important;
+}
+
+/* ================= BADGE ONLINE ================= */
+.tlp-status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22C55E;
+    box-shadow: 0 0 8px #22C55E;
+    margin-right: 6px;
+}

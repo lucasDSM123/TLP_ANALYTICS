@@ -1,0 +1,318 @@
+diff --git a/components/tabela_analise_p.py b/components/tabela_analise_p.py
+index 6be290f..269beb4 100644
+--- a/components/tabela_analise_p.py
++++ b/components/tabela_analise_p.py
+@@ -2,6 +2,7 @@ import pandas as pd
+ import streamlit as st
+ 
+ import config
++from components.cards import card
+ 
+ _CORES_FAIXA = {
+     "P0": config.TLP_RED,
+@@ -51,3 +52,78 @@ def tabela_analise_p(df_matriz: pd.DataFrame, coluna_grupo: str, titulo: str = "
+         f"</div>"
+     )
+     st.markdown(html, unsafe_allow_html=True)
++
++
++_FAIXAS_DETALHADO = ["P0", "P1", "P2", "P3", "P4", "P5", "P≥6"]
++_CORES_FAIXA_DETALHADO = {
++    "P0": config.TLP_RED,
++    "P1": config.TLP_ORANGE,
++    "P2": config.TLP_GOLD,
++    "P3": "#00C9A7",
++    "P4": "#7B8CDE",
++    "P5": "#3B82F6",
++    "P≥6": "#22C55E",
++}
++
++
++def _tabela_html(df_tabela: pd.DataFrame, coluna_grupo: str, formato_percentual: bool = False) -> str:
++    linhas_html = []
++    for _, row in df_tabela.iterrows():
++        is_total = str(row[coluna_grupo]).upper() in ("TOTAL", "TOTAL GERAL")
++        peso = "700" if is_total else "500"
++        bg = "rgba(255,106,0,0.08)" if is_total else "transparent"
++        borda = f"border-top: 2px solid {config.CARD_BORDER};" if is_total else ""
++
++        celulas = [f"<td style=\"text-align:left; font-weight:{peso};\">{row[coluna_grupo]}</td>"]
++        for faixa in _FAIXAS_DETALHADO:
++            cor = _CORES_FAIXA_DETALHADO[faixa]
++            valor = row[faixa]
++            texto = f"{valor:.1f}%" if formato_percentual else f"{int(valor)}"
++            celulas.append(f"<td style=\"color:{cor}; font-weight:{peso};\">{texto}</td>")
++        if not formato_percentual and "TOTAL" in df_tabela.columns:
++            celulas.append(f"<td style=\"font-weight:{peso}; color:{config.TEXT};\">{int(row['TOTAL'])}</td>")
++        linhas_html.append(f"<tr style=\"background:{bg}; {borda}\">{''.join(celulas)}</tr>")
++
++    colunas_extra_header = "<th style=\"text-align:center;\">TOTAL</th>" if (not formato_percentual and "TOTAL" in df_tabela.columns) else ""
++    header_html = f"<th style=\"text-align:left;\">{coluna_grupo.upper()}</th>" + "".join(
++        f"<th style=\"text-align:center; color:{_CORES_FAIXA_DETALHADO[f]};\">{f}{'%' if formato_percentual else ''}</th>"
++        for f in _FAIXAS_DETALHADO
++    ) + colunas_extra_header
++
++    return (
++        f"<div style=\"overflow-x:auto; border:1px solid {config.CARD_BORDER}; border-radius:10px;\">"
++        f"<table style=\"width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};\">"
++        f"<thead><tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{header_html}</tr></thead>"
++        f"<tbody style=\"text-align:center;\">{''.join(linhas_html)}</tbody>"
++        f"</table>"
++        f"</div>"
++    )
++
++
++def tabela_analise_p_cluster(contagem: pd.DataFrame, percentual: pd.DataFrame, resumo: dict, coluna_grupo: str = "Cluster"):
++    """
++    Renderiza a Análise P por Cluster: cards de resumo (Técnicos P0 / P1 /
++    Total) + tabela de contagem e tabela de percentual lado a lado —
++    réplica visual do site de referência (Power BI).
++    """
++    if contagem.empty or percentual.empty:
++        st.info(f"Sem dados de Análise P por {coluna_grupo} para os filtros atuais.")
++        return
++
++    c1, c2, c3 = st.columns(3)
++    with c1:
++        card("TÉCNICOS P0", resumo["P0"], config.TLP_RED)
++    with c2:
++        card("TÉCNICOS P1", resumo["P1"], config.TLP_ORANGE)
++    with c3:
++        card("TOTAL TÉCNICOS", resumo["TOTAL"], "#7B8CDE")
++
++    st.write("")
++
++    col_a, col_b = st.columns(2)
++    with col_a:
++        st.markdown(f"<h5 style='color:{config.TEXT};'>Contagem por Cluster</h5>", unsafe_allow_html=True)
++        st.markdown(_tabela_html(contagem, coluna_grupo, formato_percentual=False), unsafe_allow_html=True)
++    with col_b:
++        st.markdown(f"<h5 style='color:{config.TEXT};'>Percentual por Cluster</h5>", unsafe_allow_html=True)
++        st.markdown(_tabela_html(percentual, coluna_grupo, formato_percentual=True), unsafe_allow_html=True)
+diff --git a/services/analise_p.py b/services/analise_p.py
+index 3cb780d..91845b2 100644
+--- a/services/analise_p.py
++++ b/services/analise_p.py
+@@ -94,3 +94,76 @@ def matriz_analise_p(df: pd.DataFrame, coluna_grupo: str = "Supervisor") -> pd.D
+     pivot.index.name = coluna_grupo
+ 
+     return pivot.reset_index()
++
++
++# ------------------------------------------------------------------
++# ANÁLISE P DETALHADA POR CLUSTER — P0..P5 / P≥6, com contagem e
++# percentual por cluster (réplica da tabela "Contagem por Cluster" /
++# "Percentual por Cluster" do site de referência).
++# ------------------------------------------------------------------
++
++FAIXAS_P_DETALHADO = ["P0", "P1", "P2", "P3", "P4", "P5", "P≥6"]
++
++
++def _classificar_detalhado(qtd: int) -> str:
++    if qtd <= 0:
++        return "P0"
++    if qtd >= 6:
++        return "P≥6"
++    return f"P{qtd}"
++
++
++def classificacao_tecnicos_detalhada(df: pd.DataFrame, coluna_tecnico: str = "Técnico") -> pd.DataFrame:
++    """Mesma ideia de `classificacao_tecnicos`, mas com faixas P0..P5/P≥6."""
++    concl = concluidas_por_tecnico(df, coluna_tecnico)
++    if concl.empty:
++        return pd.DataFrame()
++
++    colunas_extra = [c for c in ["Coordenador", "Supervisor", "Cluster", "Lado"] if c in df.columns]
++    mapa = (
++        df.dropna(subset=[coluna_tecnico])
++        .drop_duplicates(subset=[coluna_tecnico])
++        .set_index(coluna_tecnico)[colunas_extra]
++    )
++
++    tabela = pd.DataFrame({coluna_tecnico: concl.index, "Concluídas": concl.values}).set_index(coluna_tecnico)
++    tabela = tabela.join(mapa, how="left")
++    tabela["Classificação"] = tabela["Concluídas"].apply(_classificar_detalhado)
++    return tabela.reset_index()
++
++
++def matriz_analise_p_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster", coluna_tecnico: str = "Técnico"):
++    """
++    Retorna duas tabelas (contagem, percentual) com as faixas P0..P5/P≥6
++    agrupadas por `coluna_grupo`, mais uma linha "Total Geral". O
++    percentual é calculado em relação ao total de técnicos de cada linha
++    (cluster), igual ao site de referência (Power BI).
++    """
++    tabela = classificacao_tecnicos_detalhada(df, coluna_tecnico)
++    if tabela.empty or coluna_grupo not in tabela.columns:
++        return pd.DataFrame(), pd.DataFrame()
++
++    tabela = tabela.dropna(subset=[coluna_grupo])
++    if tabela.empty:
++        return pd.DataFrame(), pd.DataFrame()
++
++    pivot = tabela.pivot_table(
++        index=coluna_grupo, columns="Classificação", values=coluna_tecnico, aggfunc="count", fill_value=0
++    )
++    for faixa in FAIXAS_P_DETALHADO:
++        if faixa not in pivot.columns:
++            pivot[faixa] = 0
++    pivot = pivot[FAIXAS_P_DETALHADO].sort_index()
++    pivot["TOTAL"] = pivot[FAIXAS_P_DETALHADO].sum(axis=1)
++
++    total_geral = pivot.sum(numeric_only=True)
++    total_geral.name = "Total Geral"
++    contagem = pd.concat([pivot, total_geral.to_frame().T])
++    contagem.index.name = coluna_grupo
++    contagem = contagem.astype(int)
++
++    percentual = contagem[FAIXAS_P_DETALHADO].div(contagem["TOTAL"].replace(0, pd.NA), axis=0) * 100
++    percentual = percentual.fillna(0).round(1)
++    percentual.index.name = coluna_grupo
++
++    return contagem.reset_index(), percentual.reset_index()
+diff --git a/services/indicadores.py b/services/indicadores.py
+index 1932f87..344fe26 100644
+--- a/services/indicadores.py
++++ b/services/indicadores.py
+@@ -1,6 +1,8 @@
+ import math
+ import pandas as pd
+ 
++from services.analise_p import classificacao_tecnicos, FAIXAS_P, matriz_analise_p_cluster
++
+ 
+ class Indicadores:
+     """
+@@ -368,4 +370,56 @@ class Indicadores:
+         projecao_scope = esteira_scope if ok_scope == 0 else (esteira_scope * eficacia_scope) + ok_scope
+ 
+         hc_scope = self._hc_ativo_scope(df_scope)
+-        return self._to_float(0 if hc_scope == 0 else projecao_scope / hc_scope)
+\ No newline at end of file
++        return self._to_float(0 if hc_scope == 0 else projecao_scope / hc_scope)
++
++    # ------------------------------------------------------------------
++    # ANÁLISE P (QTD_P0 / QTD_P1 / QTD_P2 / QTD_P3 / QTD_MAIOR_P3)
++    # ------------------------------------------------------------------
++
++    def analise_p(self):
++        """
++        Réplica das medidas DAX QTD_P0..QTD_MAIOR_P3: quantidade de
++        técnicos (com ao menos 1 atividade não Cancelada) classificados
++        pela quantidade de atividades Concluídas.
++
++        Escopo: apenas Contratada = "TLP" e excluindo Supervisor = "BUCKET"
++        (técnicos do bucket não entram na análise de produtividade P0..>P3).
++        """
++        df_scope = self.df[self.df["Contratada"] == "TLP"]
++        if "Supervisor" in df_scope.columns:
++            df_scope = df_scope[df_scope["Supervisor"] != "BUCKET"]
++
++        tabela = classificacao_tecnicos(df_scope)
++        if tabela.empty:
++            return {faixa: 0 for faixa in FAIXAS_P}
++
++        contagem = tabela["Classificação"].value_counts()
++        return {faixa: self._to_int(contagem.get(faixa, 0)) for faixa in FAIXAS_P}
++
++    def analise_p_cluster(self, coluna_grupo: str = "Cluster"):
++        """
++        Réplica da tabela "Contagem por Cluster" / "Percentual por Cluster"
++        do site de referência: faixas P0..P5/P≥6 agrupadas por Cluster,
++        no mesmo escopo da Análise P (Contratada = "TLP", excluindo
++        Supervisor = "BUCKET").
++
++        Retorna (contagem_df, percentual_df, resumo), onde `resumo` traz
++        os totais de TÉCNICOS P0 / TÉCNICOS P1 / TOTAL TÉCNICOS usados
++        nos cards de cabeçalho.
++        """
++        df_scope = self.df[self.df["Contratada"] == "TLP"]
++        if "Supervisor" in df_scope.columns:
++            df_scope = df_scope[df_scope["Supervisor"] != "BUCKET"]
++
++        contagem, percentual = matriz_analise_p_cluster(df_scope, coluna_grupo=coluna_grupo)
++        if contagem.empty:
++            resumo = {"P0": 0, "P1": 0, "TOTAL": 0}
++        else:
++            linha_total = contagem[contagem[coluna_grupo] == "Total Geral"].iloc[0]
++            resumo = {
++                "P0": self._to_int(linha_total["P0"]),
++                "P1": self._to_int(linha_total["P1"]),
++                "TOTAL": self._to_int(linha_total["TOTAL"]),
++            }
++
++        return contagem, percentual, resumo
+\ No newline at end of file
+diff --git a/views/dashboard.py b/views/dashboard.py
+index f20ce46..6f417cd 100644
+--- a/views/dashboard.py
++++ b/views/dashboard.py
+@@ -2,8 +2,9 @@ import streamlit as st
+ 
+ from components.cards import card
+ from components.header import secao_titulo
+-from components.charts import grafico_status_pizza, grafico_producao_dia, grafico_comparativo_ba_tt, grafico_atribuicao_pu
++from components.charts import grafico_status_pizza, grafico_comparativo_ba_tt, grafico_atribuicao_pu
+ from components.tabelas import tabela_matriz
++from components.tabela_analise_p import tabela_analise_p_cluster
+ from components.analise_indicador import render_analise_indicador
+ from components.seletor_indicador import seletor_indicador_topo
+ from services.indicadores import Indicadores
+@@ -20,11 +21,11 @@ def render(df, indicadores: Indicadores):
+     pu = indicadores.pu()
+     projecao = indicadores.projecao()
+     esteira = indicadores.esteira()
+-    hc = indicadores.hc()
+     bucket = indicadores.bucket()
+     iniciada = indicadores.iniciada()
+     media = indicadores.media_atribuicao()
+     projecao_pu = indicadores.projecao_pu()
++    analise_p = indicadores.analise_p()
+ 
+     # ====== INDICADORES PRINCIPAIS ======
+     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
+@@ -41,19 +42,20 @@ def render(df, indicadores: Indicadores):
+     with col4:
+         card("EFICÁCIA", f"{eficacia['GERAL']:.0%}", config.TLP_RED, "Taxa de conclusão")
+     with col5:
+-        card("PU", f"{pu['GERAL']:.2f}", "#7B8CDE", "Produtividade unitária")
++        proj_pu_sub = f"Proj. PU: {projecao_pu['GERAL']:.2f}"
++        card("PU", f"{pu['GERAL']:.2f}", "#7B8CDE", proj_pu_sub)
+     with col6:
+-        proj_pu_sub = f"Proj. PU: {projecao['GERAL']/hc_real['HC']:.2f}" if hc_real["HC"] > 0 else "Sem dados"
+-        card("PROJEÇÃO", f"{projecao['GERAL']:,}".replace(",", "."), "#FF5C5C", proj_pu_sub)
++        card("PROJEÇÃO", f"{projecao['GERAL']:,}".replace(",", "."), "#FF5C5C",
++             f"BA: {projecao['BA']} | TT: {projecao['TT']}")
+ 
+     col1, col2, col3, col4, col5, col6 = st.columns(6)
+ 
+     with col1:
+-        card("MSK", hc["MSK"], config.TLP_ORANGE, "Técnicos mistos")
++        card("NÃO CONCLUÍDA", f"{concluido['NOK']:,}".replace(",", "."), config.TLP_RED, "Concluído NOK")
+     with col2:
+-        card("BA", hc["BA"], "#00C9A7", f"Real: {hc_real['BA']}")
++        card("TÉCNICOS P0", analise_p["P0"], config.TLP_RED, "0 atividades concluídas")
+     with col3:
+-        card("TT", hc["TT"], config.TLP_ORANGE, f"Real: {hc_real['TT']}")
++        card("TÉCNICOS P1", analise_p["P1"], config.TLP_ORANGE, "1 atividade concluída")
+     with col4:
+         card("BUCKET", bucket["TOTAL"], config.TLP_GOLD, f"BA: {bucket['BA']} | TT: {bucket['TT']}")
+     with col5:
+@@ -106,11 +108,12 @@ def render(df, indicadores: Indicadores):
+     # ====== GRÁFICOS ======
+     secao_titulo("Visão Analítica", "Distribuição de status e evolução diária")
+ 
+-    col_a, col_b = st.columns([1, 1.4])
+-    with col_a:
+-        st.plotly_chart(grafico_status_pizza(status_counts(df)), width='stretch')
+-    with col_b:
+-        st.plotly_chart(grafico_producao_dia(df), width='stretch')
++    st.plotly_chart(grafico_status_pizza(status_counts(df)), width='stretch')
++
++    st.write("")
++    secao_titulo("Análise P por Cluster", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6)")
++    contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
++    tabela_analise_p_cluster(contagem_cluster, percentual_cluster, resumo_cluster)
+ 
+     st.plotly_chart(grafico_atribuicao_pu(df), width='stretch')
+ 

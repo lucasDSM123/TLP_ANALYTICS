@@ -1,0 +1,9 @@
+streamlit>=1.36
+pandas
+plotly
+openpyxl
+streamlit-option-menu
+sqlalchemy
+psycopg2-binary
+python-dotenv
+bcrypt
