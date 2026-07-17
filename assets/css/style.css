@@ -30,11 +30,55 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     color: var(--tlp-text);
 }
 
-/* Fundo geral: área de conteúdo clara e limpa (sem textura de imagem) */
+/* Fundo geral: a textura de marca (laranja/dourado) fica por trás de
+   TUDO — sidebar, header e cards — como uma "tela" única do site.
+   Os cards continuam opacos (brancos) por cima, então o efeito é o
+   de painéis flutuando sobre o fundo com a arte da marca. */
 [data-testid="stAppViewContainer"] {
-    background-color: var(--tlp-bg);
-    background-image: radial-gradient(circle at top right, rgba(255,106,0,0.05), transparent 45%);
+    background-color: var(--tlp-orange);
+    background-image:
+        linear-gradient(160deg, rgba(255,178,32,0.55) 0%, rgba(255,106,0,0.65) 45%, rgba(232,57,29,0.55) 100%),
+        url("__BACKGROUND_IMAGE__");
+    background-size: cover;
+    background-position: top right;
+    background-repeat: no-repeat;
     background-attachment: fixed;
+}
+
+/* A área de conteúdo inteira agora é um ÚNICO painel sólido/opaco por
+   cima do fundo de marca — cards, tabelas, gráficos, títulos, tudo
+   fica "acima" dessa superfície. O fundo laranja/textura só aparece
+   como uma moldura fina nas bordas externas (a margem ao redor deste
+   painel), nunca vazando por dentro do conteúdo.
+   Usamos o data-testid (estável entre versões do Streamlit) em vez de
+   depender só da classe .block-container, que sozinha não estava
+   sendo alcançada corretamente. */
+[data-testid="stMain"] {
+    background: transparent;
+}
+
+[data-testid="stAppViewBlockContainer"],
+.main .block-container,
+.block-container {
+    background: var(--tlp-bg) !important;
+    border-radius: 16px !important;
+    max-width: calc(100% - 20px) !important;
+    margin: 10px auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.75rem !important;
+}
+
+/* Reduz o respiro entre colunas (KPIs, gráficos lado a lado) para que
+   os blocos fiquem mais colados uns aos outros e aproveitem melhor a
+   largura disponível, em vez de deixar o fundo aparecer nos vãos. */
+[data-testid="stHorizontalBlock"] {
+    gap: 0.6rem !important;
+}
+
+[data-testid="column"] {
+    padding: 0 !important;
 }
 
 [data-testid="stHeader"] {
@@ -146,6 +190,20 @@ h1, h2, h3, h4 {
     margin: -6px 0 10px 12px;
 }
 
+/* ================= BARRA DE FILTROS =================
+   Sem isso o wrapper .tlp-filtros fica sem fundo próprio e, com a
+   textura de marca atrás de tudo, os campos apareceriam soltos
+   diretamente sobre a imagem — por isso ganham o mesmo "cartão" branco
+   dos demais blocos do dashboard. */
+.tlp-filtros {
+    background: var(--tlp-card);
+    border: 1px solid var(--tlp-card-border);
+    border-radius: 14px;
+    padding: 14px 18px 4px 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 14px rgba(20, 20, 30, 0.06);
+}
+
 /* ================= KPI CARDS ================= */
 .kpi-card {
     background: var(--tlp-card);
@@ -211,10 +269,19 @@ h1, h2, h3, h4 {
     color: var(--tlp-text-muted);
 }
 
-/* ================= HEADER (topo) ================= */
+/* ================= HEADER (topo) =================
+   Em vez de um bloco sólido, o header agora é uma faixa translúcida
+   ("vidro fosco") que deixa o fundo de marca (imagem + degradê) passar
+   por trás dele, se fundindo com a textura da página em vez de cortar
+   com uma borda dura — igual à referência enviada. */
 .tlp-header {
-    background: __TLP_HEADER_GRADIENT__;
-    border: 1px solid var(--tlp-card-border);
+    background-color: var(--tlp-orange);
+    background-image:
+        linear-gradient(90deg, rgba(255,205,90,0.95) 0%, rgba(255,106,0,0.95) 55%, rgba(232,57,29,0.92) 100%),
+        url("__BACKGROUND_IMAGE__");
+    background-size: cover;
+    background-position: top right;
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 16px;
     padding: 16px 22px;
     margin-bottom: 22px;
@@ -227,7 +294,7 @@ h1, h2, h3, h4 {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--tlp-red), var(--tlp-orange), var(--tlp-gold));
+    background: linear-gradient(90deg, rgba(232,57,29,0.7), rgba(255,106,0,0.7), rgba(255,176,32,0.7));
 }
 
 .tlp-header h2, .tlp-header span {
@@ -306,7 +373,10 @@ h1, h2, h3, h4 {
     stroke: var(--tlp-orange);
 }
 
-/* ================= GRÁFICOS (Plotly) — moldura com leve glow de marca ================= */
+/* ================= GRÁFICOS (Plotly) — moldura com leve glow de marca =================
+   O card do gráfico deve preencher 100% da coluna/seção (sem sobra de
+   fundo laranja visível ao redor) e ter apenas uma borda mínima como
+   destaque, em vez de uma "moldura" larga e transparente. */
 [data-testid="stPlotlyChart"] {
     background: var(--tlp-card);
     border: 1px solid var(--tlp-card-border);
@@ -315,6 +385,17 @@ h1, h2, h3, h4 {
     box-shadow: 0 2px 14px rgba(255, 106, 0, 0.06);
     position: relative;
     overflow: hidden;
+    width: 100% !important;
+}
+
+/* Streamlit encapsula cada elemento (gráfico, tabela, etc.) num wrapper
+   próprio que, por padrão, é transparente — é por essas frestas que o
+   fundo de marca "vazava" atrás dos gráficos. Zeramos o respiro desse
+   wrapper para o card do gráfico colar nas bordas da coluna. */
+[data-testid="stElementContainer"]:has([data-testid="stPlotlyChart"]) {
+    background: transparent;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 [data-testid="stPlotlyChart"]::before {
@@ -331,6 +412,13 @@ h1, h2, h3, h4 {
     border: 1px solid var(--tlp-card-border);
     border-radius: 10px;
     overflow: hidden;
+    width: 100% !important;
+}
+
+[data-testid="stElementContainer"]:has([data-testid="stDataFrame"]) {
+    background: transparent;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ================= BOTÕES ================= */
@@ -386,10 +474,6 @@ hr {
 /* ================= ESPAÇAMENTO GERAL MAIS COMPACTO ================= */
 [data-testid="stVerticalBlock"] {
     gap: 0.5rem;
-}
-
-.block-container {
-    padding-top: 1.5rem !important;
 }
 
 /* ================= BADGE ONLINE ================= */

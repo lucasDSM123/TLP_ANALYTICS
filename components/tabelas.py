@@ -41,10 +41,13 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     # na tela, com a tabela cortada).
 
     linhas_html = []
-    for _, row in df_matriz.iterrows():
+    for i, (_, row) in enumerate(df_matriz.iterrows()):
         is_total = row["Cluster"] == "Total"
         peso = "700" if is_total else "500"
-        bg = "rgba(255,106,0,0.08)" if is_total else "transparent"
+        if is_total:
+            bg = "rgba(255,106,0,0.08)"
+        else:
+            bg = config.CARD if i % 2 == 0 else config.SURFACE
         borda_topo = f"border-top: 1px solid {config.CARD_BORDER};" if is_total else ""
 
         eficacia_pct = f"{row['Eficácia']:.0%}"
@@ -75,7 +78,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
 
     html = (
         f"<h4 style=\"color:{cor_titulo}; margin-bottom:6px;\">{titulo}</h4>"
-        f"<div style=\"overflow-x:auto; border:1px solid {config.CARD_BORDER}; border-radius:10px;\">"
+        f"<div style=\"overflow-x:auto; background:{config.CARD}; border:1px solid {config.CARD_BORDER}; border-radius:10px; box-shadow:0 2px 14px rgba(20,20,30,0.06);\">"
         f"<table style=\"width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};\">"
         f"<thead><tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{header_html}</tr></thead>"
         f"<tbody style=\"text-align:center;\">{''.join(linhas_html)}</tbody>"

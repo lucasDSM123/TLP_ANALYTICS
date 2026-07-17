@@ -5,12 +5,12 @@ import streamlit as st
 def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
     """
     Renderiza a barra de segmentações no topo do site (Data, Estado,
-    Contratada, Cluster) e retorna o DataFrame já filtrado conforme a
-    seleção do usuário. Os filtros ficam disponíveis em todas as páginas,
-    pois são aplicados antes do roteamento.
+    Cluster) e retorna o DataFrame já filtrado conforme a seleção do
+    usuário. Os filtros ficam disponíveis em todas as páginas, pois são
+    aplicados antes do roteamento.
     """
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
-    col_data, col_estado, col_contratada, col_cluster = st.columns([1.2, 1, 1.6, 1.2])
+    col_data, col_estado, col_cluster = st.columns([1.2, 1, 1.2])
 
     # ---------------- DATA (multi) ----------------
     with col_data:
@@ -32,14 +32,6 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
         else:
             sel_estado = "Todos"
 
-    # ---------------- CONTRATADA (multi) ----------------
-    with col_contratada:
-        if "Contratada" in df.columns:
-            opcoes_contratada = sorted(df["Contratada"].dropna().unique().tolist())
-            sel_contratada = st.multiselect("Contratada", opcoes_contratada, placeholder="Todas")
-        else:
-            sel_contratada = []
-
     # ---------------- CLUSTER (depende do Estado selecionado) ----------------
     with col_cluster:
         if "Cluster" in df.columns:
@@ -60,9 +52,6 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
 
     if sel_estado != "Todos" and "Estado" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Estado"] == sel_estado]
-
-    if sel_contratada and "Contratada" in df_filtrado.columns:
-        df_filtrado = df_filtrado[df_filtrado["Contratada"].isin(sel_contratada)]
 
     if sel_cluster != "Todos" and "Cluster" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Cluster"] == sel_cluster]

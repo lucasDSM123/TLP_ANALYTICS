@@ -20,7 +20,7 @@ def _dot_eficacia(valor: float) -> str:
     return f"<span style='color:{cor};'>●</span>"
 
 
-def _celula_linha(row: dict, negrito: bool = False, bg: str = "transparent") -> str:
+def _celula_linha(row: dict, negrito: bool = False, bg: str = None) -> str:
     peso = "700" if negrito else "500"
     eficacia_pct = f"{row['Eficácia']:.0%}"
 
@@ -64,13 +64,14 @@ def render_tabela_coordenadores(grupos: list):
         total_linhas = len(supervisores) + 1
 
         primeira = True
-        for sup in supervisores:
+        for idx_sup, sup in enumerate(supervisores):
             coord_td = (
                 f"<td rowspan=\"{total_linhas}\" style=\"text-align:left; font-weight:700; "
                 f"vertical-align:middle; background:{config.SURFACE};\">{grupo['coordenador']}</td>"
                 if primeira else ""
             )
-            linhas_html.append(f"<tr>{coord_td}{_celula_linha(sup)}</tr>")
+            linha_bg = config.CARD if idx_sup % 2 == 0 else config.SURFACE
+            linhas_html.append(f"<tr style=\"background:{linha_bg};\">{coord_td}{_celula_linha(sup)}</tr>")
             primeira = False
 
         linhas_html.append(
@@ -94,7 +95,7 @@ def render_tabela_coordenadores(grupos: list):
     )
 
     html = (
-        f"<div style=\"overflow-x:auto; border:1px solid {config.CARD_BORDER}; border-radius:10px;\">"
+        f"<div style=\"overflow-x:auto; background:{config.CARD}; border:1px solid {config.CARD_BORDER}; border-radius:10px; box-shadow:0 2px 14px rgba(20,20,30,0.06);\">"
         f"<table style=\"width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};\">"
         f"<thead>"
         f"<tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{linha_header_1}</tr>"

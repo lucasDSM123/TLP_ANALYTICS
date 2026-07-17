@@ -319,17 +319,22 @@ class Indicadores:
     def pu(self):
         """
         PU geral: Concluído OK / HC Ativo (sem segmentação).
-        PU BA/TT: segmentada por 'BA-TT-Real' -- é aqui que estava a
-        divergência em relação ao BI (antes usava 'Lado').
+        PU BA/TT: Alterado de 'pu_batt' para 'pu_lado' para alinhar os valores
+        dos cards superiores com o cálculo oficial da matriz por cluster.
         """
         concluido = self.concluido()
         hc = self.hc_real()
         pu_geral = 0 if hc["HC"] == 0 else concluido["OK"] / hc["HC"]
 
-        pu_ba = self.pu_batt("BA")
-        pu_tt = self.pu_batt("TT")
+        # Alterado aqui para buscar o cálculo baseado na coluna 'Lado'
+        pu_ba = self.pu_lado("BA")
+        pu_tt = self.pu_lado("TT")
 
-        return {"GERAL": self._to_float(pu_geral), "BA": self._to_float(pu_ba), "TT": self._to_float(pu_tt)}
+        return {
+            "GERAL": self._to_float(pu_geral), 
+            "BA": self._to_float(pu_ba), 
+            "TT": self._to_float(pu_tt)
+        }
 
     def pu_batt(self, valor):
         """PU dentro do contexto BA-TT-Real = valor (replica calcular_pu do medidas.py)."""
