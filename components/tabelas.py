@@ -2,12 +2,13 @@ import pandas as pd
 import streamlit as st
 
 import config
+from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_contraste, wrapper_tabela
 
 
 def _cor_eficacia(valor: float) -> str:
     """Retorna a cor (verde/dourado/vermelho) de acordo com a faixa de eficácia."""
     if valor >= 0.80:
-        return "#22C55E"
+        return "#15803D"
     if valor >= 0.60:
         return config.TLP_GOLD
     return config.TLP_RED
@@ -16,8 +17,9 @@ def _cor_eficacia(valor: float) -> str:
 def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     """
     Renderiza a matriz de produção (BA ou TT) como uma tabela HTML estilizada,
-    no padrão visual do dashboard, com destaque de cor na coluna Eficácia e
-    a linha de Total em negrito.
+    no padrão visual único do site (cabeçalho em gradiente, números em
+    destaque e linha de Total com fundo de marca), com badges de alto
+    contraste na coluna Eficácia e nas colunas OK/NOK.
     """
     cor_titulo = cor_titulo or config.TLP_ORANGE
 
@@ -43,47 +45,56 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     linhas_html = []
     for i, (_, row) in enumerate(df_matriz.iterrows()):
         is_total = row["Cluster"] == "Total"
-        peso = "700" if is_total else "500"
-        if is_total:
-            bg = "rgba(255,106,0,0.08)"
-        else:
-            bg = config.CARD if i % 2 == 0 else config.SURFACE
-        borda_topo = f"border-top: 1px solid {config.CARD_BORDER};" if is_total else ""
-
+        peso = "800" if is_total else "600"
         eficacia_pct = f"{row['Eficácia']:.0%}"
         cor_efic = _cor_eficacia(row["Eficácia"])
 
+        if is_total:
+            bg = TOTAL_BG
+            cor_texto = "#FFFFFF"
+            cel_ok = pill_contraste(row["OK"], "#15803D")
+            cel_nok = pill_contraste(row["NOK"], config.TLP_RED)
+            cel_efic = pill_contraste(eficacia_pct, cor_efic)
+        else:
+            bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
+            cor_texto = config.TEXT
+            cel_ok = f"<span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span>"
+            cel_nok = f"<span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span>"
+            cel_efic = f"<span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span>"
+
         celulas = "".join([
-            f"<td style=\"text-align:left; font-weight:{peso};\">{row['Cluster']}</td>",
-            f"<td>{row['HC Ativo']}</td>",
-            f"<td>{row['Caixa Tot']}</td>",
-            f"<td>{row['Esteira']}</td>",
-            f"<td>{row['Bucket']}</td>",
-            f"<td>{row['Média Atrib.']:.2f}</td>",
-            f"<td>{row['PU']:.2f}</td>",
-            f"<td style=\"color:#22C55E;\">{row['OK']}</td>",
-            f"<td style=\"color:{config.TLP_RED};\">{row['NOK']}</td>",
-            f"<td>{row['Iniciada']}</td>",
-            f"<td style=\"color:{cor_efic}; font-weight:600;\">{eficacia_pct}</td>",
-            f"<td>{row['Proj.']}</td>",
-            f"<td>{row['Proj. PU']:.2f}</td>",
+            f"<td style='text-align:left; font-weight:{peso}; color:{cor_texto};'>{row['Cluster']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Esteira']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>",
+            f"<td>{cel_ok}</td>",
+            f"<td>{cel_nok}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>",
+            f"<td>{cel_efic}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>",
+            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>",
         ])
 
-        linhas_html.append(f"<tr style=\"background:{bg}; {borda_topo}\">{celulas}</tr>")
+        linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
 
     header_html = "".join(
         f"<th style='text-align:{'left' if c == 'Cluster' else 'center'};'>{c.upper()}</th>"
         for c in colunas
     )
 
-    html = (
-        f"<h4 style=\"color:{cor_titulo}; margin-bottom:6px;\">{titulo}</h4>"
-        f"<div style=\"overflow-x:auto; background:{config.CARD}; border:1px solid {config.CARD_BORDER}; border-radius:10px; box-shadow:0 2px 14px rgba(20,20,30,0.06);\">"
-        f"<table style=\"width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};\">"
-        f"<thead><tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{header_html}</tr></thead>"
-        f"<tbody style=\"text-align:center;\">{''.join(linhas_html)}</tbody>"
+    tabela = (
+        f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
-        f"</div>"
+    )
+
+    html = (
+        f"<h4 style='color:{cor_titulo}; margin-bottom:6px;'>{titulo}</h4>"
+        f"{wrapper_tabela(tabela)}"
     )
 
     st.markdown(html, unsafe_allow_html=True)

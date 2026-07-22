@@ -3,6 +3,7 @@ import streamlit as st
 from components.header import secao_titulo
 from components.charts import grafico_ranking
 from components.tabela_analise_p import tabela_analise_p
+from components.tabela_tecnicos import render_tabela_tecnicos
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo, metricas_por_tecnico
 from services.loader import opcoes_filtro, aplicar_filtro
@@ -120,16 +121,28 @@ def render(df, indicadores: Indicadores):
                 "Eficácia", "PU", "Esteira", "Iniciada", "Projeção", "Cluster",
             ] if c in matriz_tec.columns]
             matriz_tec_fmt = matriz_tec[colunas_exibir].copy()
-            matriz_tec_fmt["Eficácia"] = matriz_tec_fmt["Eficácia"] * 100
-            st.dataframe(
-                matriz_tec_fmt,
-                width='stretch',
-                hide_index=True,
-                column_config={
-                    "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
-                    "PU": st.column_config.NumberColumn("PU", format="%.2f"),
-                },
-            )
+
+            ind_tec_total = Indicadores(df_filtrado)
+            caixa_t = ind_tec_total.caixa_total()
+            concluido_t = ind_tec_total.concluido()
+            eficacia_t = ind_tec_total.eficacia()
+            pu_t = ind_tec_total.pu()
+            esteira_t = ind_tec_total.esteira()
+            iniciada_t = ind_tec_total.iniciada()
+            projecao_t = ind_tec_total.projecao()
+            total_tecnicos = {
+                "Caixa Total": caixa_t["TOTAL"],
+                "Concluído OK": concluido_t["OK"],
+                "Concluído NOK": concluido_t["NOK"],
+                "Eficácia": eficacia_t["GERAL"],
+                "PU": pu_t["GERAL"],
+                "Esteira": esteira_t["TOTAL"],
+                "Iniciada": iniciada_t["TOTAL"],
+                "Projeção": projecao_t["GERAL"],
+            }
+
+            render_tabela_tecnicos(matriz_tec_fmt, total_tecnicos)
+            st.write("")
             st.plotly_chart(
                 grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
                 width='stretch',

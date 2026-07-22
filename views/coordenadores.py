@@ -5,7 +5,7 @@ from components.charts import grafico_ranking, grafico_atribuicao_pu
 from components.tabela_coordenador import render_tabela_coordenadores
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo
-from services.coordenador_tabela import tabela_coordenadores
+from services.coordenador_tabela import tabela_coordenadores, total_geral
 
 
 def render(df, indicadores: Indicadores):
@@ -61,4 +61,4 @@ def render(df, indicadores: Indicadores):
         "Produção por Coordenador",
         "Coordenador → Supervisor, com subtotal por cluster/região (Meta = HC Ativo × 3)",
     )
-    render_tabela_coordenadores(tabela_coordenadores(df))
+    render_tabela_coordenadores(tabela_coordenadores(df), total_geral(df))

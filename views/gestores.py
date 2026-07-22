@@ -6,7 +6,7 @@ from components.tabela_analise_p import tabela_analise_p_cluster
 from components.tabela_coordenador import render_tabela_coordenadores
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo, metricas_por_tecnico
-from services.coordenador_tabela import tabela_coordenadores
+from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos
 
@@ -95,7 +95,7 @@ def render(df, indicadores: Indicadores):
         "Produção por Coordenador",
         "Coordenador → Supervisor, com subtotal por cluster/região (Meta = HC Ativo × 3)",
     )
-    render_tabela_coordenadores(tabela_coordenadores(df))
+    render_tabela_coordenadores(tabela_coordenadores(df), total_geral(df))
 
     st.markdown("<br>", unsafe_allow_html=True)
 

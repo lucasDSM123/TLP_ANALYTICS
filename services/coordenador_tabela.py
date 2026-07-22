@@ -43,6 +43,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
         "PU": pu,
         "Concluída BA": ok_ba,
         "Concluída TT": ok_tt,
+        "Concluída Total": ok_total,
         "Não Concluída": concluido["NOK"],
         "Iniciada": iniciada,
         "Eficácia": eficacia,
@@ -88,3 +89,16 @@ def tabela_coordenadores(df: pd.DataFrame) -> list[dict]:
         grupos.append({"coordenador": coordenador, "supervisores": supervisores, "subtotal": subtotal})
 
     return grupos
+
+
+def total_geral(df: pd.DataFrame) -> dict:
+    """
+    Calcula a linha "TOTAL GERAL" — mesmas métricas de _linha_metricas,
+    mas sobre a base inteira (todos os Coordenadores/Supervisores já
+    filtrados), igual ao rodapé do Power BI.
+    """
+    if df.empty:
+        return {}
+
+    df_sem_bucket = df[df["Coordenador"] != "BUCKET"] if "Coordenador" in df.columns else df
+    return _linha_metricas(df_sem_bucket, "TOTAL GERAL")

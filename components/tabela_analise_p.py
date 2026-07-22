@@ -3,6 +3,7 @@ import streamlit as st
 
 import config
 from components.cards import card
+from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_contraste, wrapper_tabela
 
 _CORES_FAIXA = {
     "P0": config.TLP_RED,
@@ -27,33 +28,37 @@ def tabela_analise_p(df_matriz: pd.DataFrame, coluna_grupo: str, titulo: str = "
     linhas_html = []
     for i, (_, row) in enumerate(df_matriz.iterrows()):
         is_total = str(row[coluna_grupo]).upper() == "TOTAL"
-        peso = "700" if is_total else "500"
-        if is_total:
-            bg = "rgba(255,106,0,0.08)"
-        else:
-            bg = config.CARD if i % 2 == 0 else config.SURFACE
-        borda = f"border-top: 2px solid {config.CARD_BORDER};" if is_total else ""
+        peso = "800" if is_total else "600"
 
-        celulas = [f"<td style=\"text-align:left; font-weight:{peso};\">{row[coluna_grupo]}</td>"]
+        if is_total:
+            bg = TOTAL_BG
+            cor_nome = "#FFFFFF"
+        else:
+            bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
+            cor_nome = config.TEXT
+
+        celulas = [f"<td style='text-align:left; font-weight:{peso}; color:{cor_nome};'>{row[coluna_grupo]}</td>"]
         for faixa in _FAIXAS:
             cor = _CORES_FAIXA[faixa]
             valor = int(row[faixa])
-            celulas.append(f"<td style=\"color:{cor}; font-weight:{peso};\">{valor}</td>")
-        linhas_html.append(f"<tr style=\"background:{bg}; {borda}\">{''.join(celulas)}</tr>")
+            if is_total:
+                celulas.append(f"<td>{pill_contraste(valor, cor)}</td>")
+            else:
+                celulas.append(f"<td style='color:{cor}; font-weight:{peso};'>{valor}</td>")
+        linhas_html.append(f"<tr style='{bg}'>{''.join(celulas)}</tr>")
 
-    header_html = f"<th style=\"text-align:left;\">{coluna_grupo.upper()}</th>" + "".join(
-        f"<th style=\"text-align:center; color:{_CORES_FAIXA[f]};\">{f}</th>" for f in _FAIXAS
+    header_html = "<th style='text-align:left;'>" + coluna_grupo.upper() + "</th>" + "".join(
+        f"<th style='text-align:center; color:#FFE9CC;'>{f}</th>" for f in _FAIXAS
     )
 
-    html = (
-        f"<h5 style=\"color:{config.TEXT}; margin-bottom:6px;\">{titulo}</h5>"
-        f"<div style=\"overflow-x:auto; background:{config.CARD}; border:1px solid {config.CARD_BORDER}; border-radius:10px; box-shadow:0 2px 14px rgba(20,20,30,0.06);\">"
-        f"<table style=\"width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};\">"
-        f"<thead><tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{header_html}</tr></thead>"
-        f"<tbody style=\"text-align:center;\">{''.join(linhas_html)}</tbody>"
+    tabela = (
+        f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
-        f"</div>"
     )
+
+    html = f"<h5 style='color:{config.TEXT}; margin-bottom:6px;'>{titulo}</h5>{wrapper_tabela(tabela)}"
     st.markdown(html, unsafe_allow_html=True)
 
 
@@ -73,37 +78,42 @@ def _tabela_html(df_tabela: pd.DataFrame, coluna_grupo: str, formato_percentual:
     linhas_html = []
     for i, (_, row) in enumerate(df_tabela.iterrows()):
         is_total = str(row[coluna_grupo]).upper() in ("TOTAL", "TOTAL GERAL")
-        peso = "700" if is_total else "500"
-        if is_total:
-            bg = "rgba(255,106,0,0.08)"
-        else:
-            bg = config.CARD if i % 2 == 0 else config.SURFACE
-        borda = f"border-top: 2px solid {config.CARD_BORDER};" if is_total else ""
+        peso = "800" if is_total else "600"
 
-        celulas = [f"<td style=\"text-align:left; font-weight:{peso};\">{row[coluna_grupo]}</td>"]
+        if is_total:
+            bg = TOTAL_BG
+            cor_nome = "#FFFFFF"
+        else:
+            bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
+            cor_nome = config.TEXT
+
+        celulas = [f"<td style='text-align:left; font-weight:{peso}; color:{cor_nome};'>{row[coluna_grupo]}</td>"]
         for faixa in _FAIXAS_DETALHADO:
             cor = _CORES_FAIXA_DETALHADO[faixa]
             valor = row[faixa]
             texto = f"{valor:.1f}%" if formato_percentual else f"{int(valor)}"
-            celulas.append(f"<td style=\"color:{cor}; font-weight:{peso};\">{texto}</td>")
+            if is_total:
+                celulas.append(f"<td>{pill_contraste(texto, cor)}</td>")
+            else:
+                celulas.append(f"<td style='color:{cor}; font-weight:{peso};'>{texto}</td>")
         if not formato_percentual and "TOTAL" in df_tabela.columns:
-            celulas.append(f"<td style=\"font-weight:{peso}; color:{config.TEXT};\">{int(row['TOTAL'])}</td>")
-        linhas_html.append(f"<tr style=\"background:{bg}; {borda}\">{''.join(celulas)}</tr>")
+            cor_total_col = "#FFFFFF" if is_total else config.TEXT
+            celulas.append(f"<td style='font-weight:{peso}; color:{cor_total_col};'>{int(row['TOTAL'])}</td>")
+        linhas_html.append(f"<tr style='{bg}'>{''.join(celulas)}</tr>")
 
-    colunas_extra_header = "<th style=\"text-align:center;\">TOTAL</th>" if (not formato_percentual and "TOTAL" in df_tabela.columns) else ""
-    header_html = f"<th style=\"text-align:left;\">{coluna_grupo.upper()}</th>" + "".join(
-        f"<th style=\"text-align:center; color:{_CORES_FAIXA_DETALHADO[f]};\">{f}{'%' if formato_percentual else ''}</th>"
+    colunas_extra_header = "<th style='text-align:center;'>TOTAL</th>" if (not formato_percentual and "TOTAL" in df_tabela.columns) else ""
+    header_html = "<th style='text-align:left;'>" + coluna_grupo.upper() + "</th>" + "".join(
+        f"<th style='text-align:center; color:#FFE9CC;'>{f}{'%' if formato_percentual else ''}</th>"
         for f in _FAIXAS_DETALHADO
     ) + colunas_extra_header
 
-    return (
-        f"<div style=\"overflow-x:auto; background:{config.CARD}; border:1px solid {config.CARD_BORDER}; border-radius:10px; box-shadow:0 2px 14px rgba(20,20,30,0.06);\">"
-        f"<table style=\"width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};\">"
-        f"<thead><tr style=\"background:{config.SURFACE}; color:{config.TEXT_MUTED};\">{header_html}</tr></thead>"
-        f"<tbody style=\"text-align:center;\">{''.join(linhas_html)}</tbody>"
+    tabela = (
+        f"<table style='width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
-        f"</div>"
     )
+    return wrapper_tabela(tabela)
 
 
 def tabela_analise_p_cluster(contagem: pd.DataFrame, percentual: pd.DataFrame, resumo: dict, coluna_grupo: str = "Cluster"):
