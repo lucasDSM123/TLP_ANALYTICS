@@ -3,7 +3,7 @@ from services.database import enviar_dados_para_neon
 
 def executar_upload():
     caminho_arquivo = "data/PRODUCAO_TLP_TRATADA.xlsx"
-    nome_tabela = "producao_tlp"
+    nome_tabela = "producao_tlp_tratada"
     coluna_chave = "numero_atividade"
 
     try:
