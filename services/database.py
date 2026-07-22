@@ -1,58 +1,103 @@
-import os
+from sqlalchemy import create_engine, text
 import pandas as pd
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import streamlit as st  # <-- Adicionado
-
-# Carrega as variáveis de ambiente do arquivo .env (rodando localmente)
-load_dotenv()
+import config
 
 def obter_engine():
-    """Cria e retorna o motor de conexão do SQLAlchemy para o Neon."""
-    # 1. Tenta pegar do .env (local). Se não achar, tenta pegar dos Secrets do Streamlit (nuvem).
-    url_banco = os.getenv("DATABASE_URL") or st.secrets.get("DATABASE_URL")
-    
-    if not url_banco:
-        raise ValueError("A variável DATABASE_URL não foi encontrada no arquivo .env local nem nos Secrets do Streamlit!")
-    
-    # Garante compatibilidade do SQLAlchemy com o prefixo 'postgresql://'
-    if url_banco.startswith("postgres://"):
-        url_banco = url_banco.replace("postgres://", "postgresql://", 1)
-        
-    return create_engine(url_banco)
+    """
+    Retorna a instância do engine do SQLAlchemy configurada com a URL do banco.
+    """
+    return create_engine(config.DATABASE_URL)
 
-def enviar_dados_para_neon(df, nome_tabela):
+def ler_dados_do_neon(nome_tabela_ou_query: str) -> pd.DataFrame:
     """
-    Salva um DataFrame do Pandas diretamente como uma tabela no Neon.
-    Se a tabela já existir, ela será substituída (if_exists='replace').
+    Lê dados do banco Neon/PostgreSQL e retorna em um DataFrame do Pandas.
+    Aceita o nome de uma tabela (ex: 'atividades') ou uma query SQL (ex: 'SELECT * FROM ...').
     """
-    try:
-        engine = obter_engine()
-        print(f"Enviando dados para a tabela '{nome_tabela}' nel Neon...")
+    engine = obter_engine()
+    
+    # Se a string começar com SELECT ou WITH, trata como query SQL; senão, trata como nome de tabela
+    if nome_tabela_ou_query.strip().upper().startswith(("SELECT", "WITH")):
+        query = nome_tabela_ou_query
+    else:
+        query = f'SELECT * FROM "{nome_tabela_ou_query}"'
         
-        # Envia para o banco
-        df.to_sql(
-            name=nome_tabela,
-            con=engine,
-            if_exists="replace",  # 'replace' reconstrói a tabela, 'append' adiciona novas linhas
-            index=False           # Não salva o índice do pandas como uma coluna no banco
-        )
-        print("Dados enviados com sucesso!")
-    except Exception as e:
-        print(f"Erro ao enviar dados para o banco: {e}")
+    with engine.connect() as conn:
+        df = pd.read_sql(text(query), conn)
+        
+    return df
 
-def ler_dados_do_neon(nome_tabela):
+def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str = "numero_atividade"):
     """
-    Lê uma tabela do Neon e retorna como um DataFrame do Pandas para usar no seu site.
+    Envia ou atualiza registros no Neon utilizando uma tabela temporária (STAGING) + MERGE/UPSERT.
+    Trata colunas com espaços, caracteres especiais e acentos sem erros de parâmetros do SQLAlchemy.
     """
-    try:
-        engine = obter_engine()
-        print(f"Buscando dados da tabela '{nome_tabela}' no Neon...")
+    if df.empty:
+        print("⚠️ Nenhum dado para enviar.")
+        return
+
+    # Valida se a coluna chave está no DataFrame
+    if coluna_chave not in df.columns:
+        raise ValueError(f"A coluna chave '{coluna_chave}' não foi encontrada no DataFrame.")
+
+    # Remove duplicadas de segurança na chave primária
+    df = df.drop_duplicates(subset=[coluna_chave], keep="last")
+
+    engine = obter_engine()
+    tabela_temp = f"temp_{nome_tabela}"
+
+    with engine.begin() as conn:
+        # 1. Envia os dados para a tabela temporária
+        df.to_sql(tabela_temp, conn, if_exists="replace", index=False)
+
+        # 2. Garante que a tabela final exista
+        df.head(0).to_sql(nome_tabela, conn, if_exists="append", index=False)
+
+        # 3. Garante a criação da Primary Key / Índice Único na coluna chave
+        sql_pk = f"""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.table_constraints 
+                WHERE table_name = '{nome_tabela}' 
+                  AND constraint_type = 'PRIMARY KEY'
+            ) THEN
+                EXECUTE 'ALTER TABLE "' || '{nome_tabela}' || '" ADD PRIMARY KEY ("' || '{coluna_chave}' || '")';
+            END IF;
+        END $$;
+        """
+        conn.execute(text(sql_pk))
+
+        # 4. Prepara a lista de colunas formatadas entre aspas
+        colunas_formatadas = [f'"{col}"' for col in df.columns]
+        colunas_str = ", ".join(colunas_formatadas)
+
+        # 5. Prepara a cláusula de UPDATE do ON CONFLICT
+        updates = [f'"{col}" = EXCLUDED."{col}"' for col in df.columns if col != coluna_chave]
         
-        # Faz uma query simples no banco e lê direto no Pandas
-        query = f"SELECT * FROM {nome_tabela}"
-        df = pd.read_sql(query, con=engine)
-        return df
-    except Exception as e:
-        print(f"Erro ao ler dados do banco: {e}")
-        return None
+        if updates:
+            updates_str = ", ".join(updates)
+            clausula_conflito = f"DO UPDATE SET {updates_str}"
+        else:
+            clausula_conflito = "DO NOTHING"
+
+        # 6. Executa o UPSERT (Copia da tabela temp para a tabela oficial)
+        sql_upsert = f"""
+            INSERT INTO "{nome_tabela}" ({colunas_str})
+            SELECT {colunas_str} FROM "{tabela_temp}"
+            ON CONFLICT ("{coluna_chave}")
+            {clausula_conflito};
+        """
+        conn.execute(text(sql_upsert))
+
+        # 7. Remove a tabela temporária
+        conn.execute(text(f'DROP TABLE IF EXISTS "{tabela_temp}";'))
+
+        print(f"✅ {len(df)} registros processados e atualizados com sucesso na tabela '{nome_tabela}'.")
+
+def obter_chaves_e_hashes_remotos(nome_tabela: str, coluna_chave: str = "numero_atividade"):
+    """
+    Função mantida para compatibilidade com scripts antigos.
+    A verificação de alterações agora é feita nativamente pelo PostgreSQL via UPSERT.
+    """
+    return {}

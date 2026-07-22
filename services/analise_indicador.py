@@ -85,7 +85,16 @@ INDICADORES = {
     },
     "esteira": {
         "label": "Esteira", "tipo": "contagem",
-        "filtro": lambda df: df["Esteira"] == "ESTEIRA",
+        # Réplica exata da fórmula oficial usada na matriz (services.indicadores.Indicadores.esteira):
+        # ESTEIRA = (Esteira == "ESTEIRA") - Bucket (Contratada = "BUCKET TLP" e Status != "Cancelada") + Sobra de Esteira.
+        # Antes este filtro contava só "Esteira == ESTEIRA" sem excluir o Bucket nem somar a Sobra,
+        # por isso a quebra por cluster (Indicador em foco) não batia com o total da matriz.
+        "filtro": lambda df: (
+            (df["Esteira"] == "ESTEIRA")
+            & ~((df["Contratada"] == "BUCKET TLP") & (df["Status"] != "Cancelada"))
+        ) | (
+            (df["CAUSA"] == "SOBRA DE ESTEIRA") & (df["Esteira"] != "ESTEIRA")
+        ),
         "coluna_valor": "Esteira",
     },
     "hc_ativo": {"label": "HC Ativo", "tipo": "taxa", "coluna_valor": "HC Ativo"},

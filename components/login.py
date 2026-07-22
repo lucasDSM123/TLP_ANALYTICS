@@ -20,7 +20,7 @@ def tela_login():
         [data-testid="stAppViewContainer"] {{
             background-color: #FFFFFF !important;
             background-image:
-                linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.55) 100%),
+                linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.82) 100%),
                 url("{login_bg_uri}") !important;
             background-repeat: no-repeat !important;
             background-position: center center !important;
@@ -32,10 +32,10 @@ def tela_login():
         .tlp-login-wrapper {{
             display: flex;
             justify-content: center;
-            margin-top: 12vh;
+            margin-top: 10vh;
         }}
         .tlp-login-card {{
-            background: rgba(255, 255, 255, 0.80);
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(8px);
             border: 1px solid {config.CARD_BORDER};
             border-radius: 16px;
@@ -46,7 +46,11 @@ def tela_login():
             box-shadow: 0 12px 40px rgba(20,20,30,0.12);
         }}
         .tlp-login-logo {{
-            display: none;
+            display: block;
+            max-width: 180px;
+            width: 60%;
+            height: auto;
+            margin: 0 auto 16px auto;
         }}
         .tlp-login-title {{
             color: {config.TEXT};

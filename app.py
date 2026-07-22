@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 import config
 from components.sidebar import sidebar
@@ -56,22 +57,25 @@ if not usuario_autenticado():
     st.stop()
 
 # ================================================
-# SIDEBAR
-# ================================================
-
-# ================================================
 # CARREGAR DADOS
 # ================================================
 
 df_base = carregar_base()
 
-# Data/hora da extração da base: a coluna "Data Extração" só vem
-# preenchida nas linhas do dia mais recente carregado (o restante do
-# histórico fica com esse campo vazio), então pegamos o valor máximo
-# não nulo para saber quando a base foi extraída pela última vez.
+# Trata casos em que a base não pôde ser carregada ou retornou vazia/com erro
+if df_base is None or not hasattr(df_base, "columns") or df_base.empty:
+    st.error("⚠️ Não foi possível carregar os dados do banco de dados Neon ou a tabela está vazia.")
+    st.info("Por favor, verifique a conexão com o banco de dados e as configurações de acesso.")
+    st.stop()
+
+# Data/hora da extração da base: a coluna de extração só vem
+# preenchida nas linhas do dia mais recente carregado, então pegamos
+# o valor máximo não nulo para saber quando a base foi extraída.
 data_extracao = None
-if "Data Extração" in df_base.columns:
-    serie_extracao = df_base["Data Extração"].dropna()
+col_extracao = next((c for c in df_base.columns if c.lower() in ["data extração", "data_extracao"]), None)
+
+if col_extracao:
+    serie_extracao = df_base[col_extracao].dropna()
     if not serie_extracao.empty:
         data_extracao = serie_extracao.max()
 
@@ -93,11 +97,6 @@ st.divider()
 # ================================================
 # INDICADOR EM FOCO
 # ================================================
-# O seletor deixou de ser global: agora cada página decide se o usa e
-# onde ele aparece. Dashboard e Relatórios renderizam o seletor
-# internamente (Dashboard mais abaixo, afetando só os indicadores
-# daquela página; Relatórios no topo da própria página). Coordenadores,
-# Supervisores não tem mais esse filtro.
 
 indicadores = Indicadores(df)
 
