@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 import config
-from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_contraste, wrapper_tabela
+from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_total, wrapper_tabela
 
 
 def _cor_eficacia(valor: float) -> str:
@@ -52,30 +52,42 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
         if is_total:
             bg = TOTAL_BG
             cor_texto = "#FFFFFF"
-            cel_ok = pill_contraste(row["OK"], "#15803D")
-            cel_nok = pill_contraste(row["NOK"], config.TLP_RED)
-            cel_efic = pill_contraste(eficacia_pct, cor_efic)
+            media_txt = f"{row['Média Atrib.']:.2f}"
+            pu_txt = f"{row['PU']:.2f}"
+            proj_pu_txt = f"{row['Proj. PU']:.2f}"
+            cel_cluster = f"<td style='text-align:left; font-weight:{peso}; color:{cor_texto};'>{row['Cluster']}</td>"
+            cel_hc = f"<td>{pill_total(row['HC Ativo'])}</td>"
+            cel_caixa = f"<td>{pill_total(row['Caixa Tot'])}</td>"
+            cel_esteira = f"<td>{pill_total(row['Esteira'])}</td>"
+            cel_bucket = f"<td>{pill_total(row['Bucket'])}</td>"
+            cel_media = f"<td>{pill_total(media_txt)}</td>"
+            cel_pu = f"<td>{pill_total(pu_txt)}</td>"
+            cel_ok = f"<td>{pill_total(row['OK'])}</td>"
+            cel_nok = f"<td>{pill_total(row['NOK'])}</td>"
+            cel_iniciada = f"<td>{pill_total(row['Iniciada'])}</td>"
+            cel_efic = f"<td>{pill_total(eficacia_pct)}</td>"
+            cel_proj = f"<td>{pill_total(row['Proj.'])}</td>"
+            cel_proj_pu = f"<td>{pill_total(proj_pu_txt)}</td>"
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
             cor_texto = config.TEXT
-            cel_ok = f"<span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span>"
-            cel_nok = f"<span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span>"
-            cel_efic = f"<span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span>"
+            cel_cluster = f"<td style='text-align:left; font-weight:{peso}; color:{cor_texto};'>{row['Cluster']}</td>"
+            cel_hc = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>"
+            cel_caixa = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>"
+            cel_esteira = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Esteira']}</td>"
+            cel_bucket = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>"
+            cel_media = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>"
+            cel_pu = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>"
+            cel_ok = f"<td><span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span></td>"
+            cel_nok = f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span></td>"
+            cel_iniciada = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>"
+            cel_efic = f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>"
+            cel_proj = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>"
+            cel_proj_pu = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>"
 
         celulas = "".join([
-            f"<td style='text-align:left; font-weight:{peso}; color:{cor_texto};'>{row['Cluster']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Esteira']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>",
-            f"<td>{cel_ok}</td>",
-            f"<td>{cel_nok}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>",
-            f"<td>{cel_efic}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>",
-            f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>",
+            cel_cluster, cel_hc, cel_caixa, cel_esteira, cel_bucket, cel_media,
+            cel_pu, cel_ok, cel_nok, cel_iniciada, cel_efic, cel_proj, cel_proj_pu,
         ])
 
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")

@@ -22,6 +22,19 @@ def pill(texto: str, cor_texto: str, cor_fundo: str, negrito: bool = True) -> st
     )
 
 
+def pill_total(texto) -> str:
+    """
+    Balão branco opaco com texto preto em negrito — usado em TODAS as
+    células numéricas das linhas de Total/Total Geral (uniformiza o
+    visual: todo valor de total vira um "balão" de alto contraste, sem
+    variar a cor por indicador).
+    """
+    return (
+        "<span style='display:inline-block; min-width:44px; padding:3px 10px; "
+        f"border-radius:8px; background:rgba(255,255,255,0.96); color:#111827; font-weight:800;'>{texto}</span>"
+    )
+
+
 def pill_contraste(texto: str, cor_texto: str) -> str:
     """
     Badge com fundo quase-branco opaco + texto colorido. Usar sempre que o

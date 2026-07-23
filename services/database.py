@@ -1,3 +1,4 @@
+import io
 import re
 
 from sqlalchemy import create_engine, text
@@ -77,8 +78,10 @@ def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str
       conteúdo realmente mudou — linhas idênticas às já existentes são
       ignoradas via cláusula WHERE ... IS DISTINCT FROM, economizando
       compute e armazenamento de histórico a cada execução.
-    - A carga da staging usa method="multi" com chunksize seguro,
-      reduzindo o tempo de CU consumido por execução.
+    - A carga da staging usa COPY nativo do Postgres (via psycopg2) em vez
+      de INSERT em lote — dramaticamente mais rápido para volumes grandes
+      (dezenas de milhares de linhas), reduzindo o tempo total de execução
+      e o tempo de CU consumido.
     """
     if df.empty:
         print("⚠️ Nenhum dado para enviar.")
@@ -102,9 +105,6 @@ def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str
     colunas_formatadas = [_quotar_coluna(col) for col in df.columns]
     colunas_str = ", ".join(colunas_formatadas)
     colunas_sem_chave = [_quotar_coluna(col) for col in df.columns if col != coluna_chave]
-
-    # chunksize seguro: Postgres tem limite de ~65535 parâmetros por statement
-    chunksize = max(1, 65000 // max(len(df.columns), 1))
 
     with engine.begin() as conn:
         # 1. Garante que a tabela final exista (não mexe nela se já existir)
@@ -138,11 +138,20 @@ def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str
             f'(LIKE "{nome_tabela}" INCLUDING DEFAULTS) ON COMMIT DROP;'
         ))
 
-        # 4. Carrega os dados na staging em lote (mais rápido que o padrão linha a linha)
-        df.to_sql(
-            tabela_temp, conn, if_exists="append", index=False,
-            method="multi", chunksize=chunksize,
-        )
+        # 4. Carrega os dados na staging via COPY nativo do Postgres — muito mais
+        #    rápido que INSERT em lote (10-50x, tipicamente) para volumes grandes,
+        #    pois usa um protocolo de streaming em vez de montar/parsear SQL.
+        buffer_csv = io.StringIO()
+        df.to_csv(buffer_csv, index=False, header=False, na_rep="")
+        buffer_csv.seek(0)
+
+        raw_conn = conn.connection  # conexão DBAPI (psycopg2) da MESMA transação
+        with raw_conn.cursor() as cur:
+            cur.copy_expert(
+                f'COPY "{tabela_temp}" ({colunas_str}) FROM STDIN '
+                f"WITH (FORMAT csv, NULL '')",
+                buffer_csv,
+            )
 
         # 5. UPSERT: só grava (INSERT/UPDATE) as linhas novas ou que realmente mudaram.
         #    A cláusula WHERE compara a linha atual (t) com a nova (EXCLUDED) e pula

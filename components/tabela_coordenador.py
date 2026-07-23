@@ -3,7 +3,7 @@ import streamlit as st
 
 import config
 from components.estilo_tabela import (
-    CABECALHO_BG, TOTAL_BG, SUBTOTAL_BG, pill, pill_contraste,
+    CABECALHO_BG, TOTAL_BG, SUBTOTAL_BG, pill, pill_total,
     cor_faixa, cor_faixa_bg, wrapper_tabela,
 )
 
@@ -50,44 +50,39 @@ def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> st
 
 def _celula_total_geral(row: dict) -> str:
     """
-    Linha TOTAL GERAL — fundo no gradiente de marca. Todo valor numérico
-    "avaliável" (PU, Eficácia, Projeção PU, Gap e os sub-totais de
-    Concluída BA/TT/Não Concluída) usa `pill_contraste`: badge com fundo
-    quase-branco opaco + texto colorido conforme a régua de cada
-    indicador (verde = bate a meta, vermelho = não bate; Gap negativo
-    sempre em vermelho). Isso resolve dois problemas de uma vez: garante
-    contraste sobre o gradiente laranja/vermelho e mantém a mesma leitura
-    de cor das linhas normais também no total.
+    Linha TOTAL GERAL — fundo no gradiente de marca. TODOS os valores usam
+    `pill_total` (balão branco opaco + texto preto em negrito), de forma
+    uniforme — sem variar a cor por indicador, só pra destacar o número
+    com contraste máximo sobre o gradiente laranja/vermelho.
     """
-    branco = "#FFFFFF"
     eficacia_pct = f"{row['Eficácia']:.0%}"
 
     txt_pu = f"{_seta(row['PU'])} {row['PU']:.2f}"
     txt_proj_pu = f"{_seta(row['Projeção PU'])} {row['Projeção PU']:.2f}"
     txt_gap = f"{_seta_gap(row['Gap'])} {row['Gap']:+d}"
-    cor_gap = "#15803D" if row["Gap"] >= 0 else config.TLP_RED
 
     caixa_fmt = f"{row['Caixa Total']:,}".replace(",", ".")
     esteira_fmt = f"{row['Esteira']:,}".replace(",", ".")
     projecao_fmt = f"{row['Projeção']:,}".replace(",", ".")
+    media_fmt = f"{row['Média Atribuição']:.2f}"
 
     return "".join([
-        f"<td colspan='2' style='text-align:left; font-weight:800; font-size:14px; color:{branco};'>{row['Nome']}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{row['HC Ativo']}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{caixa_fmt}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{esteira_fmt}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{row['Média Atribuição']:.2f}</td>",
-        f"<td>{pill_contraste(txt_pu, cor_faixa(row['PU'], config.META_PU_ALVO))}</td>",
-        f"<td>{pill_contraste(row['Concluída BA'], '#15803D')}</td>",
-        f"<td>{pill_contraste(row['Concluída TT'], config.TLP_ORANGE)}</td>",
-        f"<td style='font-weight:900; font-size:15px; color:{branco};'>{row['Concluída Total']}</td>",
-        f"<td>{pill_contraste(row['Não Concluída'], config.TLP_RED)}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{row['Iniciada']}</td>",
-        f"<td>{pill_contraste(eficacia_pct, cor_faixa(row['Eficácia'], config.META_EFICACIA_ALVO))}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{projecao_fmt}</td>",
-        f"<td>{pill_contraste(txt_proj_pu, cor_faixa(row['Projeção PU'], config.META_PU_ALVO))}</td>",
-        f"<td style='font-weight:800; font-size:14px; color:{branco};'>{row['Meta']}</td>",
-        f"<td>{pill_contraste(txt_gap, cor_gap)}</td>",
+        f"<td colspan='2' style='text-align:left; font-weight:800; font-size:14px; color:#FFFFFF;'>{row['Nome']}</td>",
+        f"<td>{pill_total(row['HC Ativo'])}</td>",
+        f"<td>{pill_total(caixa_fmt)}</td>",
+        f"<td>{pill_total(esteira_fmt)}</td>",
+        f"<td>{pill_total(media_fmt)}</td>",
+        f"<td>{pill_total(txt_pu)}</td>",
+        f"<td>{pill_total(row['Concluída BA'])}</td>",
+        f"<td>{pill_total(row['Concluída TT'])}</td>",
+        f"<td>{pill_total(row['Concluída Total'])}</td>",
+        f"<td>{pill_total(row['Não Concluída'])}</td>",
+        f"<td>{pill_total(row['Iniciada'])}</td>",
+        f"<td>{pill_total(eficacia_pct)}</td>",
+        f"<td>{pill_total(projecao_fmt)}</td>",
+        f"<td>{pill_total(txt_proj_pu)}</td>",
+        f"<td>{pill_total(row['Meta'])}</td>",
+        f"<td>{pill_total(txt_gap)}</td>",
     ])
 
 

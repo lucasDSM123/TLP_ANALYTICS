@@ -3,7 +3,7 @@ import streamlit as st
 
 import config
 from components.cards import card
-from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_contraste, wrapper_tabela
+from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_total, wrapper_tabela
 
 _CORES_FAIXA = {
     "P0": config.TLP_RED,
@@ -42,7 +42,7 @@ def tabela_analise_p(df_matriz: pd.DataFrame, coluna_grupo: str, titulo: str = "
             cor = _CORES_FAIXA[faixa]
             valor = int(row[faixa])
             if is_total:
-                celulas.append(f"<td>{pill_contraste(valor, cor)}</td>")
+                celulas.append(f"<td>{pill_total(valor)}</td>")
             else:
                 celulas.append(f"<td style='color:{cor}; font-weight:{peso};'>{valor}</td>")
         linhas_html.append(f"<tr style='{bg}'>{''.join(celulas)}</tr>")
@@ -93,12 +93,14 @@ def _tabela_html(df_tabela: pd.DataFrame, coluna_grupo: str, formato_percentual:
             valor = row[faixa]
             texto = f"{valor:.1f}%" if formato_percentual else f"{int(valor)}"
             if is_total:
-                celulas.append(f"<td>{pill_contraste(texto, cor)}</td>")
+                celulas.append(f"<td>{pill_total(texto)}</td>")
             else:
                 celulas.append(f"<td style='color:{cor}; font-weight:{peso};'>{texto}</td>")
         if not formato_percentual and "TOTAL" in df_tabela.columns:
-            cor_total_col = "#FFFFFF" if is_total else config.TEXT
-            celulas.append(f"<td style='font-weight:{peso}; color:{cor_total_col};'>{int(row['TOTAL'])}</td>")
+            if is_total:
+                celulas.append(f"<td>{pill_total(int(row['TOTAL']))}</td>")
+            else:
+                celulas.append(f"<td style='font-weight:{peso}; color:{config.TEXT};'>{int(row['TOTAL'])}</td>")
         linhas_html.append(f"<tr style='{bg}'>{''.join(celulas)}</tr>")
 
     colunas_extra_header = "<th style='text-align:center;'>TOTAL</th>" if (not formato_percentual and "TOTAL" in df_tabela.columns) else ""

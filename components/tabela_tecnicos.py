@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 import config
-from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill, pill_contraste, cor_faixa, cor_faixa_bg, wrapper_tabela
+from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill, pill_total, cor_faixa, cor_faixa_bg, wrapper_tabela
 
 _CORES_CLASSIFICACAO = {
     "P0": config.TLP_RED,
@@ -78,16 +78,16 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
             elif c == "Cluster":
                 celulas_total.append("<td></td>")
             elif c == "PU":
-                celulas_total.append(f"<td>{pill_contraste(pu_tot_txt, cor_faixa(total['PU'], config.META_PU_ALVO))}</td>")
+                celulas_total.append(f"<td>{pill_total(pu_tot_txt)}</td>")
             elif c == "Concluído OK":
-                celulas_total.append(f"<td>{pill_contraste(total['Concluído OK'], '#15803D')}</td>")
+                celulas_total.append(f"<td>{pill_total(total['Concluído OK'])}</td>")
             elif c == "Concluído NOK":
-                celulas_total.append(f"<td>{pill_contraste(total['Concluído NOK'], config.TLP_RED)}</td>")
+                celulas_total.append(f"<td>{pill_total(total['Concluído NOK'])}</td>")
             elif c == "Eficácia":
-                celulas_total.append(f"<td>{pill_contraste(eficacia_pct_tot, cor_faixa(total['Eficácia'], config.META_EFICACIA_ALVO))}</td>")
+                celulas_total.append(f"<td>{pill_total(eficacia_pct_tot)}</td>")
             elif c in ("Caixa Total", "Esteira", "Iniciada", "Projeção"):
                 valor_fmt = f"{int(total[c]):,}".replace(",", ".")
-                celulas_total.append(f"<td style='font-weight:800; font-size:14px; color:#FFFFFF;'>{valor_fmt}</td>")
+                celulas_total.append(f"<td>{pill_total(valor_fmt)}</td>")
             else:
                 celulas_total.append("<td></td>")
         linha_total_html = f"<tr style='{TOTAL_BG}'>{''.join(celulas_total)}</tr>"
