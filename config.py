@@ -93,9 +93,10 @@ SIGLAS_CLUSTER = {
 
 META_PU_ALVO = 3
 META_EFICACIA_ALVO = 0.70
+META_ATRIBUICAO_ALVO = 4.0
 
 # ------------------------------------------------------------------
 # NAVEGAÇÃO
 # ------------------------------------------------------------------
-PAGES = ["Dashboard", "Gestores", "Relatórios", "Configurações"]
-PAGE_ICONS = ["speedometer2", "people", "bar-chart-line", "gear"]
+PAGES = ["Dashboard", "Acumulado Mês", "Gestores", "Relatórios", "Configurações"]
+PAGE_ICONS = ["speedometer2", "calendar2-check", "people", "bar-chart-line", "gear"]

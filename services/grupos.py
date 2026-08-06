@@ -93,6 +93,198 @@ def serie_diaria_indicadores(df: pd.DataFrame, coluna_data: str = "Data") -> pd.
     return pd.DataFrame(linhas)
 
 
+def _parse_datas(df: pd.DataFrame, coluna_data: str = "Data") -> pd.DataFrame:
+    """Anexa a coluna auxiliar '_data' (datetime) a partir da coluna de texto 'Data' (dd/mm/aa)."""
+    serie = df.copy()
+    datas = pd.to_datetime(serie[coluna_data], format="%d/%m/%y", errors="coerce")
+    if datas.isna().all():
+        datas = pd.to_datetime(serie[coluna_data], dayfirst=True, errors="coerce")
+    serie["_data"] = datas
+    return serie.dropna(subset=["_data"])
+
+
+def _linha_indicadores_dia(sub: pd.DataFrame) -> dict:
+    """Calcula Concluída (OK), Improdutiva (NOK), Técnicos (HC Ativo), Atribuição, PU e Eficácia
+    para um recorte (dia/estado) já filtrado, reaproveitando a classe Indicadores — igual ao
+    PAINEL de fechamento mensal usado no Excel/Power BI (Eficácia %, Concluída, Improdutiva,
+    Técnicos, Atribuição, PU vs Meta).
+
+    Inclui também 'Caixa Total' (não exibida nas tabelas) — usada apenas como base para
+    recalcular corretamente a linha de Total/Total Mês (ver `_linha_resumo_soma`)."""
+    ind = Indicadores(sub)
+    hc = ind.hc_real()
+    concluido = ind.concluido()
+    eficacia = ind.eficacia()
+    pu = ind.pu()
+    media = ind.media_atribuicao()
+    caixa = ind.caixa_total()
+    return {
+        "Concluída": concluido["OK"],
+        "Improdutiva": concluido["NOK"],
+        "Técnicos": hc["HC"],
+        "Caixa Total": caixa["TOTAL"],
+        "Atribuição": media["GERAL"],
+        "PU": pu["GERAL"],
+        "Eficácia": eficacia["GERAL"],
+    }
+
+
+def _linha_resumo_soma(nome_linha: str, coluna_nome: str, sub_diario: pd.DataFrame) -> dict:
+    """
+    Constrói a linha de total (Total Mês / Total por Estado / Total Geral)
+    SOMANDO os valores diários já calculados — NUNCA recalculando PU/Atribuição
+    direto sobre o período inteiro (isso contaria Técnicos como únicos do mês
+    inteiro, um número bem menor que a soma dos técnicos de cada dia).
+
+    Regra (conforme o PAINEL do Excel/Power BI):
+    - Técnicos (Total)   = soma dos Técnicos de cada dia
+    - Concluída (Total)  = soma da Concluída de cada dia
+    - Improdutiva (Total)= soma da Improdutiva de cada dia
+    - PU (Total)         = Total Concluída / Total Técnicos
+    - Atribuição (Total) = Total Caixa Total / Total Técnicos
+    - Eficácia (Total)   = Total Concluída / (Total Concluída + Total Improdutiva)
+    """
+    concluida = int(sub_diario["Concluída"].sum())
+    improdutiva = int(sub_diario["Improdutiva"].sum())
+    tecnicos = int(sub_diario["Técnicos"].sum())
+    caixa_total = float(sub_diario["Caixa Total"].sum())
+
+    pu_total = 0.0 if tecnicos == 0 else round(concluida / tecnicos, 2)
+    atribuicao_total = 0.0 if tecnicos == 0 else round(caixa_total / tecnicos, 2)
+    base_eficacia = concluida + improdutiva
+    eficacia_total = 1.0 if base_eficacia == 0 else concluida / base_eficacia
+
+    return {
+        coluna_nome: nome_linha,
+        "Concluída": concluida,
+        "Improdutiva": improdutiva,
+        "Técnicos": tecnicos,
+        "Atribuição": atribuicao_total,
+        "PU": pu_total,
+        "Eficácia": eficacia_total,
+    }
+
+
+def resumo_mes_total(df: pd.DataFrame, coluna_data: str = "Data") -> dict:
+    """
+    Totais acumulados do mês (todo o período filtrado), SEM quebrar por
+    Estado/Cluster — mesma regra de `resumo_mes_por_grupo`/`_linha_resumo_soma`
+    (soma os Técnicos, a Concluída e a Caixa Total de CADA DIA e só então
+    divide, em vez de recalcular PU/Atribuição direto sobre o período
+    inteiro). Usada pelos cards de resumo geral no topo da página Acumulado
+    Mês, para que o PU/Atribuição mostrados ali batam com o Total das
+    tabelas mais abaixo.
+
+    Retorna um dict só com a linha de total (chaves: Concluída, Improdutiva,
+    Técnicos, Atribuição, PU, Eficácia), ou None se não houver dados.
+    """
+    if df.empty or coluna_data not in df.columns:
+        return None
+
+    serie = _parse_datas(df, coluna_data)
+    if serie.empty:
+        return None
+
+    linhas = []
+    for dia in sorted(serie["_data"].dt.date.unique()):
+        sub_dia = serie[serie["_data"].dt.date == dia]
+        linha = {"Data": dia}
+        linha.update(_linha_indicadores_dia(sub_dia))
+        linhas.append(linha)
+
+    diario = pd.DataFrame(linhas)
+    if diario.empty:
+        return None
+
+    return _linha_resumo_soma("Total", "Data", diario)
+
+
+def serie_diaria_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado", coluna_data: str = "Data") -> pd.DataFrame:
+    """
+    Réplica do PAINEL de fechamento mensal (Excel/Power BI): para cada valor
+    de `coluna_grupo` (Estado, Cluster etc.) e cada dia do período filtrado,
+    calcula Concluída, Improdutiva, Técnicos (HC Ativo), Atribuição, PU e
+    Eficácia — recalculando a classe Indicadores em cada recorte para
+    garantir que os números batam com os cards do site.
+
+    Retorna colunas: <coluna_grupo>, Data, Concluída, Improdutiva, Técnicos,
+    Caixa Total, Atribuição, PU, Eficácia.
+    """
+    if df.empty or coluna_data not in df.columns or coluna_grupo not in df.columns:
+        return pd.DataFrame()
+
+    serie = _parse_datas(df, coluna_data)
+    if serie.empty:
+        return pd.DataFrame()
+
+    linhas = []
+    for grupo in sorted(serie[coluna_grupo].dropna().unique()):
+        sub_grupo = serie[serie[coluna_grupo] == grupo]
+        for dia in sorted(sub_grupo["_data"].dt.date.unique()):
+            sub_dia = sub_grupo[sub_grupo["_data"].dt.date == dia]
+            linha = {coluna_grupo: grupo, "Data": dia}
+            linha.update(_linha_indicadores_dia(sub_dia))
+            linhas.append(linha)
+
+    return pd.DataFrame(linhas)
+
+
+def resumo_mes_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado") -> pd.DataFrame:
+    """
+    Totais acumulados do mês (todo o período filtrado) por `coluna_grupo`
+    (Estado, Cluster etc.), mais uma linha 'Total' com o consolidado geral.
+
+    IMPORTANTE: PU e Atribuição do Total NÃO são recalculados direto sobre o
+    período inteiro (isso contaria Técnicos como únicos do mês inteiro — um
+    número bem menor que o real). Em vez disso, somamos os Técnicos, a
+    Concluída e a Caixa Total de CADA DIA (via serie_diaria_por_grupo) e só
+    então dividimos — exatamente como o PAINEL do Excel/Power BI:
+
+        PU (Total) = soma(Concluída de cada dia) / soma(Técnicos de cada dia)
+        Atribuição (Total) = soma(Caixa Total de cada dia) / soma(Técnicos de cada dia)
+    """
+    if df.empty or coluna_grupo not in df.columns:
+        return pd.DataFrame()
+
+    diario = serie_diaria_por_grupo(df, coluna_grupo)
+    if diario.empty:
+        return pd.DataFrame()
+
+    linhas = []
+    for grupo in sorted(diario[coluna_grupo].dropna().unique()):
+        sub = diario[diario[coluna_grupo] == grupo]
+        if sub.empty:
+            continue
+        linhas.append(_linha_resumo_soma(grupo, coluna_grupo, sub))
+
+    if not linhas:
+        return pd.DataFrame()
+
+    linhas.append(_linha_resumo_soma("Total", coluna_grupo, diario))
+
+    return pd.DataFrame(linhas)
+
+
+def serie_diaria_por_estado(df: pd.DataFrame, coluna_data: str = "Data") -> pd.DataFrame:
+    """Atalho de `serie_diaria_por_grupo` agrupando por Estado (SC/RS)."""
+    return serie_diaria_por_grupo(df, "Estado", coluna_data)
+
+
+def resumo_mes_por_estado(df: pd.DataFrame) -> pd.DataFrame:
+    """Atalho de `resumo_mes_por_grupo` agrupando por Estado (SC/RS)."""
+    return resumo_mes_por_grupo(df, "Estado")
+
+
+def serie_diaria_por_cluster(df: pd.DataFrame, coluna_data: str = "Data") -> pd.DataFrame:
+    """Atalho de `serie_diaria_por_grupo` agrupando por Cluster."""
+    return serie_diaria_por_grupo(df, "Cluster", coluna_data)
+
+
+def resumo_mes_por_cluster(df: pd.DataFrame) -> pd.DataFrame:
+    """Atalho de `resumo_mes_por_grupo` agrupando por Cluster."""
+    return resumo_mes_por_grupo(df, "Cluster")
+
+
 def metricas_por_tecnico(df: pd.DataFrame) -> pd.DataFrame:
     """
     Matriz "Técnico -> seus indicadores": reaproveita `metricas_por_grupo`

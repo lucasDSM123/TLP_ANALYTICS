@@ -1,14 +1,15 @@
 import streamlit as st
 
 from components.header import secao_titulo
-from components.charts import grafico_media_atribuida_pu, grafico_ranking
+from components.charts import grafico_media_atribuida_pu, grafico_ranking, opcoes_grafico
 from components.tabela_analise_p import tabela_analise_p_cluster
 from components.tabela_coordenador import render_tabela_coordenadores
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo, metricas_por_tecnico
-from services.coordenador_tabela import tabela_coordenadores
+from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos
+from components.print_button import area_com_print
 
 
 def render(df, indicadores: Indicadores):
@@ -45,11 +46,12 @@ def render(df, indicadores: Indicadores):
     caixa = indicadores.caixa_total()
     eficacia = indicadores.eficacia()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Coordenadores", ranking_coord.shape[0])
-    col2.metric("HC Ativo Total", hc["HC"])
-    col3.metric("Caixa Total", f"{caixa['TOTAL']:,}".replace(",", "."))
-    col4.metric("Eficácia Geral", f"{eficacia['GERAL']:.0%}")
+    with area_com_print("gestores_cards_coordenador", nome_arquivo="resumo_coordenadores"):
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Coordenadores", ranking_coord.shape[0])
+        col2.metric("HC Ativo Total", hc["HC"])
+        col3.metric("Caixa Total", f"{caixa['TOTAL']:,}".replace(",", "."))
+        col4.metric("Eficácia Geral", f"{eficacia['GERAL']:.0%}")
 
     # ====== RESUMO — NÍVEL SUPERVISOR (respeitando a segmentação acima) ======
     ranking_sup = metricas_por_grupo(df_filtrado, "Supervisor")
@@ -61,18 +63,20 @@ def render(df, indicadores: Indicadores):
         projecao_f = ind_filtrado.projecao()
 
         st.caption("Considerando a segmentação Coordenador → Supervisor → Técnico selecionada acima")
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Supervisores", ranking_sup.shape[0])
-        col2.metric("HC Ativo (filtro)", hc_f["HC"])
-        col3.metric("PU Médio (filtro)", f"{pu_f['GERAL']:.2f}")
-        col4.metric("Projeção (filtro)", f"{projecao_f['GERAL']:,}".replace(",", "."))
+        with area_com_print("gestores_cards_supervisor", nome_arquivo="resumo_supervisores_filtro"):
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Supervisores", ranking_sup.shape[0])
+            col2.metric("HC Ativo (filtro)", hc_f["HC"])
+            col3.metric("PU Médio (filtro)", f"{pu_f['GERAL']:.2f}")
+            col4.metric("Projeção (filtro)", f"{projecao_f['GERAL']:,}".replace(",", "."))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ====== ANÁLISE P — COORDENADOR, depois SUPERVISOR ======
     secao_titulo("Análise P por Coordenador", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6)")
     contagem_coord, percentual_coord, resumo_coord = indicadores.analise_p_cluster(coluna_grupo="Coordenador")
-    tabela_analise_p_cluster(contagem_coord, percentual_coord, resumo_coord, coluna_grupo="Coordenador")
+    with area_com_print("gestores_analise_p_coordenador", nome_arquivo="analise_p_coordenador"):
+        tabela_analise_p_cluster(contagem_coord, percentual_coord, resumo_coord, coluna_grupo="Coordenador")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -81,12 +85,17 @@ def render(df, indicadores: Indicadores):
         st.info("Sem dados de supervisor para os filtros atuais.")
     else:
         contagem_sup, percentual_sup, resumo_sup = ind_filtrado.analise_p_cluster(coluna_grupo="Supervisor")
-        tabela_analise_p_cluster(contagem_sup, percentual_sup, resumo_sup, coluna_grupo="Supervisor")
+        with area_com_print("gestores_analise_p_supervisor", nome_arquivo="analise_p_supervisor"):
+            tabela_analise_p_cluster(contagem_sup, percentual_sup, resumo_sup, coluna_grupo="Supervisor")
 
     st.divider()
 
     secao_titulo("Média Atribuída x PU", "Comparativo por coordenador")
-    st.plotly_chart(grafico_media_atribuida_pu(ranking_coord, coluna_grupo="Coordenador"), width='stretch')
+    with area_com_print("gestores_grafico_atribuicao_pu", nome_arquivo="atribuicao_pu_por_coordenador"):
+        st.plotly_chart(
+            grafico_media_atribuida_pu(ranking_coord, coluna_grupo="Coordenador"), width='stretch',
+            config=opcoes_grafico("atribuicao_pu_por_coordenador"),
+        )
 
     st.divider()
 
@@ -95,7 +104,8 @@ def render(df, indicadores: Indicadores):
         "Produção por Coordenador",
         "Coordenador → Supervisor, com subtotal por cluster/região (Meta = HC Ativo × 3)",
     )
-    render_tabela_coordenadores(tabela_coordenadores(df))
+    with area_com_print("gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador"):
+        render_tabela_coordenadores(tabela_coordenadores(df), total_geral(df))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -111,15 +121,16 @@ def render(df, indicadores: Indicadores):
         ] if c in matriz_geral.columns]
         matriz_fmt = matriz_geral[colunas_exibir].copy()
         matriz_fmt["Eficácia"] = matriz_fmt["Eficácia"] * 100
-        st.dataframe(
-            matriz_fmt,
-            width='stretch',
-            hide_index=True,
-            column_config={
-                "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
-                "PU": st.column_config.NumberColumn("PU", format="%.2f"),
-            },
-        )
+        with area_com_print("gestores_matriz_tecnicos", nome_arquivo="indicadores_por_tecnico"):
+            st.dataframe(
+                matriz_fmt,
+                width='stretch',
+                hide_index=True,
+                column_config={
+                    "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
+                    "PU": st.column_config.NumberColumn("PU", format="%.2f"),
+                },
+            )
 
     st.divider()
 
@@ -139,11 +150,12 @@ def render(df, indicadores: Indicadores):
             qtd = int(linha.iloc[0]["Concluídas"])
             classe = linha.iloc[0]["Classificação"]
 
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Classificação P", classe)
-            c2.metric("Concluídas", qtd)
-            c3.metric("Caixa Total", caixa_tec["TOTAL"])
-            c4.metric("Eficácia", f"{efic_tec['GERAL']:.0%}")
+            with area_com_print("gestores_cards_tecnico_detalhe", nome_arquivo=f"detalhe_tecnico_{tec_sel}"):
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Classificação P", classe)
+                c2.metric("Concluídas", qtd)
+                c3.metric("Caixa Total", caixa_tec["TOTAL"])
+                c4.metric("Eficácia", f"{efic_tec['GERAL']:.0%}")
 
     elif sup_sel != "Todos":
         secao_titulo(
@@ -154,7 +166,9 @@ def render(df, indicadores: Indicadores):
         if matriz_tec.empty:
             st.info("Sem técnicos com atividades para este supervisor nos filtros atuais.")
         else:
-            st.plotly_chart(
-                grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
-                width='stretch',
-            )
+            with area_com_print(f"gestores_ranking_tecnicos_{sup_sel}", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
+                st.plotly_chart(
+                    grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
+                    width='stretch',
+                    config=opcoes_grafico(f"ranking_tecnicos_pu_{sup_sel}"),
+                )

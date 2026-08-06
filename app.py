@@ -10,7 +10,7 @@ from services.loader import carregar_base
 from services.indicadores import Indicadores
 from utils.assets import imagem_como_data_uri
 
-from views import dashboard, gestores, relatorios, configuracoes
+from views import dashboard, acumulado_mes, gestores, relatorios, configuracoes
 
 # ================================================
 # CONFIGURAÇÃO INICIAL
@@ -106,6 +106,7 @@ indicadores = Indicadores(df)
 
 PAGINAS = {
     "Dashboard": dashboard,
+    "Acumulado Mês": acumulado_mes,
     "Gestores": gestores,
     "Relatórios": relatorios,
     "Configurações": configuracoes,

@@ -27,6 +27,27 @@ def _icone_automatico(title: str) -> str:
     return "📌"
 
 
+def _fundo_icone_rgba(cor_hex: str, alpha: float = 0.16) -> str:
+    """
+    Converte uma cor hex (#RRGGBB) numa rgba() com opacidade `alpha` —
+    substitui o antigo `color-mix(in srgb, cor 16%, transparent)` do CSS.
+
+    Calculado aqui em Python (em vez de color-mix() no CSS) porque
+    color-mix() não é suportada pelo html2canvas (usado no botão "Copiar
+    imagem" das áreas do site), o que fazia o print falhar justamente nos
+    cards. rgba() tem o mesmo resultado visual e funciona em qualquer
+    navegador/biblioteca.
+    """
+    cor_hex = (cor_hex or "").lstrip("#")
+    if len(cor_hex) != 6:
+        return f"rgba(255, 106, 0, {alpha})"
+    try:
+        r, g, b = int(cor_hex[0:2], 16), int(cor_hex[2:4], 16), int(cor_hex[4:6], 16)
+    except ValueError:
+        return f"rgba(255, 106, 0, {alpha})"
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
 def card(title: str, value, color: str = "#FF6A00", subtitle: str = "", icon: str = None):
     """
     Renderiza um card KPI com título, valor, cor de destaque e subtítulo opcional.
@@ -43,10 +64,11 @@ def card(title: str, value, color: str = "#FF6A00", subtitle: str = "", icon: st
     # os cards tenham exatamente a mesma estrutura/altura, com ou sem subtítulo.
     subtitle_html = f'<p class="kpi-subtitle">{subtitle if subtitle else "&nbsp;"}</p>'
     icone = icon if icon else _icone_automatico(title)
+    fundo_icone = _fundo_icone_rgba(color)
 
     st.markdown(
         f"""
-        <div class="kpi-card" style="border-left-color: {color}; --kpi-color: {color};">
+        <div class="kpi-card" style="border-left-color: {color}; --kpi-color: {color}; --kpi-icon-bg: {fundo_icone};">
             <div class="kpi-title-row">
                 <span class="kpi-icon">{icone}</span>
                 <p class="kpi-title">{title}</p>

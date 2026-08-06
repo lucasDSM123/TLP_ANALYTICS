@@ -242,7 +242,12 @@ h1, h2, h3, h4 {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    background: color-mix(in srgb, var(--kpi-color, var(--tlp-orange)) 16%, transparent);
+    /* Usa a cor de fundo já calculada em Python (rgba com 16% de opacidade)
+       via --kpi-icon-bg, em vez de color-mix(): color-mix() não é suportada
+       pelo html2canvas (usado no botão "Copiar imagem"), que quebrava
+       silenciosamente ao tentar tirar print dos cards. rgba() é suportado
+       universalmente, então o print e a aparência visual ficam idênticos. */
+    background: var(--kpi-icon-bg, rgba(255, 106, 0, 0.16));
 }
 
 .kpi-card .kpi-title {

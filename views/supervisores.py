@@ -1,12 +1,14 @@
 import streamlit as st
 
 from components.header import secao_titulo
-from components.charts import grafico_ranking
+from components.charts import grafico_ranking, opcoes_grafico
 from components.tabela_analise_p import tabela_analise_p
+from components.tabela_tecnicos import render_tabela_tecnicos
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo, metricas_por_tecnico
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import matriz_analise_p, classificacao_tecnicos
+from components.print_button import area_com_print
 
 
 def render(df, indicadores: Indicadores):
@@ -41,34 +43,38 @@ def render(df, indicadores: Indicadores):
     pu = ind_filtrado.pu()
     projecao = ind_filtrado.projecao()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Supervisores", ranking.shape[0])
-    col2.metric("HC Ativo", hc["HC"])
-    col3.metric("PU Médio", f"{pu['GERAL']:.2f}")
-    col4.metric("Projeção", f"{projecao['GERAL']:,}".replace(",", "."))
+    with area_com_print("supervisores_cards_resumo", nome_arquivo="resumo_supervisores"):
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Supervisores", ranking.shape[0])
+        col2.metric("HC Ativo", hc["HC"])
+        col3.metric("PU Médio", f"{pu['GERAL']:.2f}")
+        col4.metric("Projeção", f"{projecao['GERAL']:,}".replace(",", "."))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     col_graf, col_tab = st.columns([1, 1])
 
     with col_graf:
-        st.plotly_chart(
-            grafico_ranking(ranking, "PU", "Top 15 — Produtividade (PU)"),
-            width='stretch',
-        )
+        with area_com_print("supervisores_grafico_ranking", nome_arquivo="top15_pu_supervisores"):
+            st.plotly_chart(
+                grafico_ranking(ranking, "PU", "Top 15 — Produtividade (PU)"),
+                width='stretch',
+                config=opcoes_grafico("top15_pu_supervisores"),
+            )
 
     with col_tab:
         tabela = ranking.sort_values("PU", ascending=False).copy()
         tabela["Eficácia"] = tabela["Eficácia"] * 100
-        st.dataframe(
-            tabela,
-            width='stretch',
-            hide_index=True,
-            column_config={
-                "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
-                "PU": st.column_config.NumberColumn("PU", format="%.2f"),
-            },
-        )
+        with area_com_print("supervisores_tabela_ranking", nome_arquivo="ranking_supervisores"):
+            st.dataframe(
+                tabela,
+                width='stretch',
+                hide_index=True,
+                column_config={
+                    "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
+                    "PU": st.column_config.NumberColumn("PU", format="%.2f"),
+                },
+            )
 
     st.divider()
 
@@ -99,11 +105,12 @@ def render(df, indicadores: Indicadores):
             qtd = int(linha.iloc[0]["Concluídas"])
             classe = linha.iloc[0]["Classificação"]
 
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Classificação P", classe)
-            c2.metric("Concluídas", qtd)
-            c3.metric("Caixa Total", caixa_tec["TOTAL"])
-            c4.metric("Eficácia", f"{efic_tec['GERAL']:.0%}")
+            with area_com_print("supervisores_cards_tecnico_detalhe", nome_arquivo=f"detalhe_tecnico_{tec_sel}"):
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Classificação P", classe)
+                c2.metric("Concluídas", qtd)
+                c3.metric("Caixa Total", caixa_tec["TOTAL"])
+                c4.metric("Eficácia", f"{efic_tec['GERAL']:.0%}")
 
     elif sup_sel != "Todos":
         secao_titulo(
@@ -120,20 +127,35 @@ def render(df, indicadores: Indicadores):
                 "Eficácia", "PU", "Esteira", "Iniciada", "Projeção", "Cluster",
             ] if c in matriz_tec.columns]
             matriz_tec_fmt = matriz_tec[colunas_exibir].copy()
-            matriz_tec_fmt["Eficácia"] = matriz_tec_fmt["Eficácia"] * 100
-            st.dataframe(
-                matriz_tec_fmt,
-                width='stretch',
-                hide_index=True,
-                column_config={
-                    "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
-                    "PU": st.column_config.NumberColumn("PU", format="%.2f"),
-                },
-            )
-            st.plotly_chart(
-                grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
-                width='stretch',
-            )
+
+            ind_tec_total = Indicadores(df_filtrado)
+            caixa_t = ind_tec_total.caixa_total()
+            concluido_t = ind_tec_total.concluido()
+            eficacia_t = ind_tec_total.eficacia()
+            pu_t = ind_tec_total.pu()
+            esteira_t = ind_tec_total.esteira()
+            iniciada_t = ind_tec_total.iniciada()
+            projecao_t = ind_tec_total.projecao()
+            total_tecnicos = {
+                "Caixa Total": caixa_t["TOTAL"],
+                "Concluído OK": concluido_t["OK"],
+                "Concluído NOK": concluido_t["NOK"],
+                "Eficácia": eficacia_t["GERAL"],
+                "PU": pu_t["GERAL"],
+                "Esteira": esteira_t["TOTAL"],
+                "Iniciada": iniciada_t["TOTAL"],
+                "Projeção": projecao_t["GERAL"],
+            }
+
+            with area_com_print(f"supervisores_matriz_tecnicos_{sup_sel}", nome_arquivo=f"matriz_tecnicos_{sup_sel}"):
+                render_tabela_tecnicos(matriz_tec_fmt, total_tecnicos)
+            st.write("")
+            with area_com_print(f"supervisores_ranking_tecnicos_{sup_sel}", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
+                st.plotly_chart(
+                    grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
+                    width='stretch',
+                    config=opcoes_grafico(f"ranking_tecnicos_pu_{sup_sel}"),
+                )
 
     else:
         secao_titulo(
@@ -141,8 +163,10 @@ def render(df, indicadores: Indicadores):
             "Classificação dos técnicos pela quantidade de atividades concluídas (P0 = 0 concluídas … >P3 = mais de 3). Selecione um Supervisor acima para ver a matriz completa de técnicos.",
         )
         matriz_sup = matriz_analise_p(df_filtrado, coluna_grupo="Supervisor")
-        tabela_analise_p(matriz_sup, "Supervisor", "Produtividade por Supervisor — Técnico (Análise P)")
+        with area_com_print("supervisores_analise_p_supervisor", nome_arquivo="produtividade_por_supervisor"):
+            tabela_analise_p(matriz_sup, "Supervisor", "Produtividade por Supervisor — Técnico (Análise P)")
 
         with st.expander("Ver também agrupado por Coordenador"):
             matriz_coord = matriz_analise_p(df_filtrado, coluna_grupo="Coordenador")
-            tabela_analise_p(matriz_coord, "Coordenador", "Produtividade por Coordenador — Técnico (Análise P)")
+            with area_com_print("supervisores_analise_p_coordenador", nome_arquivo="produtividade_por_coordenador"):
+                tabela_analise_p(matriz_coord, "Coordenador", "Produtividade por Coordenador — Técnico (Análise P)")
