@@ -340,10 +340,10 @@ def grafico_produtividade_diaria(serie_dia: pd.DataFrame) -> go.Figure:
 
 def cabecalho_grafico_combo(titulo: str, itens: list) -> str:
     """
-    Monta um cabeçalho HTML com o título do gráfico à esquerda e uma legenda
-    customizada (quadradinho para barra, tracinho pontilhado para linha) à
-    direita, na mesma linha — usado para os gráficos combo (Eficácia Diária
-    / Produtividade Diária).
+    Monta um cabeçalho HTML com o título do gráfico e a legenda customizada
+    (quadradinho para barra, tracinho pontilhado para linha) logo em
+    seguida, tudo centralizado no topo — usado para os gráficos combo
+    (Eficácia Diária / Produtividade Diária).
 
     Renderizado via st.markdown ANTES do st.plotly_chart, com o gráfico já
     sem título/legenda internos (showlegend=False). Isso evita depender do
@@ -366,13 +366,13 @@ def cabecalho_grafico_combo(titulo: str, itens: list) -> str:
                 f"background:{cor}; border-radius:2px; margin-right:5px; vertical-align:middle;'></span>"
             )
         badges.append(
-            f"<span style='margin-left:16px; font-size:12.5px; color:{config.TEXT_MUTED}; white-space:nowrap;'>"
+            f"<span style='margin-left:14px; font-size:12.5px; color:{config.TEXT_MUTED}; white-space:nowrap;'>"
             f"{swatch}{label}</span>"
         )
 
     return (
-        f"<div style='display:flex; justify-content:space-between; align-items:center; "
-        f"flex-wrap:wrap; margin-bottom:4px;'>"
+        f"<div style='display:flex; justify-content:center; align-items:center; "
+        f"flex-wrap:wrap; gap:2px; margin-bottom:6px;'>"
         f"<h4 style='color:{config.TEXT}; margin:0; font-size:16px; font-weight:700; white-space:nowrap;'>{titulo}</h4>"
         f"<div style='display:flex; align-items:center; flex-wrap:wrap;'>{''.join(badges)}</div>"
         f"</div>"

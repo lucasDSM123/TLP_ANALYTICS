@@ -8,7 +8,7 @@ from components.charts import (
     grafico_eficacia_diaria, grafico_produtividade_diaria, cabecalho_grafico_combo, opcoes_grafico,
 )
 from components.tabelas import tabela_fechamento_diario, tabela_consolidado_grupo, tabela_comparativo_mensal
-from components.print_button import area_com_print
+from components.print_button import area_com_print, sanitizar_chave
 from services.grupos import serie_diaria_por_grupo, resumo_mes_por_grupo, resumo_mes_total
 from services import historico_mensal
 
@@ -166,35 +166,44 @@ def render(df, indicadores):
                         f"FECHAMENTO DIÁRIO — {grupo}", cor_titulo=cor,
                     )
 
-                col_efic, col_prod = st.columns(2)
-                with col_efic:
-                    with area_com_print(f"acumulado_mes_eficacia_{coluna_grupo}_{grupo}",
-                                         nome_arquivo=f"eficacia_diaria_{grupo}"):
-                        st.markdown(
-                            cabecalho_grafico_combo("Eficácia Diária", [
-                                ("Concluída", "#15803D", "barra"),
-                                ("Improdutiva", config.TLP_RED, "barra"),
-                                ("Eficácia %", config.TEXT_MUTED, "linha"),
-                            ]),
-                            unsafe_allow_html=True,
-                        )
-                        st.plotly_chart(
-                            grafico_eficacia_diaria(df_dia_grupo), width='stretch',
-                            key=f"acumulado_mes_eficacia_chart_{coluna_grupo}_{grupo}",
-                            config=opcoes_grafico(f"eficacia_diaria_{grupo}"),
-                        )
-                with col_prod:
-                    with area_com_print(f"acumulado_mes_produtividade_{coluna_grupo}_{grupo}",
-                                         nome_arquivo=f"produtividade_diaria_{grupo}"):
-                        st.markdown(
-                            cabecalho_grafico_combo("Produtividade Diária", [
-                                ("Técnicos", config.TEXT, "barra"),
-                                ("PU", config.TLP_ORANGE, "linha"),
-                            ]),
-                            unsafe_allow_html=True,
-                        )
-                        st.plotly_chart(
-                            grafico_produtividade_diaria(df_dia_grupo), width='stretch',
-                            key=f"acumulado_mes_produtividade_chart_{coluna_grupo}_{grupo}",
-                            config=opcoes_grafico(f"produtividade_diaria_{grupo}"),
-                        )
+                num_dias = len(df_dia_grupo)
+                largura_minima = max(760, num_dias * 65)
+
+                chave_efic = sanitizar_chave(f"acumulado_mes_eficacia_{coluna_grupo}_{grupo}")
+                with area_com_print(f"acumulado_mes_eficacia_{coluna_grupo}_{grupo}",
+                                     nome_arquivo=f"eficacia_diaria_{grupo}"):
+                    st.markdown(
+                        f"<style>.st-key-{chave_efic} [data-testid='stPlotlyChart']"
+                        f"{{min-width:{largura_minima}px;}}</style>"
+                        + cabecalho_grafico_combo("Eficácia Diária", [
+                            ("Concluída", "#15803D", "barra"),
+                            ("Improdutiva", config.TLP_RED, "barra"),
+                            ("Eficácia %", config.TEXT_MUTED, "linha"),
+                        ]),
+                        unsafe_allow_html=True,
+                    )
+                    st.plotly_chart(
+                        grafico_eficacia_diaria(df_dia_grupo), width='stretch',
+                        key=f"acumulado_mes_eficacia_chart_{coluna_grupo}_{grupo}",
+                        config=opcoes_grafico(f"eficacia_diaria_{grupo}"),
+                    )
+
+                st.write("")
+
+                chave_prod = sanitizar_chave(f"acumulado_mes_produtividade_{coluna_grupo}_{grupo}")
+                with area_com_print(f"acumulado_mes_produtividade_{coluna_grupo}_{grupo}",
+                                     nome_arquivo=f"produtividade_diaria_{grupo}"):
+                    st.markdown(
+                        f"<style>.st-key-{chave_prod} [data-testid='stPlotlyChart']"
+                        f"{{min-width:{largura_minima}px;}}</style>"
+                        + cabecalho_grafico_combo("Produtividade Diária", [
+                            ("Técnicos", config.TEXT, "barra"),
+                            ("PU", config.TLP_ORANGE, "linha"),
+                        ]),
+                        unsafe_allow_html=True,
+                    )
+                    st.plotly_chart(
+                        grafico_produtividade_diaria(df_dia_grupo), width='stretch',
+                        key=f"acumulado_mes_produtividade_chart_{coluna_grupo}_{grupo}",
+                        config=opcoes_grafico(f"produtividade_diaria_{grupo}"),
+                    )

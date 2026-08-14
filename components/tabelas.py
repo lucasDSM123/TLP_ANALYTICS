@@ -2,7 +2,11 @@ import pandas as pd
 import streamlit as st
 
 import config
-from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill_total, wrapper_tabela
+from components.estilo_tabela import (
+    CABECALHO_BG, TOTAL_BG, SUBTOTAL_BG, pill_total, wrapper_tabela,
+    sanitizar_id, estilo_expansivel,
+)
+from components.tabela_expansivel import ativar_tabelas_expansiveis
 
 
 def _cor_eficacia(valor: float) -> str:
@@ -112,6 +116,141 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     st.markdown(html, unsafe_allow_html=True)
 
 
+def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
+    """Gera as 12 células de indicadores (HC Ativo .. Proj. PU) para uma
+    linha "normal" (não-Total) da matriz de produção — usado tanto pela
+    linha de Cidade quanto pela linha de subtotal do Cluster na tabela
+    expansível."""
+    eficacia_pct = f"{row['Eficácia']:.0%}"
+    cor_efic = _cor_eficacia(row["Eficácia"])
+    return "".join([
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Esteira']}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>",
+        f"<td><span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span></td>",
+        f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span></td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>",
+        f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>",
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>",
+    ])
+
+
+def _celulas_linha_matriz_total(row: dict) -> str:
+    """Mesmas 12 colunas, no estilo "balão branco" usado na linha de Total."""
+    eficacia_pct = f"{row['Eficácia']:.0%}"
+    media_txt = f"{row['Média Atrib.']:.2f}"
+    pu_txt = f"{row['PU']:.2f}"
+    proj_pu_txt = f"{row['Proj. PU']:.2f}"
+    return "".join([
+        f"<td>{pill_total(row['HC Ativo'])}</td>",
+        f"<td>{pill_total(row['Caixa Tot'])}</td>",
+        f"<td>{pill_total(row['Esteira'])}</td>",
+        f"<td>{pill_total(row['Bucket'])}</td>",
+        f"<td>{pill_total(media_txt)}</td>",
+        f"<td>{pill_total(pu_txt)}</td>",
+        f"<td>{pill_total(row['OK'])}</td>",
+        f"<td>{pill_total(row['NOK'])}</td>",
+        f"<td>{pill_total(row['Iniciada'])}</td>",
+        f"<td>{pill_total(eficacia_pct)}</td>",
+        f"<td>{pill_total(row['Proj.'])}</td>",
+        f"<td>{pill_total(proj_pu_txt)}</td>",
+    ])
+
+
+def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
+                              total: dict = None, id_tabela: str = None,
+                              rotulo_grupo: str = "CLUSTER / CIDADE",
+                              rotulo_clique: str = "Cluster"):
+    """
+    Mesma matriz de produção de `tabela_matriz` (colunas idênticas), só que
+    destrinchada em dois níveis — grupo principal -> subgrupo (ex.: Cluster
+    -> Cidade, ou Coordenador -> Supervisor) —, com o grupo principal como
+    linha "cabeçalho" clicável (seta ▶/▼) que abre/fecha os subgrupos
+    dentro dele. Todos os subgrupos começam fechados.
+
+    `grupos` vem de `services.grupos.matriz_producao_cluster_cidade` (que,
+    apesar do nome, é genérica — funciona com qualquer par de colunas):
+    [{"cluster": str, "cidades": [linha, ...], "subtotal": linha}, ...]
+    `total`, se informado, vira a linha "TOTAL" fixa no rodapé (mesmas
+    chaves de uma linha normal, com "Nome" = "Total").
+    `rotulo_grupo` é o texto do cabeçalho da 1ª coluna (ex.: "CLUSTER /
+    CIDADE" ou "COORDENADOR / SUPERVISOR"). `rotulo_clique` é usado na
+    dica abaixo do título (ex.: "Cluster" ou "Coordenador").
+    """
+    cor_titulo = cor_titulo or config.TLP_ORANGE
+
+    if not grupos:
+        st.markdown(
+            f"<h4 style='color:{cor_titulo};'>{titulo}</h4>"
+            f"<p style='color:{config.TEXT_MUTED};'>Sem dados para os filtros selecionados.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    colunas = [rotulo_grupo, "HC ATIVO", "CAIXA TOT", "ESTEIRA", "BUCKET",
+               "MÉDIA ATRIB.", "PU", "OK", "NOK", "INICIADA", "EFICÁCIA", "PROJ.", "PROJ. PU"]
+
+    id_tabela = sanitizar_id(id_tabela or titulo)
+    ativar_tabelas_expansiveis()
+
+    linhas_html = []
+    for grupo in grupos:
+        classe_grupo = f"{id_tabela}_{sanitizar_id(grupo['cluster'])}"
+        subtotal = grupo["subtotal"]
+
+        cel_nome_cluster = (
+            "<td style='text-align:left; font-weight:800; color:{cor};'>"
+            "<span class='seta-exp' style='display:inline-block; width:14px;'>▶</span> {nome}</td>"
+        ).format(cor=config.TLP_ORANGE, nome=grupo["cluster"])
+        linhas_html.append(
+            f"<tr class='linha-cluster-expansivel' data-alvo='{classe_grupo}' "
+            f"style='background:{config.SURFACE}; cursor:pointer; border-top:2px solid {config.CARD_BORDER};'>"
+            f"{cel_nome_cluster}{_celulas_linha_matriz(subtotal, '800', config.TEXT)}</tr>"
+        )
+
+        for i, cidade in enumerate(grupo["cidades"]):
+            bg = config.CARD if i % 2 == 0 else config.SURFACE
+            cel_nome_cidade = (
+                f"<td style='text-align:left; font-weight:500; font-style:italic; "
+                f"color:{config.TEXT_MUTED}; padding-left:30px;'>{cidade['Nome']}</td>"
+            )
+            linhas_html.append(
+                f"<tr class='{classe_grupo} linha-cidade-expansivel' style='display:none; background:{bg};'>"
+                f"{cel_nome_cidade}{_celulas_linha_matriz(cidade, '500', config.TEXT)}</tr>"
+            )
+
+    linha_total_html = ""
+    if total:
+        cel_nome_total = f"<td style='text-align:left; font-weight:800; color:#FFFFFF;'>{total.get('Nome', 'Total')}</td>"
+        linha_total_html = f"<tr style='{TOTAL_BG}'>{cel_nome_total}{_celulas_linha_matriz_total(total)}</tr>"
+
+    header_html = "".join(
+        f"<th style='text-align:{'left' if c == rotulo_grupo else 'center'};'>{c}</th>"
+        for c in colunas
+    )
+
+    tabela = (
+        f"<table style='width:100%; min-width:1200px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
+        f"</table>"
+    )
+
+    html = (
+        f"<h4 style='color:{cor_titulo}; margin-bottom:6px;'>{titulo}</h4>"
+        f"<p style='color:{config.TEXT_MUTED}; font-size:12.5px; margin:-4px 0 8px 0;'>"
+        f"Clique num {rotulo_clique} para ver os detalhes</p>"
+        f"{estilo_expansivel()}"
+        f"{wrapper_tabela(tabela)}"
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
+
+
 def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str = None):
     """
     Tabela de fechamento diário (réplica do PAINEL do Excel/Power BI):
@@ -189,7 +328,7 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
 
     html = (
         f"<h4 style='color:{cor_titulo}; margin-bottom:6px;'>{titulo}</h4>"
-        f"{wrapper_tabela(tabela)}"
+        f"{wrapper_tabela(tabela, altura_max=480)}"
     )
 
     st.markdown(html, unsafe_allow_html=True)

@@ -410,3 +410,91 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
     linhas.append(_linha(df_lado, sub_batt_total, "Total"))
 
     return pd.DataFrame(linhas)
+
+
+def matriz_producao_cluster_cidade(
+    df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster", coluna_subgrupo: str = "Cidade"
+) -> list[dict]:
+    """
+    Mesma matriz de produção de `matriz_producao` (colunas e regras de
+    cálculo idênticas — segmentação por 'Lado' e 'BA-TT-Real'), mas
+    destrinchada em dois níveis: Cluster -> Cidade, no formato usado pela
+    tabela expansível (mesmo padrão de `services.coordenador_tabela`).
+
+    Retorna uma lista de grupos:
+    [{"cluster": str, "cidades": [linha, ...], "subtotal": linha}, ...]
+    onde cada "linha" tem as mesmas chaves de `matriz_producao`
+    (HC Ativo, Caixa Tot, Esteira, Bucket, Média Atrib., PU, OK, NOK,
+    Iniciada, Eficácia, Proj., Proj. PU), com "Cluster" trocado por "Nome"
+    (nome da cidade, ou do próprio cluster no subtotal).
+    """
+    if df.empty or "Lado" not in df.columns or "BA-TT-Real" not in df.columns:
+        return []
+
+    df_lado = df[df["Lado"] == lado]
+    if df_lado.empty or coluna_grupo not in df_lado.columns or coluna_subgrupo not in df_lado.columns:
+        return []
+
+    def _linha(sub_lado: pd.DataFrame, sub_batt: pd.DataFrame, nome: str) -> dict:
+        ind_lado = Indicadores(sub_lado)
+        caixa = ind_lado.caixa_total()
+        esteira = ind_lado.esteira()
+        bucket = ind_lado.bucket()
+        concluido = ind_lado.concluido()
+        iniciada = ind_lado.iniciada()
+        projecao = ind_lado.projecao()
+
+        hc_ativo = ind_lado.hc_lado(lado)
+        pu = ind_lado.pu_lado(lado)
+
+        if not sub_batt.empty:
+            ind_batt = Indicadores(sub_batt)
+            media = ind_batt.media_atribuicao_batt(lado)
+            eficacia = ind_batt.eficacia_batt(lado)
+            projecao_pu = ind_batt.projecao_pu_batt(lado)
+        else:
+            media = 0.0
+            eficacia = 1.0
+            projecao_pu = 0.0
+
+        return {
+            "Nome": nome,
+            "HC Ativo": hc_ativo,
+            "Caixa Tot": caixa["TOTAL"],
+            "Esteira": esteira["TOTAL"],
+            "Bucket": bucket["TOTAL"],
+            "Média Atrib.": media,
+            "PU": pu,
+            "OK": concluido["OK"],
+            "NOK": concluido["NOK"],
+            "Iniciada": iniciada["TOTAL"],
+            "Eficácia": eficacia,
+            "Proj.": projecao["GERAL"],
+            "Proj. PU": projecao_pu,
+        }
+
+    grupos = []
+    for cluster in sorted(df_lado[coluna_grupo].dropna().unique()):
+        sub_cluster_lado = df_lado[df_lado[coluna_grupo] == cluster]
+        if sub_cluster_lado.empty:
+            continue
+
+        cidades = []
+        for cidade in sorted(sub_cluster_lado[coluna_subgrupo].dropna().unique()):
+            sub_lado = sub_cluster_lado[sub_cluster_lado[coluna_subgrupo] == cidade]
+            if sub_lado.empty:
+                continue
+            sub_batt = df[
+                (df["BA-TT-Real"] == lado) & (df[coluna_grupo] == cluster) & (df[coluna_subgrupo] == cidade)
+            ]
+            cidades.append(_linha(sub_lado, sub_batt, cidade))
+
+        if not cidades:
+            continue
+
+        sub_batt_cluster = df[(df["BA-TT-Real"] == lado) & (df[coluna_grupo] == cluster)]
+        subtotal = _linha(sub_cluster_lado, sub_batt_cluster, cluster)
+
+        grupos.append({"cluster": cluster, "cidades": cidades, "subtotal": subtotal})
+
+    return grupos

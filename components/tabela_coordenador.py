@@ -142,7 +142,7 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
         linha_total_html = f"<tr style='{TOTAL_BG}'>{_celula_total_geral(total)}</tr>"
 
     tabela = (
-        f"<table style='width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
+        f"<table style='width:100%; min-width:1700px; table-layout:auto; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
         f"<thead>"
         f"<tr style='{CABECALHO_BG}'>{linha_header_1}</tr>"
         f"<tr style='{CABECALHO_BG}'>{linha_header_2}</tr>"

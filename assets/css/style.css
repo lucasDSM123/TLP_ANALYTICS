@@ -481,6 +481,32 @@ hr {
     gap: 0.5rem;
 }
 
+/* ================= GRÁFICOS DIÁRIOS COM ROLAGEM HORIZONTAL =================
+   "Eficácia Diária" e "Produtividade Diária" (aba Acumulado Mês) ganham
+   uma barra a mais por dia ao longo do mês. Em vez de espremer tudo pra
+   caber na largura da tela, o gráfico mantém uma largura mínima por dia
+   (definida em Python via fig.update_layout(width=...), sem 'stretch')
+   e a área ganha rolagem horizontal própria — mesmo padrão de seletor
+   ([class*="st-key-..."]) já usado pelo botão "Copiar imagem". */
+[class*="st-key-acumulado_mes_eficacia_"],
+[class*="st-key-acumulado_mes_produtividade_"] {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+/* ================= TABELAS COM ROLAGEM (matrizes longas) =================
+   Usado nas tabelas que podem crescer bastante (fechamento diário do mês —
+   ganha uma linha nova por dia —, matrizes expansíveis com muitos grupos
+   etc.): a moldura ganha uma altura máxima com rolagem própria, e o
+   cabeçalho em degradê da marca fica fixo (sticky) no topo enquanto o
+   corpo rola por baixo dele, em vez de esticar a página inteira. */
+.tlp-tabela-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(120deg, var(--tlp-red) 0%, var(--tlp-orange) 55%, var(--tlp-gold) 100%);
+}
+
 /* ================= BADGE ONLINE ================= */
 .tlp-status-dot {
     display: inline-block;

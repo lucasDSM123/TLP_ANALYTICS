@@ -81,6 +81,105 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
             doc.body.removeChild(link);
         }}
 
+        function removerCortes(raiz) {{
+            // Qualquer elemento com "overflow" diferente de visible (ex.: o
+            // cartão da tabela, que tem cantos arredondados + rolagem
+            // horizontal) corta uns pixels do conteúdo bem na borda —
+            // normalmente imperceptível na tela, mas fica visível na
+            // captura (cabeçalho cortado em cima, colunas cortadas do
+            // lado). Aqui a gente neutraliza isso na cópia (garantindo
+            // também que a largura acompanhe o conteúdo quando havia
+            // rolagem de verdade).
+            var candidatos = [raiz].concat(Array.prototype.slice.call(raiz.querySelectorAll('*')));
+            candidatos.forEach(function(el) {{
+                var estilo = window.getComputedStyle(el);
+                if (estilo.overflow !== 'visible' || estilo.overflowX !== 'visible' || estilo.overflowY !== 'visible') {{
+                    el.style.overflow = 'visible';
+                    el.style.overflowX = 'visible';
+                    el.style.overflowY = 'visible';
+                }}
+                if (el.scrollWidth > el.clientWidth + 1) {{
+                    el.style.maxWidth = 'none';
+                    el.style.width = el.scrollWidth + 'px';
+                }}
+            }});
+        }}
+
+        function colSpanDe(el) {{
+            var v = parseInt(el.getAttribute('colspan') || '1', 10);
+            return (!v || v < 1) ? 1 : v;
+        }}
+
+        function colunaInicial(celula) {{
+            // Soma o colspan de todos os irmãos anteriores na mesma linha
+            // pra saber em que "coluna visual" essa célula começa — não dá
+            // pra usar só a posição no DOM porque células com colspan (ex.:
+            // "CONCLUÍDA", que ocupa 3 colunas) desalinham a contagem.
+            var col = 0;
+            var irmao = celula.previousElementSibling;
+            while (irmao) {{
+                col += colSpanDe(irmao);
+                irmao = irmao.previousElementSibling;
+            }}
+            return col;
+        }}
+
+        function indiceParaColuna(linha, colunaAlvo) {{
+            // Acha em que índice de filho inserir um novo elemento pra ele
+            // cair exatamente na coluna visual "colunaAlvo" dentro de
+            // "linha", considerando o colspan de quem já está lá.
+            var col = 0;
+            var filhos = linha.children;
+            for (var i = 0; i < filhos.length; i++) {{
+                if (col >= colunaAlvo) return i;
+                col += colSpanDe(filhos[i]);
+            }}
+            return filhos.length;
+        }}
+
+        function desfazerRowspan(raiz, manterTextoClonado) {{
+            // html2canvas tem um bug conhecido com células <td>/<th> que
+            // usam rowspan (ex.: o nome do Coordenador mesclado em várias
+            // linhas, ou os cabeçalhos que "olham" pra duas linhas) — o
+            // texto às vezes some, fica mal posicionado ou sobrepõe a
+            // linha seguinte. Solução: duplicar a célula em cada linha que
+            // ela cobria e remover o rowspan — a tabela fica "desmesclada"
+            // pro html2canvas (visualmente idêntica, já que as bordas
+            // continuam as mesmas — só o agrupamento de células muda por
+            // baixo). Leva em conta colspan pra não desalinhar colunas
+            // (ex.: o cabeçalho "CONCLUÍDA", que ocupa 3 colunas).
+            //
+            // `manterTextoClonado`: no corpo da tabela queremos repetir o
+            // texto em cada linha (ex.: nome do Coordenador em toda linha
+            // de Supervisor — combinado com desfazerRowspan(tbody, true)).
+            // No cabeçalho, o rótulo já aparece na primeira linha — a
+            // célula clonada na segunda linha só existe pra manter a
+            // coluna alinhada, então o texto dela fica vazio (senão o
+            // rótulo aparece duplicado, uma vez em cada linha do
+            // cabeçalho).
+            var celulas = raiz.querySelectorAll('td[rowspan], th[rowspan]');
+            celulas.forEach(function(celula) {{
+                var rowspan = parseInt(celula.getAttribute('rowspan'), 10);
+                if (!rowspan || rowspan <= 1) return;
+                var linha = celula.parentElement;
+                var colunaAlvo = colunaInicial(celula);
+                var linhaSeguinte = linha;
+                for (var i = 1; i < rowspan; i++) {{
+                    linhaSeguinte = linhaSeguinte.nextElementSibling;
+                    if (!linhaSeguinte) break;
+                    var clone = celula.cloneNode(true);
+                    clone.removeAttribute('rowspan');
+                    if (!manterTextoClonado) {{
+                        clone.textContent = '';
+                    }}
+                    var indiceInsercao = indiceParaColuna(linhaSeguinte, colunaAlvo);
+                    var referencia = linhaSeguinte.children[indiceInsercao] || null;
+                    linhaSeguinte.insertBefore(clone, referencia);
+                }}
+                celula.removeAttribute('rowspan');
+            }});
+        }}
+
         var botao = document.getElementById('{id_botao}');
         var status = document.getElementById('{id_botao}-status');
 
@@ -93,7 +192,59 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                     status.textContent = 'Não encontrei essa área na página.';
                     return;
                 }}
-                html2canvas(alvo, {{ backgroundColor: '#FFFFFF', scale: 2, useCORS: true }}).then(function(canvas) {{
+
+                // Fotografa uma CÓPIA isolada fora da tela (não a área
+                // visível de verdade). Assim: (1) não precisa rolar a
+                // página nem se preocupar com a posição de rolagem do
+                // usuário, e (2) dá pra "desmesclar" as células com
+                // rowspan sem alterar a tabela que o usuário está vendo.
+                var wrapper = doc.createElement('div');
+                wrapper.style.position = 'absolute';
+                wrapper.style.top = '0';
+                wrapper.style.left = '-99999px';
+                wrapper.style.background = '#FFFFFF';
+                var copia = alvo.cloneNode(true);
+                // Margem de segurança na PRÓPRIA cópia (não no wrapper —
+                // como o html2canvas fotografa "copia" diretamente, um
+                // padding no wrapper não tem efeito nenhum na captura).
+                copia.style.padding = '6px';
+                copia.style.background = '#FFFFFF';
+                copia.style.boxSizing = 'border-box';
+                wrapper.appendChild(copia);
+                doc.body.appendChild(wrapper);
+
+                removerCortes(copia);
+                var cabecalho = copia.querySelector('thead');
+                if (cabecalho) {{
+                    // Cabeçalho: mantém a célula pra não desalinhar as
+                    // colunas, mas sem duplicar o texto do rótulo.
+                    desfazerRowspan(cabecalho, false);
+                }}
+                var corpoTabela = copia.querySelector('tbody');
+                if (corpoTabela) {{
+                    // Corpo: repete o texto (ex.: nome do Coordenador em
+                    // cada linha de Supervisor) — fica natural.
+                    desfazerRowspan(corpoTabela, true);
+                }}
+
+                // Espera o navegador terminar de aplicar todos os estilos e
+                // recalcular o layout da cópia recém-inserida antes de
+                // fotografar — sem isso, o html2canvas às vezes mede a
+                // altura/posição com o layout ainda "cru", cortando uns
+                // pixels do topo da imagem.
+                requestAnimationFrame(function() {{
+                    requestAnimationFrame(function() {{
+                        capturarCopia();
+                    }});
+                }});
+
+                function capturarCopia() {{
+                html2canvas(copia, {{
+                    backgroundColor: '#FFFFFF',
+                    scale: 2,
+                    useCORS: true,
+                }}).then(function(canvas) {{
+                    doc.body.removeChild(wrapper);
                     canvas.toBlob(function(blob) {{
                         if (!blob) {{
                             status.textContent = 'Erro ao gerar a imagem.';
@@ -115,8 +266,10 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                         }}
                     }});
                 }}).catch(function() {{
+                    doc.body.removeChild(wrapper);
                     status.textContent = 'Erro ao gerar a imagem.';
                 }});
+                }}
             }});
         }});
     }})();

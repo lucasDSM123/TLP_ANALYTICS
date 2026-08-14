@@ -1,14 +1,17 @@
 import streamlit as st
 
+import config
+from components.cards import card
 from components.header import secao_titulo
 from components.charts import grafico_media_atribuida_pu, grafico_ranking, opcoes_grafico
-from components.tabela_analise_p import tabela_analise_p_cluster
+from components.tabela_analise_p import tabela_analise_p_coordenador_supervisor_tecnico
 from components.tabela_coordenador import render_tabela_coordenadores
+from components.tabelas import tabela_matriz_expansivel
 from services.indicadores import Indicadores
-from services.grupos import metricas_por_grupo, metricas_por_tecnico
+from services.grupos import metricas_por_grupo, metricas_por_tecnico, matriz_producao, matriz_producao_cluster_cidade
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
-from services.analise_p import classificacao_tecnicos
+from services.analise_p import classificacao_tecnicos, matriz_analise_p_coordenador_supervisor_tecnico
 from components.print_button import area_com_print
 
 
@@ -48,10 +51,14 @@ def render(df, indicadores: Indicadores):
 
     with area_com_print("gestores_cards_coordenador", nome_arquivo="resumo_coordenadores"):
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Coordenadores", ranking_coord.shape[0])
-        col2.metric("HC Ativo Total", hc["HC"])
-        col3.metric("Caixa Total", f"{caixa['TOTAL']:,}".replace(",", "."))
-        col4.metric("Eficácia Geral", f"{eficacia['GERAL']:.0%}")
+        with col1:
+            card("Coordenadores", ranking_coord.shape[0], config.TLP_ORANGE, icon="🧑\u200d💼")
+        with col2:
+            card("HC Ativo Total", hc["HC"], "#7B8CDE")
+        with col3:
+            card("Caixa Total", f"{caixa['TOTAL']:,}".replace(",", "."), "#00C9A7")
+        with col4:
+            card("Eficácia Geral", f"{eficacia['GERAL']:.0%}", config.TLP_RED)
 
     # ====== RESUMO — NÍVEL SUPERVISOR (respeitando a segmentação acima) ======
     ranking_sup = metricas_por_grupo(df_filtrado, "Supervisor")
@@ -65,30 +72,22 @@ def render(df, indicadores: Indicadores):
         st.caption("Considerando a segmentação Coordenador → Supervisor → Técnico selecionada acima")
         with area_com_print("gestores_cards_supervisor", nome_arquivo="resumo_supervisores_filtro"):
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Supervisores", ranking_sup.shape[0])
-            col2.metric("HC Ativo (filtro)", hc_f["HC"])
-            col3.metric("PU Médio (filtro)", f"{pu_f['GERAL']:.2f}")
-            col4.metric("Projeção (filtro)", f"{projecao_f['GERAL']:,}".replace(",", "."))
+            with col1:
+                card("Supervisores", ranking_sup.shape[0], config.TLP_GOLD)
+            with col2:
+                card("HC Ativo (filtro)", hc_f["HC"], "#7B8CDE")
+            with col3:
+                card("PU Médio (filtro)", f"{pu_f['GERAL']:.2f}", "#00C9A7")
+            with col4:
+                card("Projeção (filtro)", f"{projecao_f['GERAL']:,}".replace(",", "."), "#FF5C5C")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ====== ANÁLISE P — COORDENADOR, depois SUPERVISOR ======
-    secao_titulo("Análise P por Coordenador", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6)")
-    contagem_coord, percentual_coord, resumo_coord = indicadores.analise_p_cluster(coluna_grupo="Coordenador")
-    with area_com_print("gestores_analise_p_coordenador", nome_arquivo="analise_p_coordenador"):
-        tabela_analise_p_cluster(contagem_coord, percentual_coord, resumo_coord, coluna_grupo="Coordenador")
+    # ====== ANÁLISE P — agora só a versão expansível (Coordenador -> Supervisor -> Técnico), mais abaixo ======
+    # Usa ind_filtrado (já respeita Coordenador/Supervisor/Técnico) pra bater
+    # com a mesma segmentação da tabela expansível mais abaixo.
+    _, _, resumo_coord = ind_filtrado.analise_p_cluster(coluna_grupo="Coordenador")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    secao_titulo("Análise P por Supervisor", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6)")
-    if df_filtrado.empty:
-        st.info("Sem dados de supervisor para os filtros atuais.")
-    else:
-        contagem_sup, percentual_sup, resumo_sup = ind_filtrado.analise_p_cluster(coluna_grupo="Supervisor")
-        with area_com_print("gestores_analise_p_supervisor", nome_arquivo="analise_p_supervisor"):
-            tabela_analise_p_cluster(contagem_sup, percentual_sup, resumo_sup, coluna_grupo="Supervisor")
-
-    st.divider()
 
     secao_titulo("Média Atribuída x PU", "Comparativo por coordenador")
     with area_com_print("gestores_grafico_atribuicao_pu", nome_arquivo="atribuicao_pu_por_coordenador"):
@@ -99,13 +98,74 @@ def render(df, indicadores: Indicadores):
 
     st.divider()
 
-    # ====== PRODUÇÃO POR COORDENADOR, seguida da MATRIZ DE TÉCNICOS ======
+    # ====== PRODUÇÃO POR COORDENADOR / SUPERVISOR ======
+    # Respeita a segmentação Coordenador → Supervisor → Técnico selecionada
+    # acima (df_filtrado) — antes essas tabelas ficavam sempre com a base
+    # inteira, então selecionar um Coordenador não tinha efeito nelas.
     secao_titulo(
         "Produção por Coordenador",
-        "Coordenador → Supervisor, com subtotal por cluster/região (Meta = HC Ativo × 3)",
+        "Visão consolidada (BA + TT) e, logo abaixo, o detalhamento expansível por fila",
     )
+
+    # --- Matriz consolidada (BA + TT juntos, sempre expandida, com
+    # subtotal por cluster/região — igual ao formato que você já usava) ---
     with area_com_print("gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador"):
-        render_tabela_coordenadores(tabela_coordenadores(df), total_geral(df))
+        render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- Detalhamento por fila (BA / TT), expansível por Coordenador -> Supervisor ---
+    def _linha_total_producao(df_matriz):
+        """Extrai a linha 'Total' da matriz flat (matriz_producao) como
+        dict pronto pra tabela expansível (troca a chave 'Cluster' —
+        nome fixo da coluna de rótulo em matriz_producao, mesmo quando
+        agrupado por Coordenador — por 'Nome')."""
+        if df_matriz.empty:
+            return None
+        linha = df_matriz[df_matriz["Cluster"] == "Total"]
+        if linha.empty:
+            return None
+        total = linha.iloc[0].to_dict()
+        total["Nome"] = total.pop("Cluster")
+        return total
+
+    matriz_coord_ba = matriz_producao(df_filtrado, lado="BA", coluna_grupo="Coordenador")
+    grupos_coord_ba = matriz_producao_cluster_cidade(
+        df_filtrado, lado="BA", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
+    )
+    with area_com_print("gestores_matriz_producao_ba", nome_arquivo="producao_ba_por_coordenador"):
+        tabela_matriz_expansivel(
+            grupos_coord_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
+            total=_linha_total_producao(matriz_coord_ba), id_tabela="gestores_producao_ba",
+            rotulo_grupo="COORDENADOR / SUPERVISOR", rotulo_clique="Coordenador",
+        )
+
+    st.write("")
+
+    matriz_coord_tt = matriz_producao(df_filtrado, lado="TT", coluna_grupo="Coordenador")
+    grupos_coord_tt = matriz_producao_cluster_cidade(
+        df_filtrado, lado="TT", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
+    )
+    with area_com_print("gestores_matriz_producao_tt", nome_arquivo="producao_tt_por_coordenador"):
+        tabela_matriz_expansivel(
+            grupos_coord_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
+            total=_linha_total_producao(matriz_coord_tt), id_tabela="gestores_producao_tt",
+            rotulo_grupo="COORDENADOR / SUPERVISOR", rotulo_clique="Coordenador",
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ====== ANÁLISE P — COORDENADOR -> SUPERVISOR -> TÉCNICO (expansível) ======
+    secao_titulo(
+        "Análise P por Coordenador / Supervisor / Técnico",
+        "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6), com quebra até o nível de técnico",
+    )
+    grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_filtrado)
+    with area_com_print("gestores_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico"):
+        tabela_analise_p_coordenador_supervisor_tecnico(
+            grupos_analise_p_cst, resumo=resumo_coord,
+            id_tabela="gestores_analise_p_cst",
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -152,10 +212,14 @@ def render(df, indicadores: Indicadores):
 
             with area_com_print("gestores_cards_tecnico_detalhe", nome_arquivo=f"detalhe_tecnico_{tec_sel}"):
                 c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Classificação P", classe)
-                c2.metric("Concluídas", qtd)
-                c3.metric("Caixa Total", caixa_tec["TOTAL"])
-                c4.metric("Eficácia", f"{efic_tec['GERAL']:.0%}")
+                with c1:
+                    card("Classificação P", classe, config.TLP_GOLD)
+                with c2:
+                    card("Concluídas", qtd, "#00C9A7")
+                with c3:
+                    card("Caixa Total", caixa_tec["TOTAL"], "#7B8CDE")
+                with c4:
+                    card("Eficácia", f"{efic_tec['GERAL']:.0%}", config.TLP_RED)
 
     elif sup_sel != "Todos":
         secao_titulo(

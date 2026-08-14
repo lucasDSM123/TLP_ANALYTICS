@@ -3,13 +3,14 @@ import streamlit as st
 from components.cards import card
 from components.header import secao_titulo
 from components.charts import grafico_status_pizza, grafico_comparativo_ba_tt, grafico_pareto_causa, opcoes_grafico
-from components.tabelas import tabela_matriz
-from components.tabela_analise_p import tabela_analise_p_cluster
+from components.tabelas import tabela_matriz_expansivel
+from components.tabela_analise_p import tabela_analise_p_cluster_cidade
 from components.analise_indicador import render_analise_indicador
 from components.seletor_indicador import seletor_indicador_topo
 from components.print_button import area_com_print
 from services.indicadores import Indicadores
-from services.grupos import status_counts, matriz_producao
+from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade
+from services.analise_p import matriz_analise_p_cluster_cidade
 import config
 
 
@@ -93,18 +94,39 @@ def render(df, indicadores: Indicadores):
 
     st.divider()
 
-    # ====== MATRIZES DE PRODUÇÃO POR CLUSTER (BA / TT) ======
-    secao_titulo("Produção por Cluster", "Detalhamento por cluster — filas BA e TT")
+    # ====== MATRIZES DE PRODUÇÃO POR CLUSTER / CIDADE (BA / TT) ======
+    secao_titulo("Produção por Cluster", "Detalhamento por cluster e cidade — filas BA e TT")
+
+    def _linha_total(df_matriz):
+        """Extrai a linha 'Total' da matriz flat (matriz_producao) como
+        dict pronto pra tabela expansível (troca a chave 'Cluster' por
+        'Nome')."""
+        if df_matriz.empty:
+            return None
+        linha = df_matriz[df_matriz["Cluster"] == "Total"]
+        if linha.empty:
+            return None
+        total = linha.iloc[0].to_dict()
+        total["Nome"] = total.pop("Cluster")
+        return total
 
     matriz_ba = matriz_producao(df, lado="BA")
+    grupos_ba = matriz_producao_cluster_cidade(df, lado="BA")
     with area_com_print("dashboard_matriz_ba", nome_arquivo="producao_ba"):
-        tabela_matriz(matriz_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7")
+        tabela_matriz_expansivel(
+            grupos_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
+            total=_linha_total(matriz_ba), id_tabela="producao_ba",
+        )
 
     st.write("")
 
     matriz_tt = matriz_producao(df, lado="TT")
+    grupos_tt = matriz_producao_cluster_cidade(df, lado="TT")
     with area_com_print("dashboard_matriz_tt", nome_arquivo="producao_tt"):
-        tabela_matriz(matriz_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE)
+        tabela_matriz_expansivel(
+            grupos_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
+            total=_linha_total(matriz_tt), id_tabela="producao_tt",
+        )
 
     st.divider()
 
@@ -115,10 +137,30 @@ def render(df, indicadores: Indicadores):
         st.plotly_chart(grafico_status_pizza(status_counts(df)), width='stretch', config=opcoes_grafico("status_geral"))
 
     st.write("")
-    secao_titulo("Análise P por Cluster", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6)")
+    secao_titulo("Análise P por Cluster", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6), com quebra por cidade")
     contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
+    grupos_analise_p = matriz_analise_p_cluster_cidade(df)
+
+    def _linha_total_p(df_resumo, chave_grupo="Cluster"):
+        """Extrai a linha 'Total Geral' de contagem_cluster/percentual_cluster
+        como dict pronto pra tabela expansível (troca a chave do
+        agrupamento por 'Nome')."""
+        if df_resumo.empty:
+            return None
+        linha = df_resumo[df_resumo[chave_grupo] == "Total Geral"]
+        if linha.empty:
+            return None
+        total = linha.iloc[0].to_dict()
+        total["Nome"] = total.pop(chave_grupo)
+        return total
+
     with area_com_print("dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster"):
-        tabela_analise_p_cluster(contagem_cluster, percentual_cluster, resumo_cluster)
+        tabela_analise_p_cluster_cidade(
+            grupos_analise_p, resumo=resumo_cluster,
+            total_contagem=_linha_total_p(contagem_cluster),
+            total_percentual=_linha_total_p(percentual_cluster),
+            id_tabela="dashboard_analise_p",
+        )
 
     secao_titulo("Pareto de Pendências por Causa", "Atividades não concluídas agrupadas por causa — BA vs TT")
     with area_com_print("dashboard_grafico_pareto", nome_arquivo="pareto_pendencias"):

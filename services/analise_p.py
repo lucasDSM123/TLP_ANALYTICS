@@ -53,7 +53,7 @@ def classificacao_tecnicos(df: pd.DataFrame, coluna_tecnico: str = "Técnico") -
     if concl.empty:
         return pd.DataFrame()
 
-    colunas_extra = [c for c in ["Coordenador", "Supervisor", "Cluster", "Lado"] if c in df.columns]
+    colunas_extra = [c for c in ["Coordenador", "Supervisor", "Cluster", "Cidade", "Lado"] if c in df.columns]
     mapa = (
         df.dropna(subset=[coluna_tecnico])
         .drop_duplicates(subset=[coluna_tecnico])
@@ -119,7 +119,7 @@ def classificacao_tecnicos_detalhada(df: pd.DataFrame, coluna_tecnico: str = "T�
     if concl.empty:
         return pd.DataFrame()
 
-    colunas_extra = [c for c in ["Coordenador", "Supervisor", "Cluster", "Lado"] if c in df.columns]
+    colunas_extra = [c for c in ["Coordenador", "Supervisor", "Cluster", "Cidade", "Lado"] if c in df.columns]
     mapa = (
         df.dropna(subset=[coluna_tecnico])
         .drop_duplicates(subset=[coluna_tecnico])
@@ -167,3 +167,123 @@ def matriz_analise_p_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster", co
     percentual.index.name = coluna_grupo
 
     return contagem.reset_index(), percentual.reset_index()
+
+
+def matriz_analise_p_cluster_cidade(
+    df: pd.DataFrame, coluna_grupo: str = "Cluster", coluna_subgrupo: str = "Cidade", coluna_tecnico: str = "Técnico"
+) -> list[dict]:
+    """
+    Mesma Análise P detalhada (P0..P5/P≥6) de `matriz_analise_p_cluster`,
+    mas destrinchada em dois níveis: Cluster -> Cidade, no formato usado
+    pela tabela expansível (mesmo padrão de `services.coordenador_tabela`
+    e `services.grupos.matriz_producao_cluster_cidade`).
+
+    Retorna uma lista de grupos:
+    [{"cluster": str, "cidades": [linha, ...], "subtotal": linha}, ...]
+    onde cada "linha" é um dict com "Nome" + uma chave por faixa
+    (P0..P5/P≥6) já como contagem (int) e uma chave "TOTAL" com a soma —
+    o percentual de cada faixa é calculado na hora de renderizar (valor /
+    TOTAL da própria linha).
+    """
+    tabela = classificacao_tecnicos_detalhada(df, coluna_tecnico)
+    if tabela.empty or coluna_grupo not in tabela.columns or coluna_subgrupo not in tabela.columns:
+        return []
+
+    tabela = tabela.dropna(subset=[coluna_grupo, coluna_subgrupo])
+    if tabela.empty:
+        return []
+
+    def _linha(sub: pd.DataFrame, nome: str) -> dict:
+        contagens = sub["Classificação"].value_counts()
+        linha = {"Nome": nome}
+        for faixa in FAIXAS_P_DETALHADO:
+            linha[faixa] = int(contagens.get(faixa, 0))
+        linha["TOTAL"] = int(sum(linha[f] for f in FAIXAS_P_DETALHADO))
+        return linha
+
+    grupos = []
+    for cluster in sorted(tabela[coluna_grupo].dropna().unique()):
+        sub_cluster = tabela[tabela[coluna_grupo] == cluster]
+        if sub_cluster.empty:
+            continue
+
+        cidades = []
+        for cidade in sorted(sub_cluster[coluna_subgrupo].dropna().unique()):
+            sub_cidade = sub_cluster[sub_cluster[coluna_subgrupo] == cidade]
+            if sub_cidade.empty:
+                continue
+            cidades.append(_linha(sub_cidade, cidade))
+
+        if not cidades:
+            continue
+
+        subtotal = _linha(sub_cluster, cluster)
+        grupos.append({"cluster": cluster, "cidades": cidades, "subtotal": subtotal})
+
+    return grupos
+
+
+def matriz_analise_p_coordenador_supervisor_tecnico(
+    df: pd.DataFrame, coluna_nivel1: str = "Coordenador", coluna_nivel2: str = "Supervisor",
+    coluna_tecnico: str = "Técnico",
+) -> list[dict]:
+    """
+    Mesma Análise P detalhada (P0..P5/P≥6) de `matriz_analise_p_cluster`,
+    mas destrinchada em TRÊS níveis: Coordenador -> Supervisor -> Técnico
+    (o Técnico é o nível folha — cada um aparece com "1" na sua própria
+    faixa e "0" nas demais, já que cada técnico tem só uma classificação).
+
+    Retorna uma lista de grupos:
+    [{"nome": coordenador, "subtotal": linha, "supervisores": [
+        {"nome": supervisor, "subtotal": linha, "tecnicos": [linha, ...]},
+        ...
+    ]}, ...]
+    onde cada "linha" é um dict com "Nome" + uma chave por faixa
+    (P0..P5/P≥6, já como contagem) e uma chave "TOTAL" com a soma.
+    """
+    tabela = classificacao_tecnicos_detalhada(df, coluna_tecnico)
+    if tabela.empty or coluna_nivel1 not in tabela.columns or coluna_nivel2 not in tabela.columns:
+        return []
+
+    tabela = tabela.dropna(subset=[coluna_nivel1, coluna_nivel2])
+    if tabela.empty:
+        return []
+
+    def _linha(sub: pd.DataFrame, nome: str) -> dict:
+        contagens = sub["Classificação"].value_counts()
+        linha = {"Nome": nome}
+        for faixa in FAIXAS_P_DETALHADO:
+            linha[faixa] = int(contagens.get(faixa, 0))
+        linha["TOTAL"] = int(sum(linha[f] for f in FAIXAS_P_DETALHADO))
+        return linha
+
+    grupos = []
+    for coord in sorted(tabela[coluna_nivel1].dropna().unique()):
+        sub_coord = tabela[tabela[coluna_nivel1] == coord]
+        if sub_coord.empty:
+            continue
+
+        supervisores = []
+        for sup in sorted(sub_coord[coluna_nivel2].dropna().unique()):
+            sub_sup = sub_coord[sub_coord[coluna_nivel2] == sup]
+            if sub_sup.empty:
+                continue
+
+            tecnicos = []
+            for _, row in sub_sup.sort_values(coluna_tecnico).iterrows():
+                linha_tec = {"Nome": row[coluna_tecnico]}
+                for faixa in FAIXAS_P_DETALHADO:
+                    linha_tec[faixa] = 1 if row["Classificação"] == faixa else 0
+                linha_tec["TOTAL"] = 1
+                tecnicos.append(linha_tec)
+
+            subtotal_sup = _linha(sub_sup, sup)
+            supervisores.append({"nome": sup, "subtotal": subtotal_sup, "tecnicos": tecnicos})
+
+        if not supervisores:
+            continue
+
+        subtotal_coord = _linha(sub_coord, coord)
+        grupos.append({"nome": coord, "subtotal": subtotal_coord, "supervisores": supervisores})
+
+    return grupos
