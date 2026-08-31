@@ -1,0 +1,84 @@
+diff --git a/views/dashboard.py b/views/dashboard.py
+index de40b91..3443479 100644
+--- a/views/dashboard.py
++++ b/views/dashboard.py
+@@ -31,7 +31,19 @@ def render(df, indicadores: Indicadores):
+     # ====== INDICADORES PRINCIPAIS ======
+     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
+ 
+-    with area_com_print("dashboard_cards_principais", nome_arquivo="indicadores_principais"):
++    # Legenda automática (texto que acompanha a imagem ao copiar): usa o(s)
++    # Estado(s)/Data(s) marcados nos filtros do topo — "TODOS" / "TODAS AS
++    # DATAS" quando nada estiver marcado (visão geral, sem recorte).
++    _estados_sel = st.session_state.get("filtro_sel_estado") or []
++    _datas_sel = st.session_state.get("filtro_sel_data") or []
++    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
++    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
++
++    with area_com_print(
++        "dashboard_cards_principais", nome_arquivo="indicadores_principais",
++        legenda_template="PRODUÇÃO GERAL {estado} | {data} {hora}",
++        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
++    ):
+         col1, col2, col3, col4, col5, col6 = st.columns(6)
+ 
+         with col1:
+@@ -69,7 +81,11 @@ def render(df, indicadores: Indicadores):
+     # ====== COMPARATIVO BA VS TT ======
+     secao_titulo("Comparativo BA vs TT", "Desempenho lado a lado das duas filas técnicas")
+ 
+-    with area_com_print("dashboard_comparativo_ba_tt", nome_arquivo="comparativo_ba_tt"):
++    with area_com_print(
++        "dashboard_comparativo_ba_tt", nome_arquivo="comparativo_ba_tt",
++        legenda_template="FECHAMENTO PRODUÇÃO BA | {estado} | {data} {hora}",
++        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
++    ):
+         col_ba, col_tt = st.columns(2)
+ 
+         with col_ba:
+@@ -128,7 +144,11 @@ def render(df, indicadores: Indicadores):
+ 
+     matriz_tt = matriz_producao(df, lado="TT")
+     grupos_tt = matriz_producao_cluster_cidade(df, lado="TT")
+-    with area_com_print("dashboard_matriz_tt", nome_arquivo="producao_tt"):
++    with area_com_print(
++        "dashboard_matriz_tt", nome_arquivo="producao_tt",
++        legenda_template="FECHAMENTO PRODUÇÃO TT | {estado} | {data} {hora}",
++        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
++    ):
+         tabela_matriz_expansivel(
+             grupos_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
+             total=_linha_total(matriz_tt), id_tabela="producao_tt",
+diff --git a/views/gestores.py b/views/gestores.py
+index a105d72..ca47b43 100644
+--- a/views/gestores.py
++++ b/views/gestores.py
+@@ -18,6 +18,15 @@ from components.print_button import area_com_print
+ def render(df, indicadores: Indicadores):
+     secao_titulo("Gestores", "Coordenadores e Supervisores — visão consolidada e segmentada")
+ 
++    # Legenda automática (texto que acompanha a imagem ao copiar): usa o(s)
++    # Estado(s)/Data(s) marcados nos filtros do topo — mesma lógica da
++    # página Dashboard — "TODOS" / "TODAS AS DATAS" quando nada estiver
++    # marcado (visão geral, sem recorte).
++    _estados_sel = st.session_state.get("filtro_sel_estado") or []
++    _datas_sel = st.session_state.get("filtro_sel_data") or []
++    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
++    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
++
+     # ====== SEGMENTAÇÃO EM CASCATA: COORDENADOR → SUPERVISOR → TÉCNICO ======
+     col1, col2, col3 = st.columns(3)
+ 
+@@ -109,7 +118,11 @@ def render(df, indicadores: Indicadores):
+ 
+     # --- Matriz consolidada (BA + TT juntos, sempre expandida, com
+     # subtotal por cluster/região — igual ao formato que você já usava) ---
+-    with area_com_print("gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador"):
++    with area_com_print(
++        "gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador",
++        legenda_template="FECHAMENTO PRODUÇÃO BA/TT | {estado} (POR COORDENADOR) | {data} {hora}",
++        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
++    ):
+         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
+ 
+     st.markdown("<br>", unsafe_allow_html=True)

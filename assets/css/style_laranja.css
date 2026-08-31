@@ -1,8 +1,7 @@
 /* ================================================================
-   TLP ANALYTICS — TEMA VISUAL (variante NAVY)
-   Paleta em tons de azul marinho escuro em gradiente (accent
-   principal #2E63C7, accent secundário/ciano #38BDF8), vermelho
-   #F04438 mantido só para alerta/negativo.
+   TLP ANALYTICS — TEMA VISUAL (variante LARANJA — original)
+   Paleta baseada na marca TLP (laranja #FF6A00, vermelho #E8391D,
+   dourado #FFB020) sobre fundo escuro.
    O token __BACKGROUND_IMAGE__ é substituído em runtime (app.py)
    pela imagem de fundo em base64.
    ================================================================ */
@@ -10,10 +9,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --tlp-orange: #2E63C7;
-    --tlp-orange-light: #5B8DEF;
-    --tlp-red: #F04438;
-    --tlp-gold: #38BDF8;
+    --tlp-orange: #FF6A00;
+    --tlp-orange-light: #FF8A3D;
+    --tlp-red: #E8391D;
+    --tlp-gold: #FFB020;
     --tlp-bg: __TLP_BG__;
     --tlp-surface: __TLP_SURFACE__;
     --tlp-card: __TLP_CARD__;
@@ -36,9 +35,9 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
    Os cards continuam opacos (brancos) por cima, então o efeito é o
    de painéis flutuando sobre o fundo com a arte da marca. */
 [data-testid="stAppViewContainer"] {
-    background-color: #0A1930;
+    background-color: var(--tlp-orange);
     background-image:
-        linear-gradient(160deg, rgba(10,25,48,0.90) 0%, rgba(18,50,98,0.90) 45%, rgba(46,99,199,0.55) 100%),
+        linear-gradient(160deg, rgba(255,178,32,0.55) 0%, rgba(255,106,0,0.65) 45%, rgba(232,57,29,0.55) 100%),
         url("__BACKGROUND_IMAGE__");
     background-size: cover;
     background-position: top right;
@@ -84,13 +83,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     display: flex !important;
 }
 
-/* O bloco vertical que o Streamlit cria dentro de cada coluna (onde o
-   card KPI realmente mora) precisa esticar pra ocupar 100% da altura da
-   coluna — sem isso, "align-items:stretch" acima só deixa a COLUNA do
-   mesmo tamanho que as vizinhas, mas o card continua do tamanho do seu
-   próprio conteúdo lá dentro (cards com título maior/mais linhas ficam
-   visivelmente mais altos que os outros, principalmente na imagem
-   gerada pelo botão "Copiar imagem"). */
 [data-testid="column"] > div {
     width: 100%;
     display: flex;
@@ -246,7 +238,7 @@ h1, h2, h3, h4 {
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(46, 99, 199, 0.25);
+    box-shadow: 0 8px 18px rgba(255, 106, 0, 0.15);
     border-color: var(--tlp-orange);
 }
 
@@ -270,20 +262,11 @@ h1, h2, h3, h4 {
        pelo html2canvas (usado no botão "Copiar imagem"), que quebrava
        silenciosamente ao tentar tirar print dos cards. rgba() é suportado
        universalmente, então o print e a aparência visual ficam idênticos. */
-    background: var(--kpi-icon-bg, rgba(46, 99, 199, 0.20));
+    background: var(--kpi-icon-bg, rgba(255, 106, 0, 0.16));
 }
 
 .kpi-card .kpi-title {
     margin: 0;
-    /* min-width:0 é o pulo do gato aqui: por padrão um item flex nunca
-       encolhe abaixo do tamanho do seu próprio conteúdo (min-width:auto),
-       então um título comprido ("PROJEÇÃO PU" etc.) empurrava o card pra
-       fora da largura da coluna em vez de quebrar linha — fazendo o texto
-       "vazar" do card e, na imagem copiada, cada card ficar com uma
-       largura diferente (o removerCortes() do botão de print alarga
-       exatamente os elementos que estouram, um por um). Com min-width:0 +
-       sem white-space:nowrap, o título quebra em até 2 linhas dentro do
-       espaço do card em vez de estourar. */
     min-width: 0;
     flex: 1 1 auto;
     font-size: 10.5px;
@@ -316,13 +299,13 @@ h1, h2, h3, h4 {
    por trás dele, se fundindo com a textura da página em vez de cortar
    com uma borda dura — igual à referência enviada. */
 .tlp-header {
-    background-color: #0A1930;
+    background-color: var(--tlp-orange);
     background-image:
-        linear-gradient(90deg, rgba(10,25,48,0.96) 0%, rgba(18,50,98,0.94) 55%, rgba(46,99,199,0.88) 100%),
+        linear-gradient(90deg, rgba(255,205,90,0.95) 0%, rgba(255,106,0,0.95) 55%, rgba(232,57,29,0.92) 100%),
         url("__BACKGROUND_IMAGE__");
     background-size: cover;
     background-position: top right;
-    border: 1px solid rgba(91,141,239,0.30);
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 16px;
     padding: 16px 22px;
     margin-bottom: 22px;
@@ -335,7 +318,7 @@ h1, h2, h3, h4 {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, rgba(18,50,98,0.85), rgba(46,99,199,0.85), rgba(56,189,248,0.85));
+    background: linear-gradient(90deg, rgba(232,57,29,0.7), rgba(255,106,0,0.7), rgba(255,176,32,0.7));
 }
 
 .tlp-header h2, .tlp-header span {
@@ -423,7 +406,7 @@ h1, h2, h3, h4 {
     border: 1px solid var(--tlp-card-border);
     border-radius: 14px;
     padding: 10px 6px 4px 6px;
-    box-shadow: 0 2px 14px rgba(46, 99, 199, 0.12);
+    box-shadow: 0 2px 14px rgba(255, 106, 0, 0.06);
     position: relative;
     overflow: hidden;
     width: 100% !important;

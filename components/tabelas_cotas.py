@@ -12,17 +12,23 @@ def _cor_gap_texto(valor) -> str:
     return config.TLP_RED if valor < 0 else "#15803D"
 
 
+def _hex_para_rgba(cor_hex: str, alpha: float) -> str:
+    cor_hex = (cor_hex or "").lstrip("#")
+    r, g, b = int(cor_hex[0:2], 16), int(cor_hex[2:4], 16), int(cor_hex[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def _cor_pct_fundo(pct: float) -> str:
     """Fundo tingido (mais saturado que o padrão claro do site) — verde >=100%,
-    dourado >=60%, vermelho abaixo disso. Mesma leitura de semáforo da matriz
-    %AGENDADA_SLOT de referência."""
+    accent secundário >=60%, vermelho abaixo disso. Mesma leitura de semáforo
+    da matriz %AGENDADA_SLOT de referência."""
     if pd.isna(pct):
         return "rgba(0,0,0,0.03)"
     if pct >= 1.0:
         return "rgba(34,197,94,0.30)"
     if pct >= 0.6:
-        return "rgba(255,176,32,0.34)"
-    return "rgba(232,57,29,0.26)"
+        return _hex_para_rgba(config.TLP_GOLD, 0.34)
+    return _hex_para_rgba(config.TLP_RED, 0.26)
 
 
 def tabela_distribuicao_turno(pivot_cota: pd.DataFrame, pivot_real: pd.DataFrame, pivot_gap: pd.DataFrame):
@@ -79,13 +85,13 @@ def tabela_distribuicao_turno(pivot_cota: pd.DataFrame, pivot_real: pd.DataFrame
             f"<td>{pill_total(real_tot)}</td>"
             f"<td>{pill_contraste(f'{gap_tot:+d}', cor_gap_tot)}</td>"
         )
-    linhas_html.append(f"<tr style='{TOTAL_BG}'>{''.join(total_celulas)}</tr>")
+    linhas_html.append(f"<tr style='{TOTAL_BG()}'>{''.join(total_celulas)}</tr>")
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
         f"<thead>"
-        f"<tr style='{CABECALHO_BG}'><th style='text-align:left;'></th>{header_horarios}</tr>"
-        f"<tr style='{CABECALHO_BG}'><th style='text-align:left;'>Atividade</th>{header_sub}</tr>"
+        f"<tr style='{CABECALHO_BG()}'><th style='text-align:left;'></th>{header_horarios}</tr>"
+        f"<tr style='{CABECALHO_BG()}'><th style='text-align:left;'>Atividade</th>{header_sub}</tr>"
         f"</thead>"
         f"<tbody>{''.join(linhas_html)}</tbody>"
         f"</table>"
@@ -129,11 +135,11 @@ def tabela_matriz_agendada(matriz: pd.DataFrame, linha_total: pd.Series = None, 
             pct = linha_total[h]
             cor = "#15803D" if pct >= 1.0 else (config.TLP_GOLD if pct >= 0.6 else config.TLP_RED)
             total_celulas.append(f"<td>{pill_contraste(f'{pct * 100:.1f}%', cor)}</td>")
-        linhas_html.append(f"<tr style='{TOTAL_BG}'>{''.join(total_celulas)}</tr>")
+        linhas_html.append(f"<tr style='{TOTAL_BG()}'>{''.join(total_celulas)}</tr>")
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -168,7 +174,7 @@ def tabela_detalhe_cidade(tabela_detalhe: pd.DataFrame):
         fundo_pct = _cor_pct_fundo(pct)
 
         if eh_total:
-            bg = "background: rgba(255,106,0,0.10); border-top:2px solid " + config.TLP_ORANGE + ";"
+            bg = "background: rgba(46,99,199,0.10); border-top:2px solid " + config.TLP_ORANGE + ";"
             rotulo = f"<td style='text-align:left; font-weight:800; color:{config.TEXT};'>{cidade}</td>"
         else:
             bg = f"background:{config.SURFACE};"
@@ -189,7 +195,7 @@ def tabela_detalhe_cidade(tabela_detalhe: pd.DataFrame):
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT}; text-align:center;'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )

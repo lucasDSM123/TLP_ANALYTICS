@@ -23,6 +23,45 @@ def criar_tabela_usuarios():
         """))
 
 
+def criar_tabela_historico_acessos():
+    """Cria a tabela 'historico_acessos' no Neon, caso ainda não exista. Rode uma vez.
+
+    Cada login bem-sucedido gera uma linha aqui, permitindo consultar depois
+    quem acessa o site e com que frequência (não é sobrescrito — é um histórico).
+    """
+    engine = obter_engine()
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS historico_acessos (
+                id SERIAL PRIMARY KEY,
+                usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+                login VARCHAR(50) NOT NULL,
+                acessado_em TIMESTAMP NOT NULL DEFAULT NOW()
+            );
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_historico_acessos_usuario_id
+                ON historico_acessos (usuario_id);
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_historico_acessos_acessado_em
+                ON historico_acessos (acessado_em);
+        """))
+
+
+def registrar_acesso(usuario_id: int, login: str):
+    """Grava uma linha no histórico de acessos. Chamado a cada login bem-sucedido."""
+    engine = obter_engine()
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO historico_acessos (usuario_id, login)
+                VALUES (:usuario_id, :login)
+            """),
+            {"usuario_id": usuario_id, "login": login},
+        )
+
+
 def criar_usuario(login: str, nome: str, senha: str) -> bool:
     """
     Cria um novo usuário com a senha já hasheada.
@@ -69,6 +108,11 @@ def verificar_login(login: str, senha: str) -> dict | None:
     usuario_id, login_db, nome, senha_hash = resultado
 
     if bcrypt.checkpw(senha.encode("utf-8"), senha_hash.encode("utf-8")):
+        try:
+            registrar_acesso(usuario_id, login_db)
+        except Exception as e:
+            # Nunca deixa uma falha no registro de acesso impedir o login em si
+            print(f"Aviso: não foi possível registrar o acesso: {e}")
         return {"id": usuario_id, "login": login_db, "nome": nome}
 
     return None

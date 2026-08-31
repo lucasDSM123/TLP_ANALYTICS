@@ -40,15 +40,15 @@ def _fundo_icone_rgba(cor_hex: str, alpha: float = 0.16) -> str:
     """
     cor_hex = (cor_hex or "").lstrip("#")
     if len(cor_hex) != 6:
-        return f"rgba(255, 106, 0, {alpha})"
+        return f"rgba(46, 99, 199, {alpha})"
     try:
         r, g, b = int(cor_hex[0:2], 16), int(cor_hex[2:4], 16), int(cor_hex[4:6], 16)
     except ValueError:
-        return f"rgba(255, 106, 0, {alpha})"
+        return f"rgba(46, 99, 199, {alpha})"
     return f"rgba({r}, {g}, {b}, {alpha})"
 
 
-def card(title: str, value, color: str = "#FF6A00", subtitle: str = "", icon: str = None):
+def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: str = None):
     """
     Renderiza um card KPI com título, valor, cor de destaque e subtítulo opcional.
 

@@ -54,7 +54,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
         cor_efic = _cor_eficacia(row["Eficácia"])
 
         if is_total:
-            bg = TOTAL_BG
+            bg = TOTAL_BG()
             cor_texto = "#FFFFFF"
             media_txt = f"{row['Média Atrib.']:.2f}"
             pu_txt = f"{row['PU']:.2f}"
@@ -103,7 +103,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -185,7 +185,7 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
 
     if not grupos:
         st.markdown(
-            f"<h4 style='color:{cor_titulo};'>{titulo}</h4>"
+            f"<h4 style='color:{cor_titulo}; text-align:center;'>{titulo}</h4>"
             f"<p style='color:{config.TEXT_MUTED};'>Sem dados para os filtros selecionados.</p>",
             unsafe_allow_html=True,
         )
@@ -226,7 +226,7 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
     linha_total_html = ""
     if total:
         cel_nome_total = f"<td style='text-align:left; font-weight:800; color:#FFFFFF;'>{total.get('Nome', 'Total')}</td>"
-        linha_total_html = f"<tr style='{TOTAL_BG}'>{cel_nome_total}{_celulas_linha_matriz_total(total)}</tr>"
+        linha_total_html = f"<tr style='{TOTAL_BG()}'>{cel_nome_total}{_celulas_linha_matriz_total(total)}</tr>"
 
     header_html = "".join(
         f"<th style='text-align:{'left' if c == rotulo_grupo else 'center'};'>{c}</th>"
@@ -235,13 +235,13 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
 
     tabela = (
         f"<table style='width:100%; min-width:1200px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"
     )
 
     html = (
-        f"<h4 style='color:{cor_titulo}; margin-bottom:6px;'>{titulo}</h4>"
+        f"<h4 style='color:{cor_titulo}; margin-bottom:6px; text-align:center;'>{titulo}</h4>"
         f"<p style='color:{config.TEXT_MUTED}; font-size:12.5px; margin:-4px 0 8px 0;'>"
         f"Clique num {rotulo_clique} para ver os detalhes</p>"
         f"{estilo_expansivel()}"
@@ -291,7 +291,7 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
         pu_txt = f"{row['PU']:.2f}"
 
         if is_total:
-            bg = TOTAL_BG
+            bg = TOTAL_BG()
             cel_data = f"<td style='text-align:left; font-weight:{peso}; color:#FFFFFF;'>{row['Data']}</td>"
             cel_concluida = f"<td>{pill_total(row['Concluída'])}</td>"
             cel_improd = f"<td>{pill_total(row['Improdutiva'])}</td>"
@@ -321,7 +321,7 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -373,7 +373,7 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
         pu_txt = f"{row['PU']:.2f}"
 
         if is_total:
-            bg = TOTAL_BG
+            bg = TOTAL_BG()
             cel_grupo = f"<td style='text-align:left; font-weight:{peso}; color:#FFFFFF;'>{row[coluna_grupo]}</td>"
             cel_concluida = f"<td>{pill_total(row['Concluída'])}</td>"
             cel_improd = f"<td>{pill_total(row['Improdutiva'])}</td>"
@@ -402,7 +402,7 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -509,4 +509,179 @@ def tabela_comparativo_mensal(nome_grupo: str, mes_anterior: dict, mes_atual: di
         f"Comparativo com o Mês Anterior — {nome_grupo}</h4>"
         f"{wrapper_tabela(tabela)}"
     )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def _celulas_linha_chegada(g: dict, peso: str, meta_pct: float) -> str:
+    """
+    Gera as 6 células (Dentro/Antes/Depois/Fora/Total/% Dentro) de uma
+    linha do indicador de Chegada. Dentro e Antes em verde (chegou dentro
+    do horário ou só um pouco adiantado); Depois e Fora em vermelho
+    (chegou fora do horário). % Dentro vira badge verde/vermelho conforme
+    a meta (`meta_pct`, padrão 80%).
+    """
+    cor_pct = "#15803D" if g["pct"] >= meta_pct else config.TLP_RED
+    bg_pct = "rgba(34,197,94,0.14)" if g["pct"] >= meta_pct else "rgba(232,57,29,0.12)"
+    return "".join([
+        f"<td><span style='color:#15803D; font-weight:{peso};'>{g['dentro']}</span></td>",
+        f"<td><span style='color:#15803D; font-weight:{peso};'>{g['antes']}</span></td>",
+        f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{g['depois']}</span></td>",
+        f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{g['fora']}</span></td>",
+        f"<td style='font-weight:{peso}; color:{config.TEXT};'>{g['total']}</td>",
+        "<td><span style='display:inline-block; min-width:56px; padding:3px 10px; "
+        f"border-radius:999px; background:{bg_pct}; color:{cor_pct}; font-weight:800;'>{g['pct']:.1f}%</span></td>",
+    ])
+
+
+def tabela_chegada_expansivel(dados: list, titulo: str = "Por Cluster", meta_pct: float = 80.0,
+                               rotulo_grupo: str = "CLUSTER / CIDADE", id_tabela: str = "chegada_matriz"):
+    """
+    Matriz única (Cluster clicável -> Cidades dentro dele) do indicador de
+    Chegada, no mesmo padrão visual/comportamento das demais tabelas
+    expansíveis do site (cabeçalho em gradiente, seta ▶/▼, subgrupos
+    fechados por padrão). `dados` vem de `services.chegada.resumo_hierarquico`.
+    """
+    if not dados:
+        st.markdown(
+            f"<h4 style='color:{config.TLP_ORANGE}; text-align:center;'>{titulo}</h4>"
+            f"<p style='color:{config.TEXT_MUTED};'>Sem dados para os filtros selecionados.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    id_tabela = sanitizar_id(id_tabela)
+    ativar_tabelas_expansiveis()
+
+    colunas = [rotulo_grupo, "DENTRO", "ANTES", "DEPOIS", "FORA", "TOTAL", "% DENTRO"]
+
+    linhas_html = []
+    for grupo in dados:
+        classe_grupo = f"{id_tabela}_{sanitizar_id(grupo['nome'])}"
+
+        cel_nome = (
+            "<td style='text-align:left; font-weight:800; color:{cor};'>"
+            "<span class='seta-exp' style='display:inline-block; width:14px;'>▶</span> {nome}</td>"
+        ).format(cor=config.TLP_ORANGE, nome=grupo["nome"])
+        linhas_html.append(
+            f"<tr class='linha-cluster-expansivel' data-alvo='{classe_grupo}' "
+            f"style='background:{config.SURFACE}; cursor:pointer; border-top:2px solid {config.CARD_BORDER};'>"
+            f"{cel_nome}{_celulas_linha_chegada(grupo, '800', meta_pct)}</tr>"
+        )
+
+        for i, filho in enumerate(grupo["filhos"]):
+            bg = config.CARD if i % 2 == 0 else config.SURFACE
+            cel_nome_filho = (
+                f"<td style='text-align:left; font-weight:500; font-style:italic; "
+                f"color:{config.TEXT_MUTED}; padding-left:30px;'>{filho['nome']}</td>"
+            )
+            linhas_html.append(
+                f"<tr class='{classe_grupo} linha-cidade-expansivel' style='display:none; background:{bg};'>"
+                f"{cel_nome_filho}{_celulas_linha_chegada(filho, '500', meta_pct)}</tr>"
+            )
+
+    header_html = "".join(
+        f"<th style='text-align:{'left' if c == rotulo_grupo else 'center'};'>{c}</th>"
+        for c in colunas
+    )
+
+    tabela = (
+        f"<table style='width:100%; min-width:640px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
+        f"</table>"
+    )
+
+    html = (
+        f"<h4 style='color:{config.TLP_ORANGE}; margin-bottom:6px; text-align:center;'>{titulo}</h4>"
+        f"<p style='color:{config.TEXT_MUTED}; font-size:12.5px; margin:-4px 0 8px 0; text-align:center;'>"
+        f"Clique num Cluster para ver as Cidades</p>"
+        f"{estilo_expansivel()}"
+        f"{wrapper_tabela(tabela)}"
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def tabela_chegada_expansivel_3niveis(
+    dados: list, titulo: str = "Por Cluster", meta_pct: float = 80.0,
+    rotulo_grupo: str = "CLUSTER / CIDADE / ZONA", rotulo_clique: str = "Cluster",
+    id_tabela: str = "chegada_matriz_3n",
+):
+    """
+    Mesma ideia de `tabela_chegada_expansivel`, só que com mais um nível de
+    detalhamento (ex.: Cluster -> Cidade -> Zona, ou Coordenador ->
+    Supervisor -> Técnico). O 3º nível é a linha folha — não é clicável,
+    só uma linha a mais, ainda mais recuada. Todos os níveis começam
+    fechados. `dados` vem de `services.chegada.resumo_hierarquico_3niveis`.
+    """
+    if not dados:
+        st.markdown(
+            f"<h4 style='color:{config.TLP_ORANGE}; text-align:center;'>{titulo}</h4>"
+            f"<p style='color:{config.TEXT_MUTED};'>Sem dados para os filtros selecionados.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    id_tabela = sanitizar_id(id_tabela)
+    ativar_tabelas_expansiveis()
+
+    colunas = [rotulo_grupo, "DENTRO", "ANTES", "DEPOIS", "FORA", "TOTAL", "% DENTRO"]
+
+    linhas_html = []
+    for grupo in dados:
+        classe_grupo = f"{id_tabela}_{sanitizar_id(grupo['nome'])}"
+
+        cel_nome = (
+            "<td style='text-align:left; font-weight:800; color:{cor};'>"
+            "<span class='seta-exp' style='display:inline-block; width:14px;'>▶</span> {nome}</td>"
+        ).format(cor=config.TLP_ORANGE, nome=grupo["nome"])
+        linhas_html.append(
+            f"<tr class='linha-cluster-expansivel' data-alvo='{classe_grupo}' "
+            f"style='background:{config.SURFACE}; cursor:pointer; border-top:2px solid {config.CARD_BORDER};'>"
+            f"{cel_nome}{_celulas_linha_chegada(grupo, '800', meta_pct)}</tr>"
+        )
+
+        for filho in grupo["filhos"]:
+            classe_filho = f"{classe_grupo}_{sanitizar_id(filho['nome'])}"
+            cel_nome_filho = (
+                "<td style='text-align:left; font-weight:700; padding-left:24px; color:{cor};'>"
+                "<span class='seta-exp' style='display:inline-block; width:12px;'>▶</span> {nome}</td>"
+            ).format(cor=config.TLP_ORANGE, nome=filho["nome"])
+            linhas_html.append(
+                f"<tr class='{classe_grupo} linha-cidade-expansivel linha-cluster-expansivel' "
+                f"data-alvo='{classe_filho}' style='cursor:pointer; display:none; background:{config.CARD};'>"
+                f"{cel_nome_filho}{_celulas_linha_chegada(filho, '700', meta_pct)}</tr>"
+            )
+
+            for i, neto in enumerate(filho["netos"]):
+                bg = config.SURFACE if i % 2 == 0 else config.CARD
+                cel_nome_neto = (
+                    f"<td style='text-align:left; font-weight:500; font-style:italic; "
+                    f"color:{config.TEXT_MUTED}; padding-left:46px;'>{neto['nome']}</td>"
+                )
+                linhas_html.append(
+                    f"<tr class='{classe_filho} linha-cidade-expansivel' style='display:none; background:{bg};'>"
+                    f"{cel_nome_neto}{_celulas_linha_chegada(neto, '500', meta_pct)}</tr>"
+                )
+
+    header_html = "".join(
+        f"<th style='text-align:{'left' if c == rotulo_grupo else 'center'};'>{c}</th>"
+        for c in colunas
+    )
+
+    tabela = (
+        f"<table style='width:100%; min-width:640px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
+        f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
+        f"</table>"
+    )
+
+    html = (
+        f"<h4 style='color:{config.TLP_ORANGE}; margin-bottom:6px; text-align:center;'>{titulo}</h4>"
+        f"<p style='color:{config.TEXT_MUTED}; font-size:12.5px; margin:-4px 0 8px 0; text-align:center;'>"
+        f"Clique num {rotulo_clique} (e depois no item seguinte) para ver os detalhes</p>"
+        f"{estilo_expansivel()}"
+        f"{wrapper_tabela(tabela)}"
+    )
+
     st.markdown(html, unsafe_allow_html=True)

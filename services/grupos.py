@@ -23,7 +23,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
         hc = ind.hc_real()
         caixa = ind.caixa_total()
         concluido = ind.concluido()
-        eficacia = ind.eficacia()
+        eficacia_caixa = ind.eficacia_caixa()
         pu = ind.pu()
         media = ind.media_atribuicao()
         esteira = ind.esteira()
@@ -37,7 +37,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
                 "Caixa Total": caixa["TOTAL"],
                 "Concluído OK": concluido["OK"],
                 "Concluído NOK": concluido["NOK"],
-                "Eficácia": eficacia["GERAL"],
+                "Eficácia": eficacia_caixa,
                 "PU": pu["GERAL"],
                 "Média Atribuída": media["GERAL"],
                 "Esteira": esteira["TOTAL"],
@@ -364,19 +364,18 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
         hc_ativo = ind_lado.hc_lado(lado)
         pu = ind_lado.pu_lado(lado)
 
+        # EFICÁCIA da matriz = OK / Caixa Total, sempre no mesmo contexto
+        # (segmentado por 'Lado') já usado por Caixa Tot/OK/NOK acima na
+        # mesma linha — Média Atrib. e Proj. PU continuam segmentadas por
+        # 'BA-TT-Real' (sub_batt), que é outra coluna.
+        eficacia = ind_lado.eficacia_caixa()
+
         if not sub_batt.empty:
-            # Média Atrib., Eficácia e Proj. PU continuam segmentadas por
-            # 'BA-TT-Real' (formulação antiga) — AINDA NÃO confirmadas
-            # célula a célula contra o BI como o PU/HC Ativo acima. Se
-            # também estiverem divergindo na matriz, precisamos do mesmo
-            # tipo de comparação (prints do BI) pra essas três colunas.
             ind_batt = Indicadores(sub_batt)
             media = ind_batt.media_atribuicao_batt(lado)
-            eficacia = ind_batt.eficacia_batt(lado)
             projecao_pu = ind_batt.projecao_pu_batt(lado)
         else:
             media = 0.0
-            eficacia = 1.0
             projecao_pu = 0.0
 
         return {
@@ -447,14 +446,16 @@ def matriz_producao_cluster_cidade(
         hc_ativo = ind_lado.hc_lado(lado)
         pu = ind_lado.pu_lado(lado)
 
+        # EFICÁCIA da matriz = OK / Caixa Total, no mesmo contexto (Lado)
+        # já usado por Caixa Tot/OK/NOK acima na mesma linha.
+        eficacia = ind_lado.eficacia_caixa()
+
         if not sub_batt.empty:
             ind_batt = Indicadores(sub_batt)
             media = ind_batt.media_atribuicao_batt(lado)
-            eficacia = ind_batt.eficacia_batt(lado)
             projecao_pu = ind_batt.projecao_pu_batt(lado)
         else:
             media = 0.0
-            eficacia = 1.0
             projecao_pu = 0.0
 
         return {

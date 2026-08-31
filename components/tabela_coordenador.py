@@ -33,18 +33,22 @@ def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> st
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['HC Ativo']}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{caixa_fmt}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{esteira_fmt}</td>",
-        f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['Média Atribuição']:.2f}</td>",
+        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:#15803D;'>{row['Média Atribuída BA']:.2f}</td>",
+        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_ORANGE};'>{row['Média Atribuída TT']:.2f}</td>",
+        f"<td style='font-weight:800; font-size:{tamanho}; color:{config.TEXT};'>{row['Média Atribuída Total']:.2f}</td>",
         f"<td>{pill(txt_pu, cor_faixa(row['PU'], config.META_PU_ALVO), cor_faixa_bg(row['PU'], config.META_PU_ALVO))}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho}; color:#15803D;'>{row['Concluída BA']}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_ORANGE};'>{row['Concluída TT']}</td>",
         f"<td style='font-weight:800; font-size:{tamanho}; color:{config.TEXT};'>{row['Concluída Total']}</td>",
-        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_RED};'>{row['Não Concluída']}</td>",
+        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:#15803D;'>{row['Não Concluída BA']}</td>",
+        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_ORANGE};'>{row['Não Concluída TT']}</td>",
+        f"<td style='font-weight:800; font-size:{tamanho}; color:{config.TLP_RED};'>{row['Não Concluída Total']}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['Iniciada']}</td>",
         f"<td>{pill(eficacia_pct, cor_faixa(row['Eficácia'], config.META_EFICACIA_ALVO), cor_faixa_bg(row['Eficácia'], config.META_EFICACIA_ALVO))}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{projecao_fmt}</td>",
         f"<td>{pill(txt_proj_pu, cor_faixa(row['Projeção PU'], config.META_PU_ALVO), cor_faixa_bg(row['Projeção PU'], config.META_PU_ALVO))}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['Meta']}</td>",
-        f"<td>{pill(txt_gap, '#15803D' if row['Gap'] >= 0 else config.TLP_RED, 'rgba(34,197,94,0.14)' if row['Gap'] >= 0 else 'rgba(232,57,29,0.10)')}</td>",
+        f"<td>{pill(txt_gap, '#15803D' if row['Gap'] >= 0 else config.TLP_RED, 'rgba(34,197,94,0.14)' if row['Gap'] >= 0 else 'rgba(240,68,56,0.10)')}</td>",
     ])
 
 
@@ -64,19 +68,25 @@ def _celula_total_geral(row: dict) -> str:
     caixa_fmt = f"{row['Caixa Total']:,}".replace(",", ".")
     esteira_fmt = f"{row['Esteira']:,}".replace(",", ".")
     projecao_fmt = f"{row['Projeção']:,}".replace(",", ".")
-    media_fmt = f"{row['Média Atribuição']:.2f}"
+    media_ba_fmt = f"{row['Média Atribuída BA']:.2f}"
+    media_tt_fmt = f"{row['Média Atribuída TT']:.2f}"
+    media_total_fmt = f"{row['Média Atribuída Total']:.2f}"
 
     return "".join([
         f"<td colspan='2' style='text-align:left; font-weight:800; font-size:14px; color:#FFFFFF;'>{row['Nome']}</td>",
         f"<td>{pill_total(row['HC Ativo'])}</td>",
         f"<td>{pill_total(caixa_fmt)}</td>",
         f"<td>{pill_total(esteira_fmt)}</td>",
-        f"<td>{pill_total(media_fmt)}</td>",
+        f"<td>{pill_total(media_ba_fmt)}</td>",
+        f"<td>{pill_total(media_tt_fmt)}</td>",
+        f"<td>{pill_total(media_total_fmt)}</td>",
         f"<td>{pill_total(txt_pu)}</td>",
         f"<td>{pill_total(row['Concluída BA'])}</td>",
         f"<td>{pill_total(row['Concluída TT'])}</td>",
         f"<td>{pill_total(row['Concluída Total'])}</td>",
-        f"<td>{pill_total(row['Não Concluída'])}</td>",
+        f"<td>{pill_total(row['Não Concluída BA'])}</td>",
+        f"<td>{pill_total(row['Não Concluída TT'])}</td>",
+        f"<td>{pill_total(row['Não Concluída Total'])}</td>",
         f"<td>{pill_total(row['Iniciada'])}</td>",
         f"<td>{pill_total(eficacia_pct)}</td>",
         f"<td>{pill_total(projecao_fmt)}</td>",
@@ -97,9 +107,9 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
         st.info("Sem dados de Coordenador/Supervisor para os filtros atuais.")
         return
 
-    colunas = ["COORDENADOR", "SUPERVISOR", "HC ATIVO", "CAIXA TOTAL", "ESTEIRA",
-               "MÉDIA ATRIBUIÇÃO", "PU", "BA", "TT", "TOTAL", "NÃO CONCLUÍDA", "INICIADA",
-               "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU", "META", "GAP"]
+    colunas_antes = ["COORDENADOR", "SUPERVISOR", "HC ATIVO", "CAIXA TOTAL", "ESTEIRA"]
+    colunas_depois = ["PU"]
+    colunas_final = ["INICIADA", "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU", "META", "GAP"]
 
     linhas_html = []
     for grupo in grupos:
@@ -119,33 +129,46 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
             linhas_html.append(f"<tr style='background:{linha_bg};'>{coord_td}{_celula_linha(sup)}</tr>")
             primeira = False
 
-        linhas_html.append(f"<tr style='{SUBTOTAL_BG}'>{_celula_linha(subtotal, negrito=True)}</tr>")
+        linhas_html.append(f"<tr style='{SUBTOTAL_BG()}'>{_celula_linha(subtotal, negrito=True)}</tr>")
 
-    header_html = "".join(
+    def _th_grupo_batt(titulo: str) -> str:
+        return (
+            f"<th colspan='3' style='text-align:center;'>{titulo}</th>"
+        )
+
+    def _th_subcolunas_batt() -> str:
+        return (
+            "<th style='text-align:center; color:#7CF3B8;'>BA</th>"
+            f"<th style='text-align:center; color:{config.TLP_GOLD};'>TT</th>"
+            "<th style='text-align:center; color:#FFFFFF;'>TOTAL</th>"
+        )
+
+    header_antes = "".join(
         f"<th rowspan='2' style='text-align:{'left' if c in ('COORDENADOR', 'SUPERVISOR') else 'center'};'>{c}</th>"
-        for c in colunas[:colunas.index("BA")]
+        for c in colunas_antes
     )
-    th_concluida = "<th colspan='3' style='text-align:center;'>CONCLUÍDA</th>"
-    th_depois = "".join(
-        f"<th rowspan='2' style='text-align:center;'>{c}</th>"
-        for c in colunas[colunas.index("NÃO CONCLUÍDA"):]
+    header_depois = "".join(f"<th rowspan='2' style='text-align:center;'>{c}</th>" for c in colunas_depois)
+    header_final = "".join(f"<th rowspan='2' style='text-align:center;'>{c}</th>" for c in colunas_final)
+
+    linha_header_1 = (
+        header_antes
+        + _th_grupo_batt("MÉDIA ATRIBUÍDA")
+        + header_depois
+        + _th_grupo_batt("CONCLUÍDA")
+        + _th_grupo_batt("NÃO CONCLUÍDA")
+        + header_final
     )
-    linha_header_1 = header_html + th_concluida + th_depois
-    linha_header_2 = (
-        "<th style='text-align:center; color:#7CF3B8;'>BA</th>"
-        f"<th style='text-align:center; color:{config.TLP_GOLD};'>TT</th>"
-        "<th style='text-align:center; color:#FFFFFF;'>TOTAL</th>"
-    )
+    linha_header_2 = _th_subcolunas_batt() + _th_subcolunas_batt() + _th_subcolunas_batt()
 
     linha_total_html = ""
     if total:
-        linha_total_html = f"<tr style='{TOTAL_BG}'>{_celula_total_geral(total)}</tr>"
+        linha_total_html = f"<tr style='{TOTAL_BG()}'>{_celula_total_geral(total)}</tr>"
 
     tabela = (
         f"<table style='width:100%; min-width:1700px; table-layout:auto; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
         f"<thead>"
-        f"<tr style='{CABECALHO_BG}'>{linha_header_1}</tr>"
-        f"<tr style='{CABECALHO_BG}'>{linha_header_2}</tr>"
+        f"<tr style='{CABECALHO_BG()}'>{linha_header_1}</tr>"
+        f"<tr style='{CABECALHO_BG()}'>{linha_header_2}</tr>"
         f"</thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"

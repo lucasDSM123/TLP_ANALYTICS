@@ -142,6 +142,29 @@ def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str
         # 1. Garante que a tabela final exista (não mexe nela se já existir)
         df.head(0).to_sql(nome_tabela, conn, if_exists="append", index=False)
 
+        # 1.1 Garante que colunas NOVAS do Excel (ex: adicionadas depois que a
+        # tabela já existia no Neon) sejam criadas na tabela oficial. O
+        # to_sql acima só cria a tabela na primeira vez; se ela já existir,
+        # colunas que não estavam lá antes não são adicionadas sozinhas — e
+        # o COPY do passo 4 quebraria (a TEMP TABLE é um LIKE da oficial).
+        colunas_existentes = {
+            row[0] for row in conn.execute(text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = :tabela"
+            ), {"tabela": nome_tabela})
+        }
+        colunas_novas = [c for c in df.columns if c not in colunas_existentes]
+        for coluna in colunas_novas:
+            tipo_pg = "double precision" if pd.api.types.is_float_dtype(df[coluna]) else (
+                "bigint" if pd.api.types.is_integer_dtype(df[coluna]) else "text"
+            )
+            conn.execute(text(
+                f'ALTER TABLE "{nome_tabela}" ADD COLUMN IF NOT EXISTS '
+                f'{_quotar_coluna(coluna)} {tipo_pg}'
+            ))
+        if colunas_novas:
+            print(f"🆕 Colunas novas criadas na tabela '{nome_tabela}': {colunas_novas}")
+
         # 2. Garante a criação da Primary Key na coluna chave (checando a coluna certa)
         sql_pk = f"""
         DO $$

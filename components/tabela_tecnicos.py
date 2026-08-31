@@ -90,7 +90,7 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
                 celulas_total.append(f"<td>{pill_total(valor_fmt)}</td>")
             else:
                 celulas_total.append("<td></td>")
-        linha_total_html = f"<tr style='{TOTAL_BG}'>{''.join(celulas_total)}</tr>"
+        linha_total_html = f"<tr style='{TOTAL_BG()}'>{''.join(celulas_total)}</tr>"
 
     header_html = "".join(
         f"<th style='text-align:{'left' if c in ('Técnico', 'Cluster') else 'center'};'>{c.upper()}</th>"
@@ -99,7 +99,7 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"
     )

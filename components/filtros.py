@@ -9,13 +9,15 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
     do usuário. Os filtros ficam disponíveis em todas as páginas, pois são
     aplicados antes do roteamento.
 
-    Estado, Cluster e Cidade são multi-seleção (dá pra marcar mais de uma
-    opção em cada). Cluster respeita o(s) Estado(s) já escolhido(s), e
-    Cidade respeita o(s) Estado(s)/Cluster(s) já escolhidos — do mesmo
-    jeito que o Cluster já dependia do Estado antes.
+    Estado, Cluster, Cidade e Coordenador são multi-seleção (dá pra marcar
+    mais de uma opção em cada). Cluster respeita o(s) Estado(s) já
+    escolhido(s), Cidade respeita o(s) Estado(s)/Cluster(s) já escolhidos, e
+    Coordenador respeita o(s) Estado(s)/Cluster(s)/Cidade(s) já escolhidos —
+    cada filtro à direita vai restringindo as opções com base nos filtros já
+    marcados à esquerda.
     """
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
-    col_data, col_estado, col_cluster, col_cidade = st.columns([1.1, 1, 1.1, 1.1])
+    col_data, col_estado, col_cluster, col_cidade, col_coordenador = st.columns([1, 1, 1, 1, 1.1])
 
     # ---------------- DATA (multi) ----------------
     with col_data:
@@ -59,7 +61,32 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
         else:
             sel_cidade = []
 
+    # ------- COORDENADOR (multi, depende do(s) Estado(s)/Cluster(s)/Cidade(s)) -------
+    with col_coordenador:
+        if "Coordenador" in df.columns:
+            df_para_coordenador = df
+            if sel_estado:
+                df_para_coordenador = df_para_coordenador[df_para_coordenador["Estado"].isin(sel_estado)]
+            if sel_cluster:
+                df_para_coordenador = df_para_coordenador[df_para_coordenador["Cluster"].isin(sel_cluster)]
+            if sel_cidade:
+                df_para_coordenador = df_para_coordenador[df_para_coordenador["Cidade"].isin(sel_cidade)]
+            opcoes_coordenador = sorted(df_para_coordenador["Coordenador"].dropna().unique().tolist())
+            sel_coordenador = st.multiselect("Coordenador", opcoes_coordenador, placeholder="Todos")
+        else:
+            sel_coordenador = []
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+    # Guarda a seleção "crua" (antes de aplicar) em session_state para que
+    # outras partes do site (ex.: legenda automática do botão "Copiar
+    # imagem") saibam quais Estado(s)/Data(s) estão marcados no momento,
+    # sem precisar re-derivar isso a partir do DataFrame já filtrado.
+    st.session_state["filtro_sel_estado"] = sel_estado
+    st.session_state["filtro_sel_data"] = sel_data
+    st.session_state["filtro_sel_cluster"] = sel_cluster
+    st.session_state["filtro_sel_cidade"] = sel_cidade
+    st.session_state["filtro_sel_coordenador"] = sel_coordenador
 
     # ---------------- APLICAÇÃO DOS FILTROS ----------------
     df_filtrado = df.copy()
@@ -76,5 +103,8 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
 
     if sel_cidade and "Cidade" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Cidade"].isin(sel_cidade)]
+
+    if sel_coordenador and "Coordenador" in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado["Coordenador"].isin(sel_coordenador)]
 
     return df_filtrado

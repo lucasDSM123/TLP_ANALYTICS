@@ -162,11 +162,21 @@ def render(df, indicadores: Indicadores):
             "Análise P — Produtividade por Técnico",
             "Classificação dos técnicos pela quantidade de atividades concluídas (P0 = 0 concluídas … >P3 = mais de 3). Selecione um Supervisor acima para ver a matriz completa de técnicos.",
         )
-        matriz_sup = matriz_analise_p(df_filtrado, coluna_grupo="Supervisor")
+        # Mesmo escopo da Análise P dos cards/resumo (services.indicadores):
+        # Contratada = "TLP" e excluindo Supervisor = "BUCKET" — técnicos do
+        # bucket não entram na classificação P0..>P3 (obras não concluídas do
+        # bucket voltam como sobra pro balde, não contam produtividade do técnico).
+        df_analise_p = df_filtrado
+        if "Contratada" in df_analise_p.columns:
+            df_analise_p = df_analise_p[df_analise_p["Contratada"] == "TLP"]
+        if "Supervisor" in df_analise_p.columns:
+            df_analise_p = df_analise_p[df_analise_p["Supervisor"] != "BUCKET"]
+
+        matriz_sup = matriz_analise_p(df_analise_p, coluna_grupo="Supervisor")
         with area_com_print("supervisores_analise_p_supervisor", nome_arquivo="produtividade_por_supervisor"):
             tabela_analise_p(matriz_sup, "Supervisor", "Produtividade por Supervisor — Técnico (Análise P)")
 
         with st.expander("Ver também agrupado por Coordenador"):
-            matriz_coord = matriz_analise_p(df_filtrado, coluna_grupo="Coordenador")
+            matriz_coord = matriz_analise_p(df_analise_p, coluna_grupo="Coordenador")
             with area_com_print("supervisores_analise_p_coordenador", nome_arquivo="produtividade_por_coordenador"):
                 tabela_analise_p(matriz_coord, "Coordenador", "Produtividade por Coordenador — Técnico (Análise P)")

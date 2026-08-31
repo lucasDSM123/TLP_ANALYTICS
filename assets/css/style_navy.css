@@ -84,13 +84,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     display: flex !important;
 }
 
-/* O bloco vertical que o Streamlit cria dentro de cada coluna (onde o
-   card KPI realmente mora) precisa esticar pra ocupar 100% da altura da
-   coluna — sem isso, "align-items:stretch" acima só deixa a COLUNA do
-   mesmo tamanho que as vizinhas, mas o card continua do tamanho do seu
-   próprio conteúdo lá dentro (cards com título maior/mais linhas ficam
-   visivelmente mais altos que os outros, principalmente na imagem
-   gerada pelo botão "Copiar imagem"). */
 [data-testid="column"] > div {
     width: 100%;
     display: flex;
@@ -275,15 +268,6 @@ h1, h2, h3, h4 {
 
 .kpi-card .kpi-title {
     margin: 0;
-    /* min-width:0 é o pulo do gato aqui: por padrão um item flex nunca
-       encolhe abaixo do tamanho do seu próprio conteúdo (min-width:auto),
-       então um título comprido ("PROJEÇÃO PU" etc.) empurrava o card pra
-       fora da largura da coluna em vez de quebrar linha — fazendo o texto
-       "vazar" do card e, na imagem copiada, cada card ficar com uma
-       largura diferente (o removerCortes() do botão de print alarga
-       exatamente os elementos que estouram, um por um). Com min-width:0 +
-       sem white-space:nowrap, o título quebra em até 2 linhas dentro do
-       espaço do card em vez de estourar. */
     min-width: 0;
     flex: 1 1 auto;
     font-size: 10.5px;

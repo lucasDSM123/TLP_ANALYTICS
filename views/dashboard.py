@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from components.cards import card
@@ -31,7 +32,21 @@ def render(df, indicadores: Indicadores):
     # ====== INDICADORES PRINCIPAIS ======
     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
 
-    with area_com_print("dashboard_cards_principais", nome_arquivo="indicadores_principais"):
+    # Legenda automática (texto que acompanha a imagem ao copiar): usa o(s)
+    # Estado(s)/Data(s) marcados nos filtros do topo — "TODOS" / "TODAS AS
+    # DATAS" quando nada estiver marcado (visão geral, sem recorte).
+    _estados_sel = st.session_state.get("filtro_sel_estado") or []
+    _datas_sel = st.session_state.get("filtro_sel_data") or []
+    _clusters_sel = st.session_state.get("filtro_sel_cluster") or []
+    _cidades_sel = st.session_state.get("filtro_sel_cidade") or []
+    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
+    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
+
+    with area_com_print(
+        "dashboard_cards_principais", nome_arquivo="indicadores_principais",
+        legenda_template="PRODUÇÃO GERAL {estado} | {data} {hora}",
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+    ):
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
         with col1:
@@ -112,21 +127,41 @@ def render(df, indicadores: Indicadores):
 
     matriz_ba = matriz_producao(df, lado="BA")
     grupos_ba = matriz_producao_cluster_cidade(df, lado="BA")
-    with area_com_print("dashboard_matriz_ba", nome_arquivo="producao_ba"):
+    with area_com_print(
+        "dashboard_matriz_ba", nome_arquivo="producao_ba",
+        legenda_template="FECHAMENTO PRODUÇÃO BA | {estado} | {data} {hora}",
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+    ):
         tabela_matriz_expansivel(
             grupos_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
             total=_linha_total(matriz_ba), id_tabela="producao_ba",
         )
+        st.markdown(
+            f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
+            f"Pareto de Pendências — BA</p>",
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(grafico_pareto_causa(df, "BA"), width='stretch', config=opcoes_grafico("pareto_pendencias_ba"))
 
     st.write("")
 
     matriz_tt = matriz_producao(df, lado="TT")
     grupos_tt = matriz_producao_cluster_cidade(df, lado="TT")
-    with area_com_print("dashboard_matriz_tt", nome_arquivo="producao_tt"):
+    with area_com_print(
+        "dashboard_matriz_tt", nome_arquivo="producao_tt",
+        legenda_template="FECHAMENTO PRODUÇÃO TT | {estado} | {data} {hora}",
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+    ):
         tabela_matriz_expansivel(
             grupos_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
             total=_linha_total(matriz_tt), id_tabela="producao_tt",
         )
+        st.markdown(
+            f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
+            f"Pareto de Pendências — TT</p>",
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(grafico_pareto_causa(df, "TT"), width='stretch', config=opcoes_grafico("pareto_pendencias_tt"))
 
     st.divider()
 
@@ -139,7 +174,18 @@ def render(df, indicadores: Indicadores):
     st.write("")
     secao_titulo("Análise P por Cluster", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6), com quebra por cidade")
     contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
-    grupos_analise_p = matriz_analise_p_cluster_cidade(df)
+
+    # Mesmo escopo da Análise P dos cards/resumo (services.indicadores):
+    # Contratada = "TLP" e excluindo Supervisor = "BUCKET" — técnicos do
+    # bucket não entram na classificação P0..>P3 (obras não concluídas do
+    # bucket voltam como sobra pro balde, não contam produtividade do técnico).
+    df_analise_p = df
+    if "Contratada" in df_analise_p.columns:
+        df_analise_p = df_analise_p[df_analise_p["Contratada"] == "TLP"]
+    if "Supervisor" in df_analise_p.columns:
+        df_analise_p = df_analise_p[df_analise_p["Supervisor"] != "BUCKET"]
+
+    grupos_analise_p = matriz_analise_p_cluster_cidade(df_analise_p)
 
     def _linha_total_p(df_resumo, chave_grupo="Cluster"):
         """Extrai a linha 'Total Geral' de contagem_cluster/percentual_cluster
@@ -161,10 +207,6 @@ def render(df, indicadores: Indicadores):
             total_percentual=_linha_total_p(percentual_cluster),
             id_tabela="dashboard_analise_p",
         )
-
-    secao_titulo("Pareto de Pendências por Causa", "Atividades não concluídas agrupadas por causa — BA vs TT")
-    with area_com_print("dashboard_grafico_pareto", nome_arquivo="pareto_pendencias"):
-        st.plotly_chart(grafico_pareto_causa(df), width='stretch', config=opcoes_grafico("pareto_pendencias"))
 
     st.divider()
 

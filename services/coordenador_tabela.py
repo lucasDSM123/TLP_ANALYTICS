@@ -22,7 +22,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
     media_atrib = ind.media_atribuicao()["GERAL"]
     pu = ind.pu()["GERAL"]
     concluido = ind.concluido()
-    eficacia = ind.eficacia()["GERAL"]
+    eficacia = ind.eficacia_caixa()
     projecao = ind.projecao()["GERAL"]
     projecao_pu = ind.projecao_pu()["GERAL"]
     iniciada = ind.iniciada()["TOTAL"]
@@ -30,6 +30,12 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
     ok_ba = int(((sub["Status"] == "Concluída") & (sub["Lado"] == "BA")).sum()) if "Lado" in sub.columns else 0
     ok_tt = int(((sub["Status"] == "Concluída") & (sub["Lado"] == "TT")).sum()) if "Lado" in sub.columns else 0
     ok_total = ok_ba + ok_tt
+
+    nok_ba = int(((sub["Status"] == "Não Concluída") & (sub["Lado"] == "BA")).sum()) if "Lado" in sub.columns else 0
+    nok_tt = int(((sub["Status"] == "Não Concluída") & (sub["Lado"] == "TT")).sum()) if "Lado" in sub.columns else 0
+    nok_total = concluido["NOK"]
+
+    media_atrib_dict = ind.media_atribuicao()
 
     meta = hc * config.META_PU_ALVO
     gap = ok_total - meta
@@ -40,11 +46,17 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
         "Caixa Total": caixa,
         "Esteira": esteira,
         "Média Atribuição": media_atrib,
+        "Média Atribuída BA": media_atrib_dict["BA"],
+        "Média Atribuída TT": media_atrib_dict["TT"],
+        "Média Atribuída Total": media_atrib,
         "PU": pu,
         "Concluída BA": ok_ba,
         "Concluída TT": ok_tt,
         "Concluída Total": ok_total,
-        "Não Concluída": concluido["NOK"],
+        "Não Concluída": nok_total,
+        "Não Concluída BA": nok_ba,
+        "Não Concluída TT": nok_tt,
+        "Não Concluída Total": nok_total,
         "Iniciada": iniciada,
         "Eficácia": eficacia,
         "Projeção": projecao,

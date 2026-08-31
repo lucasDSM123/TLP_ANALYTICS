@@ -109,7 +109,16 @@ def render(df, indicadores: Indicadores):
 
     # --- Matriz consolidada (BA + TT juntos, sempre expandida, com
     # subtotal por cluster/região — igual ao formato que você já usava) ---
-    with area_com_print("gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador"):
+    _estados_sel = st.session_state.get("filtro_sel_estado") or []
+    _datas_sel = st.session_state.get("filtro_sel_data") or []
+    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
+    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
+
+    with area_com_print(
+        "gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador",
+        legenda_template="FECHAMENTO PRODUÇÃO BA/TT | {estado} (POR COORDENADOR) | {data} {hora}",
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+    ):
         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -160,7 +169,17 @@ def render(df, indicadores: Indicadores):
         "Análise P por Coordenador / Supervisor / Técnico",
         "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6), com quebra até o nível de técnico",
     )
-    grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_filtrado)
+    # Mesmo escopo das demais Análises P (cards / cluster): Contratada = "TLP"
+    # e excluindo Supervisor = "BUCKET" — técnicos do bucket não entram na
+    # classificação P0..>P3, pois são obras que, se não concluídas, sobram
+    # no balde (Bucket) em vez de contar como produtividade do técnico.
+    df_analise_p_cst = df_filtrado
+    if "Contratada" in df_analise_p_cst.columns:
+        df_analise_p_cst = df_analise_p_cst[df_analise_p_cst["Contratada"] == "TLP"]
+    if "Supervisor" in df_analise_p_cst.columns:
+        df_analise_p_cst = df_analise_p_cst[df_analise_p_cst["Supervisor"] != "BUCKET"]
+
+    grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_analise_p_cst)
     with area_com_print("gestores_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico"):
         tabela_analise_p_coordenador_supervisor_tecnico(
             grupos_analise_p_cst, resumo=resumo_coord,

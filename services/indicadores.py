@@ -264,6 +264,17 @@ class Indicadores:
         ok, nok = self._concluido_subset(df_scope)
         return self._to_float(self._eficacia_subset(ok, nok))
 
+    def eficacia_caixa(self):
+        """
+        EFICÁCIA usada nas MATRIZES de produção (por Cluster, Coordenador/
+        Gestor, Cidade etc.): Concluído OK / (Concluído OK + Concluído NOK),
+        dentro do mesmo recorte (self.df) já usado para calcular OK/NOK
+        naquela mesma linha da matriz — igual à fórmula usada nos cards de
+        KPI (`eficacia()`), pra manter os dois números sempre batendo.
+        """
+        concluido = self.concluido()
+        return self._to_float(self._eficacia_subset(concluido["OK"], concluido["NOK"]))
+
     def projecao(self):
         """Calcula PROJEÇÃO: (Esteira * Eficácia) + Concluído OK (segmentado por 'Lado')"""
         esteira = self.esteira()

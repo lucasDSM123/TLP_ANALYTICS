@@ -34,7 +34,7 @@ def tabela_analise_p(df_matriz: pd.DataFrame, coluna_grupo: str, titulo: str = "
         peso = "800" if is_total else "600"
 
         if is_total:
-            bg = TOTAL_BG
+            bg = TOTAL_BG()
             cor_nome = "#FFFFFF"
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
@@ -56,7 +56,7 @@ def tabela_analise_p(df_matriz: pd.DataFrame, coluna_grupo: str, titulo: str = "
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -84,7 +84,7 @@ def _tabela_html(df_tabela: pd.DataFrame, coluna_grupo: str, formato_percentual:
         peso = "800" if is_total else "600"
 
         if is_total:
-            bg = TOTAL_BG
+            bg = TOTAL_BG()
             cor_nome = "#FFFFFF"
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
@@ -114,7 +114,7 @@ def _tabela_html(df_tabela: pd.DataFrame, coluna_grupo: str, formato_percentual:
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}</tbody>"
         f"</table>"
     )
@@ -221,7 +221,7 @@ def _tabela_html_expansivel(grupos: list, coluna_grupo: str, id_tabela: str,
     linha_total_html = ""
     if total_row:
         cel_nome_total = f"<td style='text-align:left; font-weight:800; color:#FFFFFF;'>{total_row.get('Nome', 'Total Geral')}</td>"
-        linha_total_html = f"<tr style='{TOTAL_BG}'>{cel_nome_total}{_celulas_linha_p_total(total_row, formato_percentual)}</tr>"
+        linha_total_html = f"<tr style='{TOTAL_BG()}'>{cel_nome_total}{_celulas_linha_p_total(total_row, formato_percentual)}</tr>"
 
     colunas_extra_header = "<th style='text-align:center;'>TOTAL</th>" if not formato_percentual else ""
     header_html = "<th style='text-align:left;'>CLUSTER / CIDADE</th>" + "".join(
@@ -231,7 +231,7 @@ def _tabela_html_expansivel(grupos: list, coluna_grupo: str, id_tabela: str,
 
     tabela = (
         f"<table style='width:100%; min-width:900px; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"
     )
@@ -341,7 +341,7 @@ def _tabela_html_expansivel_3niveis(grupos: list, id_tabela: str, formato_percen
     linha_total_html = ""
     if total_row:
         cel_nome_total = f"<td style='text-align:left; font-weight:800; color:#FFFFFF;'>{total_row.get('Nome', 'Total Geral')}</td>"
-        linha_total_html = f"<tr style='{TOTAL_BG}'>{cel_nome_total}{_celulas_linha_p_total(total_row, formato_percentual)}</tr>"
+        linha_total_html = f"<tr style='{TOTAL_BG()}'>{cel_nome_total}{_celulas_linha_p_total(total_row, formato_percentual)}</tr>"
 
     colunas_extra_header = "<th style='text-align:center;'>TOTAL</th>" if not formato_percentual else ""
     header_html = "<th style='text-align:left;'>COORDENADOR / SUPERVISOR / TÉCNICO</th>" + "".join(
@@ -351,7 +351,7 @@ def _tabela_html_expansivel_3niveis(grupos: list, id_tabela: str, formato_percen
 
     tabela = (
         f"<table style='width:100%; min-width:950px; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
-        f"<thead><tr style='{CABECALHO_BG}'>{header_html}</tr></thead>"
+        f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"
     )

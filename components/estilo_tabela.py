@@ -8,9 +8,22 @@ import unicodedata
 
 import config
 
-CABECALHO_BG = f"background:{config.HEADER_GRADIENT}; color:#FFFFFF;"
-TOTAL_BG = f"background:{config.HEADER_GRADIENT}; border-top:3px solid {config.TLP_RED};"
-SUBTOTAL_BG = f"background:rgba(255,106,0,0.12); border-top:2px solid {config.TLP_ORANGE};"
+def CABECALHO_BG() -> str:
+    return f"background:{config.HEADER_GRADIENT}; color:#FFFFFF;"
+
+
+def TOTAL_BG() -> str:
+    return f"background:{config.HEADER_GRADIENT}; border-top:3px solid {config.TLP_RED};"
+
+
+def _hex_para_rgba(cor_hex: str, alpha: float) -> str:
+    cor_hex = (cor_hex or "").lstrip("#")
+    r, g, b = int(cor_hex[0:2], 16), int(cor_hex[2:4], 16), int(cor_hex[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def SUBTOTAL_BG() -> str:
+    return f"background:{_hex_para_rgba(config.TLP_ORANGE, 0.12)}; border-top:2px solid {config.TLP_ORANGE};"
 
 
 def pill(texto: str, cor_texto: str, cor_fundo: str, negrito: bool = True) -> str:
@@ -73,8 +86,8 @@ def cor_faixa_bg(valor: float, bom: float, medio: float = None) -> str:
     if valor >= bom:
         return "rgba(34,197,94,0.14)"
     if medio is not None and valor >= medio:
-        return "rgba(255,176,32,0.16)"
-    return "rgba(232,57,29,0.10)"
+        return _hex_para_rgba(config.TLP_GOLD, 0.16)
+    return _hex_para_rgba(config.TLP_RED, 0.10)
 
 
 def wrapper_tabela(conteudo_html: str, altura_max: int = None) -> str:
@@ -119,12 +132,25 @@ def estilo_expansivel(cor_destaque: str = None) -> str:
     quase transparente, que também apagava o zebrado branco/cinza que o
     Python já mandava pronto pra linha de Cidade): agora cada nível tem
     sua própria identidade —
-      • Nível 1 (Cluster/Coordenador) aberto: realce em degrade de marca
-        (vermelho -> laranja -> dourado) numa barra grossa à esquerda,
-        igual ao "bar" usado no resto do site (`tlp-section-title`).
+      • Nível 1 (Cluster/Coordenador) aberto: vira um SUBCABEÇALHO de
+        verdade — fundo sólido e opaco em `config.TLP_ORANGE_LIGHT` (o
+        tom "um pouco mais claro que o cabeçalho principal" de cada
+        tema: laranja claro no tema laranja, azul-marinho claro no tema
+        navy), texto escuro (`config.TEXT` — testado com >4.5:1 de
+        contraste nos dois temas, melhor leitura que texto branco nesse
+        tom claro) e a mesma barra grossa em degradê de marca à esquerda
+        usada no resto do site. Antes era só um
+        tingimento translúcido sobre branco — ficava quase da mesma
+        intensidade das linhas já expandidas por baixo, dificultando
+        notar onde acaba o grupo e começam os detalhes; com fundo sólido
+        o subcabeçalho agora contrasta claramente tanto com o cabeçalho
+        principal (mais escuro/saturado) quanto com as linhas internas
+        (brancas/zebradas).
       • Nível 2, quando também é clicável (Supervisor, no caso de 3
-        níveis): mesmo espírito, barra mais fina e tom mais suave, pra
-        ficar visualmente "abaixo" do nível 1.
+        níveis): mesmo espírito — usa o mesmo tom claro do subcabeçalho,
+        só que translúcido (não sólido) e mais fraco quando fechado, pra
+        ficar visualmente "abaixo" do nível 1 mas ainda assim destacado
+        das linhas-folha.
       • Nível-folha (Cidade final / Técnico): SEM tingir de laranja — fica
         no branco/cinza padrão do site (herda o zebrado que o Python já
         define quando existe; sem `!important` pra não brigar com ele),
@@ -139,6 +165,7 @@ def estilo_expansivel(cor_destaque: str = None) -> str:
     clique (`components/tabela_expansivel.py`).
     """
     cor = cor_destaque or config.TLP_ORANGE
+    cor_subcabecalho = config.TLP_ORANGE_LIGHT
     gradiente_marca = f"linear-gradient(180deg, {config.TLP_RED} 0%, {cor} 55%, {config.TLP_GOLD} 100%)"
     gradiente_suave = f"linear-gradient(180deg, {cor} 0%, {config.TLP_GOLD} 100%)"
     return (
@@ -148,16 +175,26 @@ def estilo_expansivel(cor_destaque: str = None) -> str:
         ".linha-cidade-expansivel td:not(:first-child){"
         f"background-image:{gradiente_marca}; background-repeat:no-repeat; "
         "background-position:left center; background-size:1.5px 62%;}"
-        # Nível 1 (Cluster/Coordenador) aberto.
-        f".linha-cluster-expansivel.cluster-aberto{{background:linear-gradient(90deg,{cor}29 0%,{cor}0F 65%,transparent 100%) !important;}}"
+        # Nível 1 (Cluster/Coordenador) aberto — subcabeçalho sólido.
+        f".linha-cluster-expansivel.cluster-aberto{{background:{cor_subcabecalho} !important;}}"
+        # Força texto escuro (mesma cor do corpo do site) em qualquer
+        # célula/rótulo sem fundo próprio — testado: >4.5:1 de contraste
+        # nos dois temas, bem melhor que texto branco sobre esse tom
+        # claro (o badge de % já tem seu próprio fundo claro opaco — via
+        # `[style*=\"background\"]` — então continua com sua cor original,
+        # sempre legível independente da cor do subcabeçalho).
+        f".linha-cluster-expansivel.cluster-aberto td:not([style*=\"background\"]){{color:{config.TEXT} !important;}}"
+        f".linha-cluster-expansivel.cluster-aberto td span:not([style*=\"background\"]){{color:{config.TEXT} !important;}}"
         ".linha-cluster-expansivel.cluster-aberto td:first-child{"
         f"background-image:{gradiente_marca}; background-repeat:no-repeat; "
         "background-position:left center; background-size:4px 100%; padding-left:16px !important;}"
         # Nível 2 clicável (Supervisor, nas tabelas de 3 níveis) — sempre
-        # com um tapete leve pra se diferenciar da folha, mais forte
-        # quando aberto.
-        f".linha-cidade-expansivel.linha-cluster-expansivel{{background:{cor}0D !important;}}"
-        f".linha-cidade-expansivel.linha-cluster-expansivel.cluster-aberto{{background:linear-gradient(90deg,{cor}22 0%,{cor}0A 65%,transparent 100%) !important;}}"
+        # com um tapete leve pra se diferenciar da folha, e um tom
+        # translúcido do MESMO subcabeçalho do Nível 1 quando aberto
+        # (mais fraco que o sólido de cima — mantém a hierarquia:
+        # cabeçalho > subcabeçalho Nível 1 > subcabeçalho Nível 2 > folha).
+        f".linha-cidade-expansivel.linha-cluster-expansivel{{background:{cor}14 !important;}}"
+        f".linha-cidade-expansivel.linha-cluster-expansivel.cluster-aberto{{background:{_hex_para_rgba(cor_subcabecalho, 0.38)} !important;}}"
         ".linha-cidade-expansivel.linha-cluster-expansivel td:first-child{"
         f"background-image:{gradiente_suave}; background-repeat:no-repeat; "
         "background-position:left center; background-size:3px 100%; padding-left:12px !important;}"

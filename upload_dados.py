@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 from services.database import enviar_dados_para_neon
+from services.historico_intradia import registrar_snapshot
 
 CAMINHO_ARQUIVO = Path("data/PRODUCAO_TLP_TRATADA.xlsx")
 NOME_TABELA = "producao_tlp_tratada"
@@ -70,6 +71,14 @@ def executar_upload() -> bool:
         return False
     duracao_envio = time.time() - inicio_envio
     print(f"⏱️  Comunicação com o Neon (staging + upsert + delete órfãs): {duracao_envio:.1f}s")
+
+    # Fotografa PU/Eficácia desta extração (por Estado) pro gráfico de
+    # evolução intradiária do Dashboard. Roda sempre, mas nunca derruba o
+    # upload principal se falhar — ver services/historico_intradia.py.
+    if registrar_snapshot(df):
+        print("📸 Snapshot intradiário (PU/Eficácia) registrado.")
+    else:
+        print("⚠️ Snapshot intradiário não registrado (ver aviso acima, se houver).")
 
     duracao_total = time.time() - inicio_total
     print(f"✅ Upload concluído em {duracao_total:.1f}s no total ({len(df)} registros).")

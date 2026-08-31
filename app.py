@@ -10,7 +10,7 @@ from services.loader import carregar_base
 from services.indicadores import Indicadores
 from utils.assets import imagem_como_data_uri
 
-from views import dashboard, acumulado_mes, cotas, gestores, relatorios, configuracoes
+from views import dashboard, acumulado_mes, cotas, chegada, gestores, relatorios, configuracoes
 
 # ================================================
 # CONFIGURAÇÃO INICIAL
@@ -22,6 +22,14 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ================================================
+# TEMA (laranja/navy) — precisa rodar ANTES do bloco de CSS abaixo,
+# pra config.TLP_ORANGE, config.CARD, config.CSS_PATH etc. já refletirem
+# o tema escolhido pelo usuário nesta sessão.
+# ================================================
+
+config.aplicar_tema_da_sessao()
 
 # ================================================
 # CSS + TEMA (imagem de fundo TLP embutida em base64)
@@ -79,6 +87,13 @@ if col_extracao:
     if not serie_extracao.empty:
         data_extracao = serie_extracao.max()
 
+# Deixa a hora da extração disponível pra qualquer parte do site (ex.:
+# legenda automática do botão "Copiar imagem", que preenche o "{hora}"
+# do texto sozinha em vez de precisar digitar toda vez).
+st.session_state["data_extracao_hora"] = (
+    data_extracao.strftime("%H:%M") if hasattr(data_extracao, "strftime") else ""
+)
+
 # ================================================
 # SIDEBAR
 # ================================================
@@ -108,6 +123,7 @@ PAGINAS = {
     "Dashboard": dashboard,
     "Acumulado Mês": acumulado_mes,
     "Cotas": cotas,
+    "Chegada": chegada,
     "Gestores": gestores,
     "Relatórios": relatorios,
     "Configurações": configuracoes,

@@ -1,0 +1,109 @@
+--- tlp7/views/chegada.py	2026-08-28 18:11:26.000000000 +0000
++++ tlp/views/chegada.py	2026-08-28 19:00:18.980605281 +0000
+@@ -8,8 +8,6 @@
+ from components.charts import (
+     grafico_status_pizza,
+     grafico_ranking,
+-    grafico_tempo_inicio_janela,
+-    renderizar_grafico_scroll,
+     opcoes_grafico,
+ )
+ from components.print_button import area_com_print
+@@ -32,7 +30,6 @@
+     calcular_indicador_termino,
+     resumo_tempo_termino,
+     tempo_termino_por_janela,
+-    filtrar_por_status_termino,
+ )
+ 
+ 
+@@ -179,24 +176,13 @@
+ 
+         tabela_tempo_janela = tempo_inicio_por_janela(df_chegada)
+         if not tabela_tempo_janela.empty:
+-            col_graf_tempo, col_tab_tempo = st.columns([1, 1])
+-            with col_graf_tempo:
+-                with area_com_print(f"chegada_tempo_inicio_grafico_{janela_sel}", nome_arquivo="tempo_inicio_por_janela"):
+-                    renderizar_grafico_scroll(
+-                        grafico_tempo_inicio_janela(
+-                            tabela_tempo_janela, titulo="Tempo Médio até Início — por Janela de Serviço",
+-                        ),
+-                        n_categorias=len(tabela_tempo_janela),
+-                        nome_arquivo="tempo_inicio_por_janela",
+-                    )
+-            with col_tab_tempo:
+-                with area_com_print(f"chegada_tempo_inicio_tabela_{janela_sel}", nome_arquivo="tempo_inicio_tabela_por_janela"):
+-                    st.dataframe(
+-                        tabela_tempo_janela.drop(columns="_tempo_medio_min"),
+-                        width="stretch",
+-                        hide_index=True,
+-                        height=380,
+-                    )
++            with area_com_print(f"chegada_tempo_inicio_tabela_{janela_sel}", nome_arquivo="tempo_inicio_tabela_por_janela"):
++                st.dataframe(
++                    tabela_tempo_janela.drop(columns="_tempo_medio_min"),
++                    width="stretch",
++                    hide_index=True,
++                    height=380,
++                )
+ 
+     st.divider()
+ 
+@@ -213,15 +199,7 @@
+     )
+ 
+     df_termino = calcular_indicador_termino(df_filtrado)
+-
+-    status_termino_opcoes = ["Todos", "Dentro", "Antes", "Depois", "Fora"]
+-    status_termino_sel = st.radio(
+-        "Filtrar por status de término",
+-        status_termino_opcoes,
+-        horizontal=True,
+-        key="chg_status_termino",
+-    )
+-    df_termino_filtrado = filtrar_por_status_termino(df_termino, status_termino_sel)
++    df_termino_filtrado = df_termino
+ 
+     tempo_termino_geral = resumo_tempo_termino(df_termino_filtrado)
+ 
+@@ -230,7 +208,7 @@
+     elif tempo_termino_geral["total"] == 0:
+         st.info("Nenhuma OS avaliável para este filtro.")
+     else:
+-        with area_com_print(f"chegada_tempo_termino_cards_{janela_sel}_{status_termino_sel}", nome_arquivo="tempo_termino_resumo"):
++        with area_com_print(f"chegada_tempo_termino_cards_{janela_sel}", nome_arquivo="tempo_termino_resumo"):
+             col1, col2, col3 = st.columns(3)
+             with col1:
+                 card("Horário Médio de Término", tempo_termino_geral["horario_medio"], color="#2E63C7")
+@@ -244,24 +222,13 @@
+ 
+         tabela_termino_janela = tempo_termino_por_janela(df_termino_filtrado)
+         if not tabela_termino_janela.empty:
+-            col_graf_termino, col_tab_termino = st.columns([1, 1])
+-            with col_graf_termino:
+-                with area_com_print(f"chegada_tempo_termino_grafico_{janela_sel}_{status_termino_sel}", nome_arquivo="tempo_termino_por_janela"):
+-                    renderizar_grafico_scroll(
+-                        grafico_tempo_inicio_janela(
+-                            tabela_termino_janela, titulo="Tempo Médio até Término — por Janela de Serviço",
+-                        ),
+-                        n_categorias=len(tabela_termino_janela),
+-                        nome_arquivo="tempo_termino_por_janela",
+-                    )
+-            with col_tab_termino:
+-                with area_com_print(f"chegada_tempo_termino_tabela_{janela_sel}_{status_termino_sel}", nome_arquivo="tempo_termino_tabela_por_janela"):
+-                    st.dataframe(
+-                        tabela_termino_janela.drop(columns="_tempo_medio_min"),
+-                        width="stretch",
+-                        hide_index=True,
+-                        height=380,
+-                    )
++            with area_com_print(f"chegada_tempo_termino_tabela_{janela_sel}", nome_arquivo="tempo_termino_tabela_por_janela"):
++                st.dataframe(
++                    tabela_termino_janela.drop(columns="_tempo_medio_min"),
++                    width="stretch",
++                    hide_index=True,
++                    height=380,
++                )
+ 
+     st.divider()
+ 
