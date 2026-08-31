@@ -185,6 +185,15 @@ def estilo_expansivel(cor_destaque: str = None) -> str:
         # sempre legível independente da cor do subcabeçalho).
         f".linha-cluster-expansivel.cluster-aberto td:not([style*=\"background\"]){{color:{config.TEXT} !important;}}"
         f".linha-cluster-expansivel.cluster-aberto td span:not([style*=\"background\"]){{color:{config.TEXT} !important;}}"
+        # O badge de %, por sua vez, TEM fundo próprio — mas era um verde/
+        # vermelho bem clarinho e translúcido (pensado pra ficar sobre
+        # branco); em cima do subcabeçalho sólido ele "camuflava". Reforça
+        # pra um branco quase opaco só dentro das linhas de subcabeçalho
+        # abertas (nível 1 e nível 2), deixando o texto colorido do badge
+        # de fora dessa regra — assim ele volta a se destacar.
+        ".cluster-aberto td span[style*=\"background\"]{"
+        "background:rgba(255,255,255,0.92) !important; "
+        "box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);}"
         ".linha-cluster-expansivel.cluster-aberto td:first-child{"
         f"background-image:{gradiente_marca}; background-repeat:no-repeat; "
         "background-position:left center; background-size:4px 100%; padding-left:16px !important;}"
