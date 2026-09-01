@@ -12,7 +12,7 @@ from services.grupos import metricas_por_grupo, metricas_por_tecnico, matriz_pro
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos, matriz_analise_p_coordenador_supervisor_tecnico
-from components.print_button import area_com_print
+from components.print_button import area_com_print, legenda_producao_ou_fechamento
 
 
 def render(df, indicadores: Indicadores):
@@ -116,7 +116,11 @@ def render(df, indicadores: Indicadores):
 
     with area_com_print(
         "gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador",
-        legenda_template="FECHAMENTO PRODUÇÃO BA/TT | {estado} (POR COORDENADOR) | {data} {hora}",
+        legenda_template=legenda_producao_ou_fechamento(
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA/TT | {estado} (POR GESTÃO) | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO BA/TT | {estado} (POR COORDENADOR) | {data} {hora}",
+            _datas_sel,
+        ),
         legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
     ):
         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))

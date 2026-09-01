@@ -3,8 +3,39 @@ import re
 import unicodedata
 import uuid
 from contextlib import contextmanager
+from datetime import datetime
 
 import streamlit as st
+
+
+def eh_legenda_producao(datas_sel=None) -> bool:
+    """
+    Decide se a legenda de uma área com \"Copiar imagem\" deve usar o texto
+    de PRODUÇÃO (visão do dia corrente — nenhuma data marcada no filtro do
+    topo, ou só a data de hoje marcada) ou de FECHAMENTO (quando alguma
+    data marcada no filtro é de ontem pra trás, ou seja, dado já fechado).
+
+    `datas_sel` é a lista de datas (\"dd/mm/aaaa\") marcadas no filtro do
+    topo (`st.session_state[\"filtro_sel_data\"]`); se não for informada,
+    resolve automaticamente a partir do session_state.
+    """
+    if datas_sel is None:
+        datas_sel = st.session_state.get("filtro_sel_data") or []
+    if not datas_sel:
+        # Nenhuma data marcada = visão geral do dia corrente -> produção.
+        return True
+    hoje = datetime.now().strftime("%d/%m/%Y")
+    return all(d == hoje for d in datas_sel)
+
+
+def legenda_producao_ou_fechamento(template_producao: str, template_fechamento: str, datas_sel=None) -> str:
+    """
+    Retorna `template_producao` se a(s) data(s) marcada(s) no filtro do
+    topo forem a de hoje (ou nenhuma estiver marcada), e
+    `template_fechamento` caso alguma data marcada seja de ontem pra trás.
+    Ver `eh_legenda_producao` para o critério completo.
+    """
+    return template_producao if eh_legenda_producao(datas_sel) else template_fechamento
 
 
 def montar_legenda(template: str, variaveis: dict, chave_horario: str) -> str:

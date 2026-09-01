@@ -8,7 +8,7 @@ from components.tabelas import tabela_matriz_expansivel
 from components.tabela_analise_p import tabela_analise_p_cluster_cidade
 from components.analise_indicador import render_analise_indicador
 from components.seletor_indicador import seletor_indicador_topo
-from components.print_button import area_com_print
+from components.print_button import area_com_print, legenda_producao_ou_fechamento
 from services.indicadores import Indicadores
 from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade
 from services.analise_p import matriz_analise_p_cluster_cidade
@@ -44,7 +44,11 @@ def render(df, indicadores: Indicadores):
 
     with area_com_print(
         "dashboard_cards_principais", nome_arquivo="indicadores_principais",
-        legenda_template="PRODUÇÃO GERAL {estado} | {data} {hora}",
+        legenda_template=legenda_producao_ou_fechamento(
+            "PRODUÇÃO GERAL | {estado} | {data} {hora}",
+            "FECHAMENTO GERAL | {estado} | {data} {hora}",
+            _datas_sel,
+        ),
         legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
     ):
         col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -129,7 +133,11 @@ def render(df, indicadores: Indicadores):
     grupos_ba = matriz_producao_cluster_cidade(df, lado="BA")
     with area_com_print(
         "dashboard_matriz_ba", nome_arquivo="producao_ba",
-        legenda_template="FECHAMENTO PRODUÇÃO BA | {estado} | {data} {hora}",
+        legenda_template=legenda_producao_ou_fechamento(
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA | {estado} | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO BA | {estado} | {data} {hora}",
+            _datas_sel,
+        ),
         legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
     ):
         tabela_matriz_expansivel(
@@ -149,7 +157,11 @@ def render(df, indicadores: Indicadores):
     grupos_tt = matriz_producao_cluster_cidade(df, lado="TT")
     with area_com_print(
         "dashboard_matriz_tt", nome_arquivo="producao_tt",
-        legenda_template="FECHAMENTO PRODUÇÃO TT | {estado} | {data} {hora}",
+        legenda_template=legenda_producao_ou_fechamento(
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - TT | {estado} | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO TT | {estado} | {data} {hora}",
+            _datas_sel,
+        ),
         legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
     ):
         tabela_matriz_expansivel(
