@@ -12,7 +12,7 @@ from services.grupos import metricas_por_grupo, metricas_por_tecnico, matriz_pro
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos, matriz_analise_p_coordenador_supervisor_tecnico
-from components.print_button import area_com_print, legenda_producao_ou_fechamento
+from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros
 
 
 def render(df, indicadores: Indicadores):
@@ -109,19 +109,20 @@ def render(df, indicadores: Indicadores):
 
     # --- Matriz consolidada (BA + TT juntos, sempre expandida, com
     # subtotal por cluster/região — igual ao formato que você já usava) ---
-    _estados_sel = st.session_state.get("filtro_sel_estado") or []
-    _datas_sel = st.session_state.get("filtro_sel_data") or []
-    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
-    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
+    _ctx_legenda = contexto_legenda_filtros()
+    _estado_legenda = _ctx_legenda["estado"]
+    _data_legenda = _ctx_legenda["data"]
+    _sufixo_legenda = _ctx_legenda["sufixo"]
+    _datas_sel = _ctx_legenda["datas_sel"]
 
     with area_com_print(
         "gestores_matriz_coordenadores", nome_arquivo="producao_por_coordenador",
         legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA/TT | {estado} (POR GESTÃO) | {data} {hora}",
-            "FECHAMENTO PRODUÇÃO BA/TT | {estado} (POR COORDENADOR) | {data} {hora}",
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA/TT | {estado}{sufixo} (POR GESTÃO) | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO BA/TT | {estado}{sufixo} (POR COORDENADOR) | {data} {hora}",
             _datas_sel,
         ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
     ):
         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
 
@@ -253,7 +254,7 @@ def render(df, indicadores: Indicadores):
         if matriz_tec.empty:
             st.info("Sem técnicos com atividades para este supervisor nos filtros atuais.")
         else:
-            with area_com_print(f"gestores_ranking_tecnicos_{sup_sel}", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
+            with area_com_print("gestores_ranking_tecnicos", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
                 st.plotly_chart(
                     grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
                     width='stretch',

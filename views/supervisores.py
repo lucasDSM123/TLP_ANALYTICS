@@ -147,10 +147,10 @@ def render(df, indicadores: Indicadores):
                 "Projeção": projecao_t["GERAL"],
             }
 
-            with area_com_print(f"supervisores_matriz_tecnicos_{sup_sel}", nome_arquivo=f"matriz_tecnicos_{sup_sel}"):
+            with area_com_print("supervisores_matriz_tecnicos", nome_arquivo=f"matriz_tecnicos_{sup_sel}"):
                 render_tabela_tecnicos(matriz_tec_fmt, total_tecnicos)
             st.write("")
-            with area_com_print(f"supervisores_ranking_tecnicos_{sup_sel}", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
+            with area_com_print("supervisores_ranking_tecnicos", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
                 st.plotly_chart(
                     grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
                     width='stretch',

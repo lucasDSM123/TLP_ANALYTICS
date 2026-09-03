@@ -26,7 +26,7 @@ def render(df, indicadores: Indicadores):
     esteira = ind_filtrado.esteira()
     iniciada = ind_filtrado.iniciada()
 
-    with area_com_print(f"cidades_cards_{estado_sel}", nome_arquivo=f"resumo_cidades_{estado_sel}"):
+    with area_com_print("cidades_cards", nome_arquivo=f"resumo_cidades_{estado_sel}"):
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Cidades", ranking.shape[0])
         col2.metric("Caixa Total", f"{caixa['TOTAL']:,}".replace(",", "."))
@@ -38,7 +38,7 @@ def render(df, indicadores: Indicadores):
     col_graf, col_tab = st.columns([1, 1])
 
     with col_graf:
-        with area_com_print(f"cidades_grafico_ranking_{estado_sel}", nome_arquivo=f"top15_caixa_total_cidades_{estado_sel}"):
+        with area_com_print("cidades_grafico_ranking", nome_arquivo=f"top15_caixa_total_cidades_{estado_sel}"):
             st.plotly_chart(
                 grafico_ranking(ranking, "Caixa Total", "Top 15 — Caixa Total"),
                 width='stretch',
@@ -48,7 +48,7 @@ def render(df, indicadores: Indicadores):
     with col_tab:
         tabela = ranking.sort_values("Caixa Total", ascending=False).copy()
         tabela["Eficácia"] = tabela["Eficácia"] * 100
-        with area_com_print(f"cidades_tabela_ranking_{estado_sel}", nome_arquivo=f"ranking_cidades_{estado_sel}"):
+        with area_com_print("cidades_tabela_ranking", nome_arquivo=f"ranking_cidades_{estado_sel}"):
             st.dataframe(
                 tabela,
                 width='stretch',
@@ -61,7 +61,7 @@ def render(df, indicadores: Indicadores):
 
     st.divider()
     secao_titulo("Produção Diária", "Filtro aplicado acima")
-    with area_com_print(f"cidades_grafico_producao_{estado_sel}", nome_arquivo=f"producao_diaria_cidades_{estado_sel}"):
+    with area_com_print("cidades_grafico_producao", nome_arquivo=f"producao_diaria_cidades_{estado_sel}"):
         st.plotly_chart(
             grafico_producao_dia(df_filtrado), width='stretch',
             config=opcoes_grafico(f"producao_diaria_cidades_{estado_sel}"),

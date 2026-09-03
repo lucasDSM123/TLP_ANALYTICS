@@ -92,7 +92,7 @@ def render(df, indicadores):
     # Cards resumo do dia (mesmo componente card() usado nas outras abas)
     # ------------------------------------------------------------
     cards = resumo_cards(df_dia)
-    with area_com_print(f"cotas_cards_{dia_sel}{sufixo_chave}", nome_arquivo=f"resumo_cotas_{dia_sel}{sufixo_chave}"):
+    with area_com_print("cotas_cards", nome_arquivo=f"resumo_cotas_{dia_sel}{sufixo_chave}"):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             valor = f"{cards['Cota']:,}".replace(",", ".") + (f" {unidade}" if unidade else "")
@@ -119,7 +119,7 @@ def render(df, indicadores):
 
     pivot_cota, pivot_real, pivot_gap = resumo_turno(df_dia)
 
-    with area_com_print(f"cotas_turno_{dia_sel}{sufixo_chave}", nome_arquivo=f"distribuicao_turno_{dia_sel}{sufixo_chave}"):
+    with area_com_print("cotas_turno", nome_arquivo=f"distribuicao_turno_{dia_sel}{sufixo_chave}"):
         tabela_distribuicao_turno(pivot_cota, pivot_real, pivot_gap)
 
     st.divider()
@@ -140,7 +140,7 @@ def render(df, indicadores):
         if por_cluster.empty:
             st.info("Sem dados de cluster para este dia.")
         else:
-            with area_com_print(f"cotas_arvore_{dia_sel}{sufixo_chave}", nome_arquivo=f"cotas_cluster_cidade_{dia_sel}{sufixo_chave}"):
+            with area_com_print("cotas_arvore", nome_arquivo=f"cotas_cluster_cidade_{dia_sel}{sufixo_chave}"):
                 for _, linha in por_cluster.iterrows():
                     cluster_nome = linha["Cluster"]
                     rotulo = (
@@ -199,5 +199,5 @@ def render(df, indicadores):
             matriz_total = matriz_agendada_slot(df_dia.assign(**{"__total__": "TOTAL"}), nivel="__total__")
             linha_total = matriz_total.loc["TOTAL"] if "TOTAL" in matriz_total.index else None
 
-            with area_com_print(f"cotas_matriz_{dia_sel}{sufixo_chave}", nome_arquivo=f"matriz_agendada_{dia_sel}{sufixo_chave}"):
+            with area_com_print("cotas_matriz", nome_arquivo=f"matriz_agendada_{dia_sel}{sufixo_chave}"):
                 tabela_matriz_agendada(matriz_cluster, linha_total=linha_total, nome_linha="Cluster")

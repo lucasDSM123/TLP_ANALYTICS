@@ -1,7 +1,6 @@
 import json
 import re
 import unicodedata
-import uuid
 from contextlib import contextmanager
 from datetime import datetime
 
@@ -36,6 +35,83 @@ def legenda_producao_ou_fechamento(template_producao: str, template_fechamento: 
     Ver `eh_legenda_producao` para o critério completo.
     """
     return template_producao if eh_legenda_producao(datas_sel) else template_fechamento
+
+
+def sufixo_selecao(*grupos) -> str:
+    """
+    Monta o sufixo " - NOME1/NOME2 - NOME3" pra legenda automática a
+    partir de listas de nomes já marcados nos filtros (ex.: Cluster,
+    Coordenador) — cada lista vira um bloco "NOME/NOME" unido por "/", e
+    os blocos (quando mais de um filtro estiver marcado ao mesmo tempo)
+    são unidos por " - ". Listas vazias/`None` são ignoradas. Retorna ""
+    se nada estiver marcado.
+    """
+    blocos = ["/".join(g) for g in grupos if g]
+    return (" - " + " - ".join(blocos)) if blocos else ""
+
+
+def contexto_legenda_filtros() -> dict:
+    """
+    Lê os filtros atualmente marcados na barra do topo do site (Estado,
+    Data, Cluster, Cidade, Coordenador) direto de `st.session_state` e
+    devolve um dicionário pronto pra alimentar `legenda_vars` — assim
+    TODA legenda automática do site (Dashboard, Gestores, Chegada, etc.)
+    reflete exatamente o que está marcado ("flegado") na barra de
+    filtros, e não só Estado/Data.
+
+    Chaves devolvidas:
+    - "estado": Estado(s) marcados unidos por "/" (ex.: "SC/PR"), ou
+      "TODOS" se nenhum estiver marcado.
+    - "data": Data(s) marcada(s) unidas por " / ", ou "TODAS AS DATAS".
+    - "sufixo": bloco pronto pra colar no fim do Estado na legenda (ex.:
+      " - CLUSTER_X - CIDADE_Y - WILLIAN SCHNAIDER"), com o(s) nome(s) de
+      Cluster/Cidade/Coordenador marcados nesta ordem — cada filtro com
+      mais de um valor marcado vira "NOME1/NOME2" dentro do seu bloco.
+      Vira "" (string vazia) quando nenhum desses três filtros estiver
+      marcado, então templates com "{estado}{sufixo}" continuam corretos
+      mesmo sem nada selecionado.
+    - "datas_sel": lista crua de datas marcadas (pra quem precisa decidir
+      entre legenda de PRODUÇÃO ou FECHAMENTO via
+      `legenda_producao_ou_fechamento`).
+    """
+    estados_sel = st.session_state.get("filtro_sel_estado") or []
+    datas_sel = st.session_state.get("filtro_sel_data") or []
+    clusters_sel = st.session_state.get("filtro_sel_cluster") or []
+    cidades_sel = st.session_state.get("filtro_sel_cidade") or []
+    coordenadores_sel = st.session_state.get("filtro_sel_coordenador") or []
+
+    return {
+        "estado": "/".join(estados_sel) if estados_sel else "TODOS",
+        "data": " / ".join(datas_sel) if datas_sel else "TODAS AS DATAS",
+        "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel),
+        "datas_sel": datas_sel,
+    }
+
+
+def formatar_hora_compacta(hora: str) -> str:
+    """Converte 'HH:MM' no formato compacto usado nas legendas (ex.:
+    '08:30' -> '8h30', '14:00' -> '14h00'), removendo o zero à esquerda
+    da hora quando houver. Se `hora` não estiver no formato esperado,
+    devolve o texto original sem alterar."""
+    texto = str(hora).strip()
+    partes = texto.split(":")
+    if len(partes) != 2:
+        return texto
+    h, m = partes
+    h = h.lstrip("0") or "0"
+    return f"{h}h{m}"
+
+
+def janela_inicio_compacta(janela: str) -> str:
+    """Extrai o horário de início de uma Janela de Serviço no formato
+    'HH:MM - HH:MM' (ex.: '08:30 - 10:30') e devolve já no formato
+    compacto das legendas (ex.: '8h30'). Ver `formatar_hora_compacta`.
+    Quando nenhuma janela específica está selecionada ('Todos'), a
+    legenda mostra 'Acumulado' em vez de 'Todos'."""
+    if str(janela).strip() == "Todos":
+        return "Acumulado"
+    inicio = str(janela).split("-")[0].strip()
+    return formatar_hora_compacta(inicio)
 
 
 def montar_legenda(template: str, variaveis: dict, chave_horario: str) -> str:
@@ -112,7 +188,14 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
     """
     chave_container = sanitizar_chave(chave_container)
     nome_arquivo = sanitizar_chave(nome_arquivo or chave_container)
-    id_botao = f"btn-print-{chave_container}-{uuid.uuid4().hex[:6]}"
+    # Id determinístico (sem uuid aleatório): gerar um id novo a cada rerun
+    # forçava o conteúdo do <iframe> a mudar sempre, mesmo sem nada de
+    # relevante ter mudado, obrigando o navegador a recriar o iframe do
+    # zero em toda interação da página (inclusive cliques em outras áreas,
+    # como abrir/fechar um Cluster) — churn de DOM desnecessário que podia
+    # colidir com a reconciliação do React. Com o id fixo por área, o
+    # navegador só recria o iframe quando o conteúdo realmente muda.
+    id_botao = f"btn-print-{chave_container}"
     legenda_js = json.dumps(legenda) if legenda else "null"
 
     if legenda:
@@ -158,7 +241,7 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
             link.href = canvas.toDataURL('image/png');
             doc.body.appendChild(link);
             link.click();
-            doc.body.removeChild(link);
+            if (link.parentNode) {{ link.parentNode.removeChild(link); }}
         }}
 
         function removerCortes(raiz) {{
@@ -366,6 +449,22 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                 wrapper.style.left = '-99999px';
                 wrapper.style.background = '#FFFFFF';
                 var copia = alvo.cloneNode(true);
+                // Remove qualquer <iframe> que tenha vindo junto no clone
+                // (ex.: o iframezinho invisível que liga o clique de
+                // abrir/fechar Cluster/Coordenador — `ativar_tabelas_
+                // expansiveis` — quando ele mora dentro da mesma área
+                // fotografada). Sem isso, ao inserir esse iframe clonado
+                // na página (mesmo fora da tela) o navegador recarrega e
+                // reexecuta o script dele, que reatribui
+                // `document.onclick`; quando esse iframe clonado é
+                // removido logo em seguida, a função vira um "objeto
+                // morto" (a página perde a referência viva pro handler) e
+                // o clique de expandir/encolher para de responder depois
+                // de copiar a imagem uma vez. O iframe original (fora da
+                // cópia) continua intacto e não precisa aparecer no
+                // print, então é seguro remover só na cópia.
+                var iframesClone = copia.querySelectorAll('iframe');
+                iframesClone.forEach(function(f) {{ f.remove(); }});
                 // Margem de segurança na PRÓPRIA cópia (não no wrapper —
                 // como o html2canvas fotografa "copia" diretamente, um
                 // padding no wrapper não tem efeito nenhum na captura).
@@ -413,7 +512,7 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                     scale: 2,
                     useCORS: true,
                 }}).then(function(canvas) {{
-                    doc.body.removeChild(wrapper);
+                    if (wrapper.parentNode) {{ wrapper.parentNode.removeChild(wrapper); }}
                     canvas.toBlob(function(blob) {{
                         if (!blob) {{
                             status.textContent = 'Erro ao gerar a imagem.';
@@ -441,7 +540,7 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                         }}
                     }});
                 }}).catch(function() {{
-                    doc.body.removeChild(wrapper);
+                    if (wrapper.parentNode) {{ wrapper.parentNode.removeChild(wrapper); }}
                     status.textContent = 'Erro ao gerar a imagem.';
                 }});
                 }}

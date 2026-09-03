@@ -10,7 +10,7 @@ from components.charts import (
     grafico_ranking,
     opcoes_grafico,
 )
-from components.print_button import area_com_print
+from components.print_button import area_com_print, janela_inicio_compacta, contexto_legenda_filtros
 from components.tabelas import tabela_chegada_expansivel_3niveis
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.indicadores import Indicadores
@@ -37,6 +37,15 @@ def render(df, indicadores: Indicadores):
     secao_titulo("Chegada", "Aderência do técnico à Janela de Serviço (horário real x agendado)")
     st.caption("⏱️ Tolerância: início até 60 min antes da Janela ou até 30 min depois da abertura ainda conta como 'Dentro'. Exclui OS Canceladas, Não Iniciadas e em rota.")
 
+    # Legenda automática (texto que acompanha a imagem ao copiar): reflete
+    # TODOS os filtros marcados na barra do topo (Estado, Data, Cluster,
+    # Cidade, Coordenador) — mesmo padrão usado nas legendas do
+    # Dashboard/Gestores.
+    _ctx_legenda = contexto_legenda_filtros()
+    _estado_legenda = _ctx_legenda["estado"]
+    _data_legenda = _ctx_legenda["data"]
+    _sufixo_legenda = _ctx_legenda["sufixo"]
+
     if "Janela" not in df.columns or "Início" not in df.columns:
         st.warning("Este indicador precisa das colunas 'Janela' e 'Início' na base, que não foram encontradas.")
         return
@@ -62,7 +71,7 @@ def render(df, indicadores: Indicadores):
         return
 
     # ====== KPIs ======
-    with area_com_print(f"chegada_cards_{janela_sel}", nome_arquivo="resumo_chegada"):
+    with area_com_print("chegada_cards", nome_arquivo="resumo_chegada"):
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             card("OS Avaliadas", f"{resumo['total']:,}".replace(",", "."), color="#2E63C7")
@@ -88,7 +97,7 @@ def render(df, indicadores: Indicadores):
     col_graf, col_rank = st.columns([1, 1])
 
     with col_graf:
-        with area_com_print(f"chegada_pizza_{janela_sel}", nome_arquivo="chegada_dentro_x_fora"):
+        with area_com_print("chegada_pizza", nome_arquivo="chegada_dentro_x_fora"):
             st.plotly_chart(
                 grafico_status_pizza(
                     {"Dentro": resumo["dentro"], "Antes": resumo["antes"], "Depois": resumo["depois"]},
@@ -101,7 +110,7 @@ def render(df, indicadores: Indicadores):
     with col_rank:
         ranking_cluster = resumo_por_grupo(df_chegada, "Cluster")
         if not ranking_cluster.empty:
-            with area_com_print(f"chegada_ranking_cluster_{janela_sel}", nome_arquivo="chegada_ranking_cluster"):
+            with area_com_print("chegada_ranking_cluster", nome_arquivo="chegada_ranking_cluster"):
                 st.plotly_chart(
                     grafico_ranking(ranking_cluster, "% Dentro", "Ranking por Cluster — % Dentro da Janela"),
                     width="stretch",
@@ -116,7 +125,14 @@ def render(df, indicadores: Indicadores):
     aba_cluster, aba_gestores = st.tabs(["Por Cluster", "Por Gestores"])
 
     with aba_cluster:
-        with area_com_print(f"chegada_matriz_cluster_{janela_sel}", nome_arquivo="chegada_por_cluster_cidade_zona"):
+        with area_com_print(
+            "chegada_matriz_cluster", nome_arquivo="chegada_por_cluster_cidade_zona",
+            legenda_template="{janela} | Indicador de Chegada BA/TT - {estado}{sufixo} | {data} {hora}",
+            legenda_vars={
+                "janela": janela_inicio_compacta(janela_sel),
+                "estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda,
+            },
+        ):
             dados_cluster = resumo_hierarquico_3niveis(df_chegada, "Cluster", "Cidade", "Zona")
             tabela_chegada_expansivel_3niveis(
                 dados_cluster, titulo="Por Cluster", meta_pct=80.0,
@@ -137,7 +153,14 @@ def render(df, indicadores: Indicadores):
         else:
             rotulo_tecnico = "COORDENADOR / SUPERVISOR / TÉCNICO"
 
-        with area_com_print(f"chegada_matriz_gestores_{janela_sel}", nome_arquivo="chegada_por_coordenador_supervisor_tecnico"):
+        with area_com_print(
+            "chegada_matriz_gestores", nome_arquivo="chegada_por_coordenador_supervisor_tecnico",
+            legenda_template="{janela} | Indicador de Chegada BA/TT - {estado}{sufixo} (POR GESTÃO) | {data} {hora}",
+            legenda_vars={
+                "janela": janela_inicio_compacta(janela_sel),
+                "estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda,
+            },
+        ):
             tabela_chegada_expansivel_3niveis(
                 dados_gestores, titulo="Por Gestores", meta_pct=80.0,
                 rotulo_grupo=rotulo_tecnico, rotulo_clique="Coordenador",
@@ -162,7 +185,7 @@ def render(df, indicadores: Indicadores):
     if tempo_geral["total"] == 0:
         st.info("Nenhuma OS avaliável para este filtro.")
     else:
-        with area_com_print(f"chegada_tempo_inicio_cards_{janela_sel}", nome_arquivo="tempo_inicio_resumo"):
+        with area_com_print("chegada_tempo_inicio_cards", nome_arquivo="tempo_inicio_resumo"):
             col1, col2, col3 = st.columns(3)
             with col1:
                 card("Horário Médio de Início", tempo_geral["horario_medio"], color="#2E63C7")
@@ -176,7 +199,7 @@ def render(df, indicadores: Indicadores):
 
         tabela_tempo_janela = tempo_inicio_por_janela(df_chegada)
         if not tabela_tempo_janela.empty:
-            with area_com_print(f"chegada_tempo_inicio_tabela_{janela_sel}", nome_arquivo="tempo_inicio_tabela_por_janela"):
+            with area_com_print("chegada_tempo_inicio_tabela", nome_arquivo="tempo_inicio_tabela_por_janela"):
                 st.dataframe(
                     tabela_tempo_janela.drop(columns="_tempo_medio_min"),
                     width="stretch",
@@ -208,7 +231,7 @@ def render(df, indicadores: Indicadores):
     elif tempo_termino_geral["total"] == 0:
         st.info("Nenhuma OS avaliável para este filtro.")
     else:
-        with area_com_print(f"chegada_tempo_termino_cards_{janela_sel}", nome_arquivo="tempo_termino_resumo"):
+        with area_com_print("chegada_tempo_termino_cards", nome_arquivo="tempo_termino_resumo"):
             col1, col2, col3 = st.columns(3)
             with col1:
                 card("Horário Médio de Término", tempo_termino_geral["horario_medio"], color="#2E63C7")
@@ -222,7 +245,7 @@ def render(df, indicadores: Indicadores):
 
         tabela_termino_janela = tempo_termino_por_janela(df_termino_filtrado)
         if not tabela_termino_janela.empty:
-            with area_com_print(f"chegada_tempo_termino_tabela_{janela_sel}", nome_arquivo="tempo_termino_tabela_por_janela"):
+            with area_com_print("chegada_tempo_termino_tabela", nome_arquivo="tempo_termino_tabela_por_janela"):
                 st.dataframe(
                     tabela_termino_janela.drop(columns="_tempo_medio_min"),
                     width="stretch",
@@ -242,7 +265,7 @@ def render(df, indicadores: Indicadores):
 
     with col_top_tecnico:
         ranking_tecnicos = ranking_ofensores(df_chegada, "Técnico", top_n=10)
-        with area_com_print(f"chegada_ofensores_tecnico_{janela_sel}", nome_arquivo="chegada_top10_tecnicos_ofensores"):
+        with area_com_print("chegada_ofensores_tecnico", nome_arquivo="chegada_top10_tecnicos_ofensores"):
             if ranking_tecnicos.empty:
                 st.info("Nenhuma chegada 'Depois' registrada para este filtro.")
             else:
@@ -259,7 +282,7 @@ def render(df, indicadores: Indicadores):
 
     with col_top_supervisor:
         ranking_supervisores = ranking_ofensores(df_chegada, "Supervisor", top_n=10)
-        with area_com_print(f"chegada_ofensores_supervisor_{janela_sel}", nome_arquivo="chegada_top10_supervisores_ofensores"):
+        with area_com_print("chegada_ofensores_supervisor", nome_arquivo="chegada_top10_supervisores_ofensores"):
             if ranking_supervisores.empty:
                 st.info("Nenhuma chegada 'Depois' registrada para este filtro.")
             else:

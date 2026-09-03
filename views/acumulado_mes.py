@@ -122,7 +122,7 @@ def render(df, indicadores):
     # ====== CONSOLIDADO POR GRUPO (Estado ou Cluster) ======
     secao_titulo(f"Consolidado por {rotulo_dim}", f"Totais acumulados do mês — cada {rotulo_dim.lower()} e o Total geral")
     resumo_grupo = resumo_mes_por_grupo(df, coluna_grupo)
-    with area_com_print(f"acumulado_mes_consolidado_{coluna_grupo}", nome_arquivo=f"consolidado_por_{coluna_grupo}"):
+    with area_com_print("acumulado_mes_consolidado", nome_arquivo=f"consolidado_por_{coluna_grupo}"):
         tabela_consolidado_grupo(resumo_grupo, f"TOTAL DO MÊS POR {rotulo_dim.upper()}", coluna_grupo)
 
     st.divider()
@@ -148,18 +148,22 @@ def render(df, indicadores):
                 linha_total = resumo_grupo[resumo_grupo[coluna_grupo] == grupo].iloc[0].to_dict()
                 cor = _cor_grupo(i, grupo, coluna_grupo)
 
-                mes_anterior = historico_mensal.fechamento_mes_anterior(grupo, coluna_grupo)
+                mes_anterior = historico_mensal.fechamento_mes_anterior(
+                    grupo, coluna_grupo, data_referencia=df_dia_grupo["Data"].max() if not df_dia_grupo.empty else None,
+                )
                 if mes_anterior:
-                    with area_com_print(f"acumulado_mes_comparativo_{coluna_grupo}_{grupo}",
+                    with area_com_print(f"acumulado_mes_comparativo_{grupo}",
                                          nome_arquivo=f"comparativo_mensal_{grupo}"):
                         tabela_comparativo_mensal(
                             grupo, mes_anterior, _linha_total_para_comparativo(linha_total),
-                            rotulo_mes_anterior=historico_mensal.MES_REFERENCIA,
+                            rotulo_mes_anterior=historico_mensal.rotulo_mes_anterior(
+                                df_dia_grupo["Data"].max() if not df_dia_grupo.empty else None,
+                            ),
                             rotulo_mes_atual=_rotulo_mes_atual(df_dia_grupo),
                         )
                     st.write("")
 
-                with area_com_print(f"acumulado_mes_fechamento_{coluna_grupo}_{grupo}",
+                with area_com_print(f"acumulado_mes_fechamento_{grupo}",
                                      nome_arquivo=f"fechamento_diario_{grupo}"):
                     tabela_fechamento_diario(
                         _com_total_mes(df_dia_grupo, linha_total, coluna_grupo),
@@ -169,8 +173,8 @@ def render(df, indicadores):
                 num_dias = len(df_dia_grupo)
                 largura_minima = max(760, num_dias * 65)
 
-                chave_efic = sanitizar_chave(f"acumulado_mes_eficacia_{coluna_grupo}_{grupo}")
-                with area_com_print(f"acumulado_mes_eficacia_{coluna_grupo}_{grupo}",
+                chave_efic = sanitizar_chave(f"acumulado_mes_eficacia_{grupo}")
+                with area_com_print(f"acumulado_mes_eficacia_{grupo}",
                                      nome_arquivo=f"eficacia_diaria_{grupo}"):
                     st.markdown(
                         f"<style>.st-key-{chave_efic} [data-testid='stPlotlyChart']"
@@ -184,14 +188,14 @@ def render(df, indicadores):
                     )
                     st.plotly_chart(
                         grafico_eficacia_diaria(df_dia_grupo), width='stretch',
-                        key=f"acumulado_mes_eficacia_chart_{coluna_grupo}_{grupo}",
+                        key=f"acumulado_mes_eficacia_chart_{grupo}",
                         config=opcoes_grafico(f"eficacia_diaria_{grupo}"),
                     )
 
                 st.write("")
 
-                chave_prod = sanitizar_chave(f"acumulado_mes_produtividade_{coluna_grupo}_{grupo}")
-                with area_com_print(f"acumulado_mes_produtividade_{coluna_grupo}_{grupo}",
+                chave_prod = sanitizar_chave(f"acumulado_mes_produtividade_{grupo}")
+                with area_com_print(f"acumulado_mes_produtividade_{grupo}",
                                      nome_arquivo=f"produtividade_diaria_{grupo}"):
                     st.markdown(
                         f"<style>.st-key-{chave_prod} [data-testid='stPlotlyChart']"
@@ -204,6 +208,6 @@ def render(df, indicadores):
                     )
                     st.plotly_chart(
                         grafico_produtividade_diaria(df_dia_grupo), width='stretch',
-                        key=f"acumulado_mes_produtividade_chart_{coluna_grupo}_{grupo}",
+                        key=f"acumulado_mes_produtividade_chart_{grupo}",
                         config=opcoes_grafico(f"produtividade_diaria_{grupo}"),
                     )

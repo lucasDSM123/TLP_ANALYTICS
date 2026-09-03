@@ -8,7 +8,7 @@ from components.tabelas import tabela_matriz_expansivel
 from components.tabela_analise_p import tabela_analise_p_cluster_cidade
 from components.analise_indicador import render_analise_indicador
 from components.seletor_indicador import seletor_indicador_topo
-from components.print_button import area_com_print, legenda_producao_ou_fechamento
+from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros
 from services.indicadores import Indicadores
 from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade
 from services.analise_p import matriz_analise_p_cluster_cidade
@@ -32,24 +32,24 @@ def render(df, indicadores: Indicadores):
     # ====== INDICADORES PRINCIPAIS ======
     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
 
-    # Legenda automática (texto que acompanha a imagem ao copiar): usa o(s)
-    # Estado(s)/Data(s) marcados nos filtros do topo — "TODOS" / "TODAS AS
-    # DATAS" quando nada estiver marcado (visão geral, sem recorte).
-    _estados_sel = st.session_state.get("filtro_sel_estado") or []
-    _datas_sel = st.session_state.get("filtro_sel_data") or []
-    _clusters_sel = st.session_state.get("filtro_sel_cluster") or []
-    _cidades_sel = st.session_state.get("filtro_sel_cidade") or []
-    _estado_legenda = "/".join(_estados_sel) if _estados_sel else "TODOS"
-    _data_legenda = " / ".join(_datas_sel) if _datas_sel else "TODAS AS DATAS"
+    # Legenda automática (texto que acompanha a imagem ao copiar): reflete
+    # TODOS os filtros marcados na barra do topo (Estado, Data, Cluster,
+    # Cidade, Coordenador) — "TODOS" / "TODAS AS DATAS" quando nada
+    # estiver marcado (visão geral, sem recorte).
+    _ctx_legenda = contexto_legenda_filtros()
+    _estado_legenda = _ctx_legenda["estado"]
+    _data_legenda = _ctx_legenda["data"]
+    _sufixo_legenda = _ctx_legenda["sufixo"]
+    _datas_sel = _ctx_legenda["datas_sel"]
 
     with area_com_print(
         "dashboard_cards_principais", nome_arquivo="indicadores_principais",
         legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO GERAL | {estado} | {data} {hora}",
-            "FECHAMENTO GERAL | {estado} | {data} {hora}",
+            "PRODUÇÃO GERAL | {estado}{sufixo} | {data} {hora}",
+            "FECHAMENTO GERAL | {estado}{sufixo} | {data} {hora}",
             _datas_sel,
         ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
     ):
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -134,11 +134,11 @@ def render(df, indicadores: Indicadores):
     with area_com_print(
         "dashboard_matriz_ba", nome_arquivo="producao_ba",
         legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA | {estado} | {data} {hora}",
-            "FECHAMENTO PRODUÇÃO BA | {estado} | {data} {hora}",
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA | {estado}{sufixo} | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO BA | {estado}{sufixo} | {data} {hora}",
             _datas_sel,
         ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
     ):
         tabela_matriz_expansivel(
             grupos_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
@@ -158,11 +158,11 @@ def render(df, indicadores: Indicadores):
     with area_com_print(
         "dashboard_matriz_tt", nome_arquivo="producao_tt",
         legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO + ESTEIRA + EFICÁCIA - TT | {estado} | {data} {hora}",
-            "FECHAMENTO PRODUÇÃO TT | {estado} | {data} {hora}",
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - TT | {estado}{sufixo} | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO TT | {estado}{sufixo} | {data} {hora}",
             _datas_sel,
         ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda},
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
     ):
         tabela_matriz_expansivel(
             grupos_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
@@ -212,7 +212,13 @@ def render(df, indicadores: Indicadores):
         total["Nome"] = total.pop(chave_grupo)
         return total
 
-    with area_com_print("dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster"):
+    with area_com_print(
+        "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
+        legenda_template="Produtividade Parcial {estado}{sufixo} | {data} {hora}",
+        legenda_vars={
+            "estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda,
+        },
+    ):
         tabela_analise_p_cluster_cidade(
             grupos_analise_p, resumo=resumo_cluster,
             total_contagem=_linha_total_p(contagem_cluster),

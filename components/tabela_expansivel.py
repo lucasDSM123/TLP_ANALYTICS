@@ -37,19 +37,29 @@ def ativar_tabelas_expansiveis():
         var doc = window.parent.document;
 
         doc.onclick = function(ev) {
-            var linha = ev.target.closest('.linha-cluster-expansivel');
-            if (!linha) { return; }
-            var classeGrupo = linha.getAttribute('data-alvo');
-            if (!classeGrupo) { return; }
-            var linhasAlvo = doc.querySelectorAll('.' + classeGrupo);
-            if (!linhasAlvo.length) { return; }
-            var abrir = linhasAlvo[0].style.display === 'none';
-            linhasAlvo.forEach(function(l) {
-                l.style.display = abrir ? 'table-row' : 'none';
-            });
-            linha.classList.toggle('cluster-aberto', abrir);
-            var seta = linha.querySelector('.seta-exp');
-            if (seta) { seta.textContent = abrir ? '▼' : '▶'; }
+            try {
+                var linha = ev.target.closest('.linha-cluster-expansivel');
+                if (!linha) { return; }
+                var classeGrupo = linha.getAttribute('data-alvo');
+                if (!classeGrupo) { return; }
+                var linhasAlvo = doc.querySelectorAll('.' + classeGrupo);
+                if (!linhasAlvo.length) { return; }
+                var abrir = linhasAlvo[0].style.display === 'none';
+                linhasAlvo.forEach(function(l) {
+                    l.style.display = abrir ? 'table-row' : 'none';
+                });
+                linha.classList.toggle('cluster-aberto', abrir);
+                var seta = linha.querySelector('.seta-exp');
+                if (seta) { seta.textContent = abrir ? '▼' : '▶'; }
+            } catch (erro) {
+                // Nunca deixa uma falha inesperada aqui (ex.: um clique no
+                // meio de um rerender do Streamlit, com a linha já tendo
+                // sumido do DOM) escapar como exceção não tratada dentro do
+                // handler de clique do documento — isso pode confundir a
+                // reconciliação do React em volta (erro "removeChild" na
+                // tela) mesmo sem relação direta com esta tabela.
+                console.warn('Falha ao abrir/fechar Cluster:', erro);
+            }
         };
     })();
     </script>
