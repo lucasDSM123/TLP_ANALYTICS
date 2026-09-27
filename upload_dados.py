@@ -1,12 +1,11 @@
 import sys
 import time
 from pathlib import Path
-
 import pandas as pd
 from services.database import enviar_dados_para_neon
 from services.historico_intradia import registrar_snapshot
 
-CAMINHO_ARQUIVO = Path("data/PRODUCAO_TLP_TRATADA.xlsx")
+CAMINHO_ARQUIVO = Path(__file__).resolve().parent / "data" / "PRODUCAO_TLP_TRATADA.xlsx"
 NOME_TABELA = "producao_tlp_tratada"
 COLUNA_CHAVE = "numero_atividade"
 

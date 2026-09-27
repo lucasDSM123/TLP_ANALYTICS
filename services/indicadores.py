@@ -356,6 +356,67 @@ class Indicadores:
         hc_scope = self._hc_ativo_scope(df_scope)
         return self._to_float(0 if hc_scope == 0 else ok_scope / hc_scope)
 
+    # ------------------------------------------------------------------
+    # PU VIVO — réplica do cálculo do Backoffice Regional Sul (site da
+    # Vivo), reverse-engineered a partir da coluna 'Peso' já presente na
+    # base (PRODUCAO_TLP_TRATADA). Fórmula confirmada célula a célula:
+    #
+    #   PU VIVO = SOMA(Peso) das atividades Concluídas
+    #             ÷ nº de técnicos ÚNICOS (coluna 'Técnico') que concluíram
+    #               PELO MENOS 1 atividade no mesmo escopo/dia
+    #
+    # Diferenças-chave em relação ao PU do nosso site (pu() / pu_lado() /
+    # pu_batt(), que usam OK / HC-por-headcount):
+    #   1) Numerador é a SOMA do peso granular por tipo de atividade
+    #      (coluna 'Peso' do Zeus — ex.: Instalação Banda=1.10, Instalação
+    #      TV+Banda=1.30, Defeito=0.80...), não a contagem simples de OK.
+    #   2) Denominador é a contagem de técnicos que efetivamente concluíram
+    #      algo no dia (união de logins), não o HC calculado por
+    #      MSK/BA/TT com arredondamento (fórmula do nosso hc_real/hc_lado).
+    #   3) Técnicos do Bucket (Contratada == 'BUCKET TLP') são excluídos,
+    #      igual ao site da Vivo, que ignora logins 'BKT'/vazios.
+    #
+    # Se a coluna 'Peso' não existir na base carregada (ex.: fonte antiga
+    # sem essa coluna), os métodos abaixo retornam 0.0 em vez de quebrar.
+    # ------------------------------------------------------------------
+
+    def _tem_peso(self) -> bool:
+        return "Peso" in self.df.columns and "Técnico" in self.df.columns
+
+    def _pu_vivo_scope(self, df_scope: pd.DataFrame) -> float:
+        """Aplica a fórmula PU VIVO a um recorte (df_scope) já filtrado."""
+        if df_scope.empty or not self._tem_peso():
+            return 0.0
+        df_real = df_scope
+        if "Contratada" in df_real.columns:
+            df_real = df_real[df_real["Contratada"] != "BUCKET TLP"]
+        concluida = df_real[df_real["Status"] == "Concluída"]
+        if concluida.empty:
+            return 0.0
+        soma_peso = concluida["Peso"].sum()
+        n_tecnicos = concluida["Técnico"].nunique()
+        return self._to_float(0 if n_tecnicos == 0 else soma_peso / n_tecnicos)
+
+    def pu_vivo(self):
+        """PU VIVO geral + segmentado por 'Lado' (BA/TT), no mesmo formato de pu()."""
+        return {
+            "GERAL": self._pu_vivo_scope(self.df),
+            "BA": self.pu_vivo_lado("BA"),
+            "TT": self.pu_vivo_lado("TT"),
+        }
+
+    def pu_vivo_lado(self, lado):
+        """PU VIVO dentro do filtro 'Lado' = lado — usado na MATRIZ POR CLUSTER."""
+        if "Lado" not in self.df.columns:
+            return 0.0
+        return self._pu_vivo_scope(self.df[self.df["Lado"] == lado])
+
+    def pu_vivo_batt(self, valor):
+        """PU VIVO dentro do filtro 'BA-TT-Real' = valor — espelha pu_batt()."""
+        if "BA-TT-Real" not in self.df.columns:
+            return 0.0
+        return self._pu_vivo_scope(self.df[self.df["BA-TT-Real"] == valor])
+
     def projecao_pu(self):
         """
         PROJEÇÃO PU geral: Projeção / HC Ativo (sem segmentação).

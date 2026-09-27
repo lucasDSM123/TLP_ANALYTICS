@@ -48,7 +48,8 @@ def _fundo_icone_rgba(cor_hex: str, alpha: float = 0.16) -> str:
     return f"rgba({r}, {g}, {b}, {alpha})"
 
 
-def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: str = None):
+def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: str = None,
+         pu_site: float = None, pu_vivo_valor: float = None):
     """
     Renderiza um card KPI com título, valor, cor de destaque e subtítulo opcional.
 
@@ -59,12 +60,27 @@ def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: st
         subtitle: Texto adicional abaixo do valor
         icon: Emoji do badge do card. Se não informado, é escolhido
             automaticamente com base no título.
+        pu_site: valor de PU do nosso site (opcional). Quando informado
+            junto com pu_vivo_valor E o toggle "Ver PU VIVO" estiver
+            marcado, uma segunda linha comparativa é exibida abaixo do
+            subtítulo — ex.: "PU Vivo: 1.68 (▲ 6%)".
+        pu_vivo_valor: valor de PU no padrão do Backoffice Regional Sul
+            (ver services/indicadores.py -> pu_vivo*()).
     """
     # Sempre renderiza o parágrafo do subtítulo (mesmo vazio) para que todos
     # os cards tenham exatamente a mesma estrutura/altura, com ou sem subtítulo.
     subtitle_html = f'<p class="kpi-subtitle">{subtitle if subtitle else "&nbsp;"}</p>'
     icone = icon if icon else _icone_automatico(title)
     fundo_icone = _fundo_icone_rgba(color)
+
+    pu_vivo_html = ""
+    if pu_site is not None and pu_vivo_valor is not None:
+        from components.pu_vivo import pu_vivo_ativo, texto_comparativo_pu, cor_comparativo_pu
+        if pu_vivo_ativo():
+            texto = texto_comparativo_pu(pu_site, pu_vivo_valor)
+            if texto:
+                cor_pv = cor_comparativo_pu(pu_site, pu_vivo_valor)
+                pu_vivo_html = f'<p class="kpi-subtitle" style="color:{cor_pv}; font-weight:700;">{texto}</p>'
 
     st.markdown(
         f"""
@@ -75,6 +91,7 @@ def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: st
             </div>
             <h2 class="kpi-value">{value}</h2>
             {subtitle_html}
+            {pu_vivo_html}
         </div>
         """,
         unsafe_allow_html=True,

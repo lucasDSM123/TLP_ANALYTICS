@@ -25,6 +25,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
         concluido = ind.concluido()
         eficacia_caixa = ind.eficacia_caixa()
         pu = ind.pu()
+        pu_vivo = ind.pu_vivo()
         media = ind.media_atribuicao()
         esteira = ind.esteira()
         projecao = ind.projecao()
@@ -39,6 +40,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
                 "Concluído NOK": concluido["NOK"],
                 "Eficácia": eficacia_caixa,
                 "PU": pu["GERAL"],
+                "PU Vivo": pu_vivo["GERAL"],
                 "Média Atribuída": media["GERAL"],
                 "Esteira": esteira["TOTAL"],
                 "Iniciada": iniciada["TOTAL"],
@@ -363,6 +365,10 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
         # segmenta por 'BA-TT-Real' e soma BA_REAL+TT_REAL (hc_real_batt).
         hc_ativo = ind_lado.hc_lado(lado)
         pu = ind_lado.pu_lado(lado)
+        # PU VIVO — mesmo escopo (filtro 'Lado') usado pelo PU da matriz,
+        # só que com a fórmula do Backoffice Regional Sul (Vivo). Ver
+        # services/indicadores.py -> pu_vivo_lado().
+        pu_vivo = ind_lado.pu_vivo_lado(lado)
 
         # EFICÁCIA da matriz = OK / Caixa Total, sempre no mesmo contexto
         # (segmentado por 'Lado') já usado por Caixa Tot/OK/NOK acima na
@@ -386,6 +392,7 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
             "Bucket": bucket["TOTAL"],
             "Média Atrib.": media,
             "PU": pu,
+            "PU Vivo": pu_vivo,
             "OK": concluido["OK"],
             "NOK": concluido["NOK"],
             "Iniciada": iniciada["TOTAL"],
@@ -445,6 +452,7 @@ def matriz_producao_cluster_cidade(
 
         hc_ativo = ind_lado.hc_lado(lado)
         pu = ind_lado.pu_lado(lado)
+        pu_vivo = ind_lado.pu_vivo_lado(lado)
 
         # EFICÁCIA da matriz = OK / Caixa Total, no mesmo contexto (Lado)
         # já usado por Caixa Tot/OK/NOK acima na mesma linha.
@@ -466,6 +474,7 @@ def matriz_producao_cluster_cidade(
             "Bucket": bucket["TOTAL"],
             "Média Atrib.": media,
             "PU": pu,
+            "PU Vivo": pu_vivo,
             "OK": concluido["OK"],
             "NOK": concluido["NOK"],
             "Iniciada": iniciada["TOTAL"],

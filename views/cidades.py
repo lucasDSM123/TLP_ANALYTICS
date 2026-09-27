@@ -2,6 +2,7 @@ import streamlit as st
 
 from components.header import secao_titulo
 from components.charts import grafico_ranking, grafico_producao_dia, opcoes_grafico
+from components.pu_vivo import pu_vivo_ativo
 from services.indicadores import Indicadores
 from services.grupos import metricas_por_grupo
 from services.loader import opcoes_filtro, aplicar_filtro
@@ -48,6 +49,8 @@ def render(df, indicadores: Indicadores):
     with col_tab:
         tabela = ranking.sort_values("Caixa Total", ascending=False).copy()
         tabela["Eficácia"] = tabela["Eficácia"] * 100
+        if not pu_vivo_ativo() and "PU Vivo" in tabela.columns:
+            tabela = tabela.drop(columns=["PU Vivo"])
         with area_com_print("cidades_tabela_ranking", nome_arquivo=f"ranking_cidades_{estado_sel}"):
             st.dataframe(
                 tabela,
@@ -56,6 +59,7 @@ def render(df, indicadores: Indicadores):
                 column_config={
                     "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
                     "PU": st.column_config.NumberColumn("PU", format="%.2f"),
+                    "PU Vivo": st.column_config.NumberColumn("PU Vivo", format="%.2f", help="Fórmula do Backoffice Regional Sul (Vivo)"),
                 },
             )
 

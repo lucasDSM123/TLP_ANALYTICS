@@ -28,6 +28,7 @@ def render(df, indicadores: Indicadores):
     iniciada = indicadores.iniciada()
     media = indicadores.media_atribuicao()
     projecao_pu = indicadores.projecao_pu()
+    pu_vivo = indicadores.pu_vivo()
 
     # ====== INDICADORES PRINCIPAIS ======
     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
@@ -63,7 +64,8 @@ def render(df, indicadores: Indicadores):
         with col4:
             card("NÃO CONCLUÍDA", f"{concluido['NOK']:,}".replace(",", "."), config.TLP_RED, "Concluído NOK")
         with col5:
-            card("PU", f"{pu['GERAL']:.2f}", "#7B8CDE")
+            card("PU", f"{pu['GERAL']:.2f}", "#7B8CDE",
+                 pu_site=pu["GERAL"], pu_vivo_valor=pu_vivo["GERAL"])
         with col6:
             card("PROJEÇÃO PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE")
 
@@ -99,7 +101,8 @@ def render(df, indicadores: Indicadores):
             with c2:
                 card("Média Atrib.", f"{media['BA']:.2f}", "#00C9A7")
             with c3:
-                card("PU BA", f"{pu['BA']:.2f}", config.TLP_GOLD)
+                card("PU BA", f"{pu['BA']:.2f}", config.TLP_GOLD,
+                     pu_site=pu["BA"], pu_vivo_valor=pu_vivo["BA"])
 
         with col_tt:
             st.markdown(f"<h4 style='color: {config.TLP_ORANGE};'>TT</h4>", unsafe_allow_html=True)
@@ -109,7 +112,8 @@ def render(df, indicadores: Indicadores):
             with c2:
                 card("Média Atrib.", f"{media['TT']:.2f}", "#7B8CDE")
             with c3:
-                card("PU TT", f"{pu['TT']:.2f}", "#FF5C5C")
+                card("PU TT", f"{pu['TT']:.2f}", "#FF5C5C",
+                     pu_site=pu["TT"], pu_vivo_valor=pu_vivo["TT"])
 
     st.divider()
 

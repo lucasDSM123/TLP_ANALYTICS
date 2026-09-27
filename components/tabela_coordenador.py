@@ -6,6 +6,7 @@ from components.estilo_tabela import (
     CABECALHO_BG, TOTAL_BG, SUBTOTAL_BG, pill, pill_total,
     cor_faixa, cor_faixa_bg, wrapper_tabela,
 )
+from components.pu_vivo import pu_vivo_ativo
 
 
 def _seta(valor: float, alvo: float = config.META_PU_ALVO) -> str:
@@ -14,6 +15,17 @@ def _seta(valor: float, alvo: float = config.META_PU_ALVO) -> str:
 
 def _seta_gap(valor: float) -> str:
     return "▲" if valor >= 0 else "▼"
+
+
+def _cel_pu_vivo(row: dict, total: bool = False) -> str:
+    """Célula extra 'PU Vivo' (fórmula da Vivo), exibida ao lado de PU
+    quando o toggle "Ver PU VIVO" está marcado (ver components/pu_vivo.py)."""
+    if not pu_vivo_ativo() or "PU Vivo" not in row:
+        return ""
+    txt = f"{row['PU Vivo']:.2f}"
+    if total:
+        return f"<td>{pill_total(txt)}</td>"
+    return f"<td style='font-weight:700; color:#0369A1;'>{txt}</td>"
 
 
 def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> str:
@@ -37,6 +49,7 @@ def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> st
         f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_ORANGE};'>{row['Média Atribuída TT']:.2f}</td>",
         f"<td style='font-weight:800; font-size:{tamanho}; color:{config.TEXT};'>{row['Média Atribuída Total']:.2f}</td>",
         f"<td>{pill(txt_pu, cor_faixa(row['PU'], config.META_PU_ALVO), cor_faixa_bg(row['PU'], config.META_PU_ALVO))}</td>",
+        _cel_pu_vivo(row),
         f"<td style='font-weight:{peso}; font-size:{tamanho}; color:#15803D;'>{row['Concluída BA']}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TLP_ORANGE};'>{row['Concluída TT']}</td>",
         f"<td style='font-weight:800; font-size:{tamanho}; color:{config.TEXT};'>{row['Concluída Total']}</td>",
@@ -81,6 +94,7 @@ def _celula_total_geral(row: dict) -> str:
         f"<td>{pill_total(media_tt_fmt)}</td>",
         f"<td>{pill_total(media_total_fmt)}</td>",
         f"<td>{pill_total(txt_pu)}</td>",
+        _cel_pu_vivo(row, total=True),
         f"<td>{pill_total(row['Concluída BA'])}</td>",
         f"<td>{pill_total(row['Concluída TT'])}</td>",
         f"<td>{pill_total(row['Concluída Total'])}</td>",
@@ -108,7 +122,7 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
         return
 
     colunas_antes = ["COORDENADOR", "SUPERVISOR", "HC ATIVO", "CAIXA TOTAL", "ESTEIRA"]
-    colunas_depois = ["PU"]
+    colunas_depois = ["PU"] + (["PU VIVO"] if pu_vivo_ativo() else [])
     colunas_final = ["INICIADA", "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU", "META", "GAP"]
 
     linhas_html = []

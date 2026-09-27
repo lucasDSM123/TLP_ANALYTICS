@@ -587,6 +587,77 @@ def grafico_pareto_causa(df: pd.DataFrame, lado: str = "BA") -> go.Figure:
     return _tema(fig, "", altura=380)
 
 
+def grafico_pareto_generico(tabela: pd.DataFrame, titulo: str = "") -> go.Figure:
+    """
+    Pareto genérico a partir de uma tabela já pronta com colunas
+    'Causa', 'Qtd' e '% Acumulado' (ver services/analitica.py ->
+    pareto_causas). Usado pra Não Conclusão e Cancelamento na aba
+    Analítica — mesmo visual do grafico_pareto_causa (barras em degradê +
+    linha de % acumulado), só que aceita qualquer recorte já calculado em
+    vez de recalcular Motivo da Pendência internamente.
+    """
+    if tabela is None or tabela.empty or "Causa" not in tabela.columns:
+        return _tema(go.Figure(), titulo)
+
+    causas = tabela["Causa"].tolist()
+    valores = tabela["Qtd"].tolist()
+    acumulado = tabela["% Acumulado"].tolist()
+    cores_barras = _cor_gradiente_marca(len(causas))
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(
+        go.Bar(
+            x=causas, y=valores, name="Qtd",
+            marker_color=cores_barras,
+            text=valores, texttemplate="%{text:,.0f}", textposition="outside",
+        ),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=causas, y=acumulado, name="% Acumulado",
+            mode="lines+markers+text",
+            line=dict(color=config.TLP_RED, width=2, dash="dash"),
+            marker=dict(size=6, color=config.TLP_RED),
+            text=[round(v) for v in acumulado],
+            texttemplate="%{text:.0f}%", textposition="top center",
+            textfont=dict(size=10, color=config.TLP_RED),
+        ),
+        secondary_y=True,
+    )
+    fig.update_layout(barmode="group", showlegend=False)
+    fig.update_yaxes(title_text="Qtd", secondary_y=False, showgrid=True, gridcolor=config.CARD_BORDER)
+    fig.update_yaxes(title_text="% Acumulado", secondary_y=True, range=[0, 110], showgrid=False)
+    fig.update_xaxes(tickangle=-20)
+    return _tema(fig, titulo, altura=400)
+
+
+def grafico_heatmap_causa(pivot: pd.DataFrame, titulo: str = "") -> go.Figure:
+    """Heatmap Grupo x Causa (ver services/analitica.py -> matriz_heatmap_causa)
+    — mostra em que grupo (Coordenador/Supervisor/Cidade) cada causa mais
+    aparece, pra distinguir causa 'geral da operação' de causa concentrada
+    nalgum time específico."""
+    if pivot is None or pivot.empty:
+        return _tema(go.Figure(), titulo)
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns.tolist(),
+            y=pivot.index.tolist(),
+            colorscale=[[0, "rgba(0,0,0,0)"], [0.001, config.TLP_GOLD], [1, config.TLP_RED]],
+            text=pivot.values,
+            texttemplate="%{text}",
+            textfont=dict(size=11),
+            hovertemplate="%{y} — %{x}: %{z}<extra></extra>",
+            colorbar=dict(title="Qtd"),
+        )
+    )
+    fig.update_xaxes(tickangle=-25, side="bottom")
+    fig.update_yaxes(autorange="reversed")
+    return _tema(fig, titulo, altura=max(360, 32 * len(pivot.index)))
+
+
 def grafico_media_atribuida_pu(ranking: pd.DataFrame, coluna_grupo: str = "Coordenador") -> go.Figure:
     """
     Gráfico "Média Atribuída x PU" por grupo (Coordenador, Supervisor etc.):

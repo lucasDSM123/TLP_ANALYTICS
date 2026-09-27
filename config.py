@@ -172,5 +172,5 @@ META_ATRIBUICAO_ALVO = 4.0
 # ------------------------------------------------------------------
 # NAVEGAÇÃO
 # ------------------------------------------------------------------
-PAGES = ["Dashboard", "Acumulado Mês", "Cotas", "Chegada", "Gestores", "Relatórios", "Configurações"]
-PAGE_ICONS = ["speedometer2", "calendar2-check", "clipboard-data", "clock-history", "people", "bar-chart-line", "gear"]
+PAGES = ["Dashboard", "Acumulado Mês", "Alongados", "Cotas", "Chegada", "Gestores", "Analítica", "Relatórios", "Configurações"]
+PAGE_ICONS = ["speedometer2", "calendar2-check", "hourglass-split", "clipboard-data", "clock-history", "people", "graph-up-arrow", "bar-chart-line", "gear"]

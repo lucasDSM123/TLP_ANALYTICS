@@ -19,6 +19,22 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
     col_data, col_estado, col_cluster, col_cidade, col_coordenador = st.columns([1, 1, 1, 1, 1.1])
 
+    # ---------------- TOGGLE PU VIVO (global, vale para todas as páginas) ----------------
+    # Fica em session_state para que qualquer card/tabela, em qualquer view,
+    # saiba se deve mostrar a comparação "PU Vivo" (fórmula do Backoffice
+    # Regional Sul / Vivo) ao lado do PU do nosso site, sem precisar
+    # repassar esse parâmetro manualmente por todas as funções.
+    st.session_state["mostrar_pu_vivo"] = st.checkbox(
+        "🔁 Ver PU VIVO",
+        value=st.session_state.get("mostrar_pu_vivo", False),
+        help=(
+            "Mostra ao lado do PU do nosso site o PU calculado no padrão do "
+            "Backoffice Regional Sul (site da Vivo): soma do peso de cada "
+            "atividade concluída (coluna 'Peso') ÷ técnicos que concluíram "
+            "pelo menos 1 atividade no dia."
+        ),
+    )
+
     # ---------------- DATA (multi) ----------------
     with col_data:
         if "Data" in df.columns:

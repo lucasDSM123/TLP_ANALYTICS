@@ -7,6 +7,24 @@ from components.estilo_tabela import (
     sanitizar_id, estilo_expansivel,
 )
 from components.tabela_expansivel import ativar_tabelas_expansiveis
+from components.pu_vivo import pu_vivo_ativo
+
+
+def _cel_pu_vivo(row: dict, peso: str = "600", total: bool = False) -> str:
+    """
+    Célula extra 'PU Vivo' (fórmula do Backoffice Regional Sul / Vivo),
+    inserida logo depois da coluna PU quando o toggle "Ver PU VIVO" está
+    marcado E a linha tem a chave 'PU Vivo' (nem toda tabela recalcula
+    matriz por Lado, então a chave pode não existir — nesse caso a célula
+    fica vazia em vez de quebrar).
+    """
+    if "PU Vivo" not in row:
+        return ""
+    valor = row["PU Vivo"]
+    txt = f"{valor:.2f}"
+    if total:
+        return f"<td>{pill_total(txt)}</td>"
+    return f"<td style='font-weight:{peso}; color:#0369A1;'>{txt}</td>"
 
 
 def _cor_eficacia(valor: float) -> str:
@@ -35,9 +53,13 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
         )
         return
 
+    mostrar_pu_vivo = pu_vivo_ativo() and "PU Vivo" in df_matriz.columns
+
     colunas = ["Cluster", "HC Ativo", "Caixa Tot", "Esteira", "Bucket",
-               "Média Atrib.", "PU", "OK", "NOK", "Iniciada", "Eficácia",
-               "Proj.", "Proj. PU"]
+               "Média Atrib.", "PU"]
+    if mostrar_pu_vivo:
+        colunas.append("PU Vivo")
+    colunas += ["OK", "NOK", "Iniciada", "Eficácia", "Proj.", "Proj. PU"]
 
     # NOTA: todo o HTML abaixo é montado SEM indentação (linhas começando na
     # coluna 0) de propósito. Se strings HTML multi-linha passadas para
@@ -66,6 +88,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_bucket = f"<td>{pill_total(row['Bucket'])}</td>"
             cel_media = f"<td>{pill_total(media_txt)}</td>"
             cel_pu = f"<td>{pill_total(pu_txt)}</td>"
+            cel_pu_vivo = _cel_pu_vivo(row, total=True) if mostrar_pu_vivo else ""
             cel_ok = f"<td>{pill_total(row['OK'])}</td>"
             cel_nok = f"<td>{pill_total(row['NOK'])}</td>"
             cel_iniciada = f"<td>{pill_total(row['Iniciada'])}</td>"
@@ -82,6 +105,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_bucket = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>"
             cel_media = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>"
             cel_pu = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>"
+            cel_pu_vivo = _cel_pu_vivo(row, peso=peso) if mostrar_pu_vivo else ""
             cel_ok = f"<td><span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span></td>"
             cel_nok = f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span></td>"
             cel_iniciada = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>"
@@ -91,7 +115,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
 
         celulas = "".join([
             cel_cluster, cel_hc, cel_caixa, cel_esteira, cel_bucket, cel_media,
-            cel_pu, cel_ok, cel_nok, cel_iniciada, cel_efic, cel_proj, cel_proj_pu,
+            cel_pu, cel_pu_vivo, cel_ok, cel_nok, cel_iniciada, cel_efic, cel_proj, cel_proj_pu,
         ])
 
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
@@ -123,6 +147,7 @@ def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
     expansível."""
     eficacia_pct = f"{row['Eficácia']:.0%}"
     cor_efic = _cor_eficacia(row["Eficácia"])
+    cel_pu_vivo = _cel_pu_vivo(row, peso=peso) if pu_vivo_ativo() else ""
     return "".join([
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>",
@@ -130,6 +155,7 @@ def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Bucket']}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Média Atrib.']:.2f}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['PU']:.2f}</td>",
+        cel_pu_vivo,
         f"<td><span style='color:#15803D; font-weight:{peso};'>{row['OK']}</span></td>",
         f"<td><span style='color:{config.TLP_RED}; font-weight:{peso};'>{row['NOK']}</span></td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Iniciada']}</td>",
@@ -145,6 +171,7 @@ def _celulas_linha_matriz_total(row: dict) -> str:
     media_txt = f"{row['Média Atrib.']:.2f}"
     pu_txt = f"{row['PU']:.2f}"
     proj_pu_txt = f"{row['Proj. PU']:.2f}"
+    cel_pu_vivo = _cel_pu_vivo(row, total=True) if pu_vivo_ativo() else ""
     return "".join([
         f"<td>{pill_total(row['HC Ativo'])}</td>",
         f"<td>{pill_total(row['Caixa Tot'])}</td>",
@@ -152,6 +179,7 @@ def _celulas_linha_matriz_total(row: dict) -> str:
         f"<td>{pill_total(row['Bucket'])}</td>",
         f"<td>{pill_total(media_txt)}</td>",
         f"<td>{pill_total(pu_txt)}</td>",
+        cel_pu_vivo,
         f"<td>{pill_total(row['OK'])}</td>",
         f"<td>{pill_total(row['NOK'])}</td>",
         f"<td>{pill_total(row['Iniciada'])}</td>",
@@ -192,7 +220,10 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
         return
 
     colunas = [rotulo_grupo, "HC ATIVO", "CAIXA TOT", "ESTEIRA", "BUCKET",
-               "MÉDIA ATRIB.", "PU", "OK", "NOK", "INICIADA", "EFICÁCIA", "PROJ.", "PROJ. PU"]
+               "MÉDIA ATRIB.", "PU"]
+    if pu_vivo_ativo():
+        colunas.append("PU VIVO")
+    colunas += ["OK", "NOK", "INICIADA", "EFICÁCIA", "PROJ.", "PROJ. PU"]
 
     id_tabela = sanitizar_id(id_tabela or titulo)
     ativar_tabelas_expansiveis()
@@ -274,7 +305,15 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
         )
         return
 
+    # "% Chegada" (indicador de Chegada — % Dentro da Janela do dia) é
+    # opcional: só entra na tabela quando df_dia trouxer essa coluna (ver
+    # services.chegada.serie_diaria_percentual_dentro), pois a base pode não
+    # ter as colunas Janela/Início.
+    tem_chegada = "% Chegada" in df_dia.columns
+
     colunas = ["Data", "Concluída", "Improdutiva", "Técnicos", "Atribuição", "PU", "Eficácia"]
+    if tem_chegada:
+        colunas.append("% Chegada")
 
     linhas_html = []
     for i, (_, row) in enumerate(df_dia.iterrows()):
@@ -290,6 +329,11 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
         atrib_txt = f"{row['Atribuição']:.2f}"
         pu_txt = f"{row['PU']:.2f}"
 
+        if tem_chegada:
+            valor_chegada = row.get("% Chegada")
+            chegada_txt = f"{valor_chegada:.1f}%" if pd.notna(valor_chegada) else "—"
+            cor_chegada = _cor_eficacia((valor_chegada or 0) / 100) if pd.notna(valor_chegada) else config.TEXT_MUTED
+
         if is_total:
             bg = TOTAL_BG()
             cel_data = f"<td style='text-align:left; font-weight:{peso}; color:#FFFFFF;'>{row['Data']}</td>"
@@ -299,6 +343,8 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
             cel_atrib = f"<td>{pill_total(atrib_txt)}</td>"
             cel_pu = f"<td>{pill_total(pu_txt)}</td>"
             cel_efic = f"<td>{pill_total(eficacia_pct)}</td>"
+            if tem_chegada:
+                cel_chegada = f"<td>{pill_total(chegada_txt)}</td>"
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
             cor_texto = config.TEXT
@@ -310,8 +356,13 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
             cel_atrib = f"<td><span style='color:{cor_atrib}; font-weight:700;'>{atrib_txt}</span></td>"
             cel_pu = f"<td><span style='color:{cor_pu}; font-weight:700;'>{pu_txt}</span></td>"
             cel_efic = f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>"
+            if tem_chegada:
+                cel_chegada = f"<td><span style='color:{cor_chegada}; font-weight:700;'>{chegada_txt}</span></td>"
 
-        celulas = "".join([cel_data, cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic])
+        partes_linha = [cel_data, cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic]
+        if tem_chegada:
+            partes_linha.append(cel_chegada)
+        celulas = "".join(partes_linha)
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
 
     header_html = "".join(
@@ -356,7 +407,15 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
         )
         return
 
+    # "% Chegada" (acumulado do indicador de Chegada — % Dentro da Janela) é
+    # opcional: só entra na tabela quando o df_resumo trouxer essa coluna
+    # (ver services.chegada.percentual_dentro_por_grupo), pois a base pode
+    # não ter as colunas Janela/Início.
+    tem_chegada = "% Chegada" in df_resumo.columns
+
     colunas = [coluna_grupo, "Concluída", "Improdutiva", "Técnicos", "Atribuição", "PU", "Eficácia"]
+    if tem_chegada:
+        colunas.append("% Chegada")
 
     linhas_html = []
     for i, (_, row) in enumerate(df_resumo.iterrows()):
@@ -372,6 +431,11 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
         atrib_txt = f"{row['Atribuição']:.2f}"
         pu_txt = f"{row['PU']:.2f}"
 
+        if tem_chegada:
+            valor_chegada = row.get("% Chegada")
+            chegada_txt = f"{valor_chegada:.1f}%" if pd.notna(valor_chegada) else "—"
+            cor_chegada = _cor_eficacia((valor_chegada or 0) / 100) if pd.notna(valor_chegada) else config.TEXT_MUTED
+
         if is_total:
             bg = TOTAL_BG()
             cel_grupo = f"<td style='text-align:left; font-weight:{peso}; color:#FFFFFF;'>{row[coluna_grupo]}</td>"
@@ -381,6 +445,8 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
             cel_atrib = f"<td>{pill_total(atrib_txt)}</td>"
             cel_pu = f"<td>{pill_total(pu_txt)}</td>"
             cel_efic = f"<td>{pill_total(eficacia_pct)}</td>"
+            if tem_chegada:
+                cel_chegada = f"<td>{pill_total(chegada_txt)}</td>"
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
             cor_texto = config.TEXT
@@ -391,8 +457,13 @@ def tabela_consolidado_grupo(df_resumo: pd.DataFrame, titulo: str, coluna_grupo:
             cel_atrib = f"<td><span style='color:{cor_atrib}; font-weight:700;'>{atrib_txt}</span></td>"
             cel_pu = f"<td><span style='color:{cor_pu}; font-weight:700;'>{pu_txt}</span></td>"
             cel_efic = f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>"
+            if tem_chegada:
+                cel_chegada = f"<td><span style='color:{cor_chegada}; font-weight:700;'>{chegada_txt}</span></td>"
 
-        celulas = "".join([cel_grupo, cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic])
+        partes_linha = [cel_grupo, cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic]
+        if tem_chegada:
+            partes_linha.append(cel_chegada)
+        celulas = "".join(partes_linha)
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
 
     header_html = "".join(

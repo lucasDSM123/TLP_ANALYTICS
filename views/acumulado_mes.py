@@ -11,9 +11,13 @@ from components.tabelas import tabela_fechamento_diario, tabela_consolidado_grup
 from components.print_button import area_com_print, sanitizar_chave
 from services.grupos import serie_diaria_por_grupo, resumo_mes_por_grupo, resumo_mes_total
 from services import historico_mensal
+from services.chegada import (
+    calcular_indicador_chegada, resumo_geral as resumo_geral_chegada, percentual_dentro_por_grupo,
+    serie_diaria_percentual_dentro,
+)
 
 # Dimensões disponíveis para o fechamento mensal — rótulo exibido -> nome da coluna no df
-DIMENSOES = {"Estado": "Estado", "Cluster": "Cluster"}
+DIMENSOES = {"Estado": "Estado", "Cluster": "Cluster", "Supervisor": "Supervisor"}
 
 _MESES_PT = {
     1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL", 5: "MAIO", 6: "JUNHO",
@@ -85,8 +89,18 @@ def render(df, indicadores):
     pu_geral = total_geral.get("PU", 0.0)
     atribuicao_geral = total_geral.get("Atribuição", 0.0)
 
+    # Acumulado do indicador de Chegada (% Dentro da Janela) no período
+    # filtrado — mesma lógica/tolerâncias já usadas na aba "Chegada"
+    # (services.chegada), só que aqui aparece como resumo acumulado do mês.
+    pct_chegada_geral = None
+    if "Janela" in df.columns and "Início" in df.columns:
+        resumo_chegada_geral = resumo_geral_chegada(calcular_indicador_chegada(df))
+        if resumo_chegada_geral["total"]:
+            pct_chegada_geral = resumo_chegada_geral["pct_dentro"]
+
     with area_com_print("acumulado_mes_cards_resumo", nome_arquivo="resumo_geral_acumulado_mes"):
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        colunas_cards = st.columns(7 if pct_chegada_geral is not None else 6)
+        col1, col2, col3, col4, col5, col6 = colunas_cards[:6]
         with col1:
             card("TÉCNICOS", hc["HC"], config.TLP_ORANGE, f"BA: {hc['BA']} | TT: {hc['TT']}")
         with col2:
@@ -99,6 +113,9 @@ def render(df, indicadores):
             card("ATRIBUIÇÃO", f"{atribuicao_geral:.2f}", "#7B8CDE", f"Meta: {config.META_ATRIBUICAO_ALVO:.1f}")
         with col6:
             card("PU", f"{pu_geral:.2f}", "#00C9A7", f"Meta: {config.META_PU_ALVO:.1f}")
+        if pct_chegada_geral is not None:
+            with colunas_cards[6]:
+                card("% CHEGADA", f"{pct_chegada_geral:.1f}%", "#2E63C7", "Dentro da Janela")
 
     st.divider()
 
@@ -122,6 +139,14 @@ def render(df, indicadores):
     # ====== CONSOLIDADO POR GRUPO (Estado ou Cluster) ======
     secao_titulo(f"Consolidado por {rotulo_dim}", f"Totais acumulados do mês — cada {rotulo_dim.lower()} e o Total geral")
     resumo_grupo = resumo_mes_por_grupo(df, coluna_grupo)
+
+    # Anexa o acumulado do indicador de Chegada (% Dentro da Janela) como
+    # coluna extra, quebrado pela mesma dimensão (Estado/Cluster/Supervisor)
+    # — não entra na tabela se a base não tiver Janela/Início.
+    mapa_chegada = percentual_dentro_por_grupo(df, coluna_grupo)
+    if mapa_chegada and not resumo_grupo.empty:
+        resumo_grupo["% Chegada"] = resumo_grupo[coluna_grupo].map(mapa_chegada)
+
     with area_com_print("acumulado_mes_consolidado", nome_arquivo=f"consolidado_por_{coluna_grupo}"):
         tabela_consolidado_grupo(resumo_grupo, f"TOTAL DO MÊS POR {rotulo_dim.upper()}", coluna_grupo)
 
@@ -131,6 +156,7 @@ def render(df, indicadores):
     secao_titulo("Fechamento Diário", f"Detalhamento dia a dia por {rotulo_dim.lower()}, com o total do mês ao final")
 
     serie_grupo = serie_diaria_por_grupo(df, coluna_grupo)
+    serie_chegada_grupo = serie_diaria_percentual_dentro(df, coluna_grupo)
 
     if resumo_grupo.empty or serie_grupo.empty:
         st.info("Sem dados para os filtros selecionados.")
@@ -145,7 +171,19 @@ def render(df, indicadores):
                     .drop(columns=[coluna_grupo])
                     .sort_values("Data")
                 )
+
+                # Anexa o % Chegada (indicador de Chegada) dia a dia, quando
+                # disponível — mesma junção por Data usada no restante da
+                # tabela; dias sem OS avaliável na Chegada ficam com "—".
+                if not serie_chegada_grupo.empty:
+                    df_dia_grupo = df_dia_grupo.merge(
+                        serie_chegada_grupo[serie_chegada_grupo[coluna_grupo] == grupo][["Data", "% Chegada"]],
+                        on="Data", how="left",
+                    )
+
                 linha_total = resumo_grupo[resumo_grupo[coluna_grupo] == grupo].iloc[0].to_dict()
+                if mapa_chegada:
+                    linha_total["% Chegada"] = mapa_chegada.get(grupo)
                 cor = _cor_grupo(i, grupo, coluna_grupo)
 
                 mes_anterior = historico_mensal.fechamento_mes_anterior(

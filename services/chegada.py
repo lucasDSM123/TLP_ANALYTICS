@@ -256,6 +256,81 @@ def resumo_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
     return resultado[[coluna, "Dentro", "Antes", "Depois", "Fora", "Total", "% Dentro"]]
 
 
+def percentual_dentro_por_grupo(df: pd.DataFrame, coluna: str) -> dict:
+    """
+    Calcula o % Dentro da Janela (indicador de Chegada) acumulado do período
+    filtrado, quebrado por `coluna` (Estado, Cluster, Supervisor etc.), mais
+    a chave especial "Total" com o % geral do período inteiro.
+
+    Usada pela aba "Acumulado Mês" para trazer o acumulado do indicador de
+    Chegada (já existente na aba "Chegada") como coluna extra na tabela de
+    Consolidado por Grupo, sem repetir a lógica de classificação aqui.
+
+    Retorna {} se a base não tiver as colunas Janela/Início (indicador não
+    aplicável) ou se não houver nenhuma OS avaliável no período.
+    """
+    if df.empty or COL_JANELA not in df.columns or COL_INICIO not in df.columns:
+        return {}
+
+    df_chegada = calcular_indicador_chegada(df)
+
+    geral = resumo_geral(df_chegada)
+    if geral["total"] == 0:
+        return {}
+
+    resultado = {"Total": geral["pct_dentro"]}
+
+    if coluna in df_chegada.columns:
+        por_grupo = resumo_por_grupo(df_chegada, coluna)
+        for _, row in por_grupo.iterrows():
+            resultado[row[coluna]] = row["% Dentro"]
+
+    return resultado
+
+
+def serie_diaria_percentual_dentro(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
+    """
+    Série diária do % Dentro da Janela (indicador de Chegada), quebrada por
+    `coluna` (Estado, Cluster, Supervisor etc.) — mesmo padrão de
+    services.grupos.serie_diaria_por_grupo, usada para anexar o indicador de
+    Chegada como coluna extra na tabela de Fechamento Diário por grupo.
+
+    Retorna colunas: <coluna>, Data (date), % Chegada. Vazio se a base não
+    tiver Janela/Início/Data ou não houver OS avaliável no período.
+    """
+    colunas_vazias = [coluna, "Data", "% Chegada"]
+    if (df.empty or COL_JANELA not in df.columns or COL_INICIO not in df.columns
+            or COL_DATA not in df.columns or coluna not in df.columns):
+        return pd.DataFrame(columns=colunas_vazias)
+
+    # Import local (não no topo do módulo) para evitar acoplamento
+    # circular entre services.chegada e services.grupos.
+    from services.grupos import _parse_datas
+
+    avaliavel = _base_avaliavel(calcular_indicador_chegada(df))
+    if avaliavel.empty:
+        return pd.DataFrame(columns=colunas_vazias)
+
+    serie = _parse_datas(avaliavel, COL_DATA)
+    if serie.empty:
+        return pd.DataFrame(columns=colunas_vazias)
+
+    linhas = []
+    for grupo in sorted(serie[coluna].dropna().unique()):
+        sub_grupo = serie[serie[coluna] == grupo]
+        for dia in sorted(sub_grupo["_data"].dt.date.unique()):
+            sub_dia = sub_grupo[sub_grupo["_data"].dt.date == dia]
+            total = len(sub_dia)
+            dentro = int((sub_dia["Status Chegada"] == STATUS_DENTRO).sum())
+            linhas.append({
+                coluna: grupo,
+                "Data": dia,
+                "% Chegada": (dentro / total * 100) if total else None,
+            })
+
+    return pd.DataFrame(linhas)
+
+
 def resumo_hierarquico(df: pd.DataFrame, coluna_pai: str = "Cluster", coluna_filho: str = "Cidade") -> list:
     """
     Agrupa o indicador em dois níveis (ex.: Cluster -> Cidade) pronto para

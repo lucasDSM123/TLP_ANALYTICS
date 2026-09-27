@@ -3,6 +3,7 @@ import streamlit as st
 
 import config
 from components.estilo_tabela import CABECALHO_BG, TOTAL_BG, pill, pill_total, cor_faixa, cor_faixa_bg, wrapper_tabela
+from components.pu_vivo import pu_vivo_ativo
 
 _CORES_CLASSIFICACAO = {
     "P0": config.TLP_RED,
@@ -31,10 +32,13 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
         st.info("Sem técnicos com atividades para este filtro.")
         return
 
-    colunas_ordem = [c for c in [
+    colunas_candidatas = [
         "Técnico", "Classificação P", "Cluster", "Caixa Total", "Esteira",
-        "PU", "Concluído OK", "Concluído NOK", "Iniciada", "Eficácia", "Projeção",
-    ] if c in df_matriz.columns]
+        "PU", "PU Vivo", "Concluído OK", "Concluído NOK", "Iniciada", "Eficácia", "Projeção",
+    ]
+    if not pu_vivo_ativo():
+        colunas_candidatas.remove("PU Vivo")
+    colunas_ordem = [c for c in colunas_candidatas if c in df_matriz.columns]
 
     linhas_html = []
     for i, (_, row) in enumerate(df_matriz.iterrows()):
@@ -51,6 +55,8 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
                 celulas.append(f"<td style='color:{config.TEXT_MUTED}; font-weight:600;'>{row[c]}</td>")
             elif c == "PU":
                 celulas.append(f"<td>{pill(f'{row[c]:.2f}', cor_faixa(row[c], config.META_PU_ALVO), cor_faixa_bg(row[c], config.META_PU_ALVO))}</td>")
+            elif c == "PU Vivo":
+                celulas.append(f"<td style='font-weight:700; color:#0369A1;'>{row[c]:.2f}</td>")
             elif c == "Concluído OK":
                 celulas.append(f"<td style='font-weight:700; color:#15803D;'>{row[c]}</td>")
             elif c == "Concluído NOK":
@@ -79,6 +85,9 @@ def render_tabela_tecnicos(df_matriz: pd.DataFrame, total: dict = None):
                 celulas_total.append("<td></td>")
             elif c == "PU":
                 celulas_total.append(f"<td>{pill_total(pu_tot_txt)}</td>")
+            elif c == "PU Vivo":
+                pu_vivo_tot_txt = f"{total['PU Vivo']:.2f}" if "PU Vivo" in total else "-"
+                celulas_total.append(f"<td>{pill_total(pu_vivo_tot_txt)}</td>")
             elif c == "Concluído OK":
                 celulas_total.append(f"<td>{pill_total(total['Concluído OK'])}</td>")
             elif c == "Concluído NOK":

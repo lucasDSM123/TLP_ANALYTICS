@@ -21,6 +21,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
     esteira = ind.esteira()["TOTAL"]
     media_atrib = ind.media_atribuicao()["GERAL"]
     pu = ind.pu()["GERAL"]
+    pu_vivo = ind.pu_vivo()["GERAL"]
     concluido = ind.concluido()
     eficacia = ind.eficacia_caixa()
     projecao = ind.projecao()["GERAL"]
@@ -50,6 +51,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
         "Média Atribuída TT": media_atrib_dict["TT"],
         "Média Atribuída Total": media_atrib,
         "PU": pu,
+        "PU Vivo": pu_vivo,
         "Concluída BA": ok_ba,
         "Concluída TT": ok_tt,
         "Concluída Total": ok_total,
