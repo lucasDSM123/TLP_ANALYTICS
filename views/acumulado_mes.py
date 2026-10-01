@@ -70,9 +70,33 @@ def _cor_grupo(indice: int, valor: str, coluna_grupo: str) -> str:
     return config.CHART_COLORWAY[indice % len(config.CHART_COLORWAY)]
 
 
+def _somente_mes_corrente(df: pd.DataFrame) -> pd.DataFrame:
+    """Mantém só as linhas do mês da data mais recente da base.
+
+    A base ao vivo pode trazer dias do mês anterior (ex.: 30/09 junto com
+    01/10). Sem este corte, esses dias entravam no acumulado do mês novo
+    (e na comparação com o mês anterior congelado), inflando os números.
+    """
+    if df.empty or "Data" not in df.columns:
+        return df
+    datas = pd.to_datetime(df["Data"], format="%d/%m/%y", errors="coerce")
+    if datas.isna().all():
+        datas = pd.to_datetime(df["Data"], dayfirst=True, errors="coerce")
+    if datas.isna().all():
+        return df
+    ref = datas.max()
+    mask = (datas.dt.year == ref.year) & (datas.dt.month == ref.month)
+    return df[mask]
+
+
 def render(df, indicadores):
 
     secao_titulo("Acumulado Mês", "Fechamento mensal consolidado — réplica do PAINEL do Excel/Power BI")
+
+    # Acumulado Mês considera apenas o mês corrente (data mais recente da
+    # base) — dias do mês anterior presentes na base não entram aqui.
+    df = _somente_mes_corrente(df)
+    indicadores = indicadores.__class__(df)
 
     # ====== RESUMO GERAL DO PERÍODO FILTRADO ======
     hc = indicadores.hc_real()
