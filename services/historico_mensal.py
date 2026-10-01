@@ -85,6 +85,24 @@ _AGOSTO_2026_CLUSTER = {
     # LAGES: não cadastrado de propósito — não atuamos mais lá (ver nota acima).
 }
 
+# Setembro/2026 — fechamento congelado (prints do painel fechado).
+# Estado: números da planilha de Estado (mesma fonte usada em Agosto).
+# Cluster: números da planilha de Clusters. Lages fica de fora de propósito
+# (operação encerrada — ver nota de Agosto).
+_SETEMBRO_2026_ESTADO = {
+    "SC": dict(eficacia=0.74, concluida=6872, improdutiva=2392, tecnicos=2257, atribuicao=4.10, pu=3.04),
+    "RS": dict(eficacia=0.68, concluida=5880, improdutiva=2704, tecnicos=1905, atribuicao=4.51, pu=3.09),
+}
+
+_SETEMBRO_2026_CLUSTER = {
+    "FLORIANOPOLIS":  dict(eficacia=0.75, concluida=2669, improdutiva=870,  tecnicos=890,  atribuicao=3.98, pu=3.00),
+    "BLUMENAU":       dict(eficacia=0.68, concluida=1778, improdutiva=838,  tecnicos=566,  atribuicao=4.62, pu=3.14),
+    "JOINVILLE":      dict(eficacia=0.75, concluida=2140, improdutiva=725,  tecnicos=645,  atribuicao=4.44, pu=3.32),
+    "CHAPECO":        dict(eficacia=0.68, concluida=285,  improdutiva=132,  tecnicos=131,  atribuicao=3.18, pu=2.18),
+    "PORTO ALEGRE":   dict(eficacia=0.65, concluida=3943, improdutiva=2100, tecnicos=1389, atribuicao=4.35, pu=2.84),
+    "CANOAS":         dict(eficacia=0.76, concluida=1935, improdutiva=604,  tecnicos=543,  atribuicao=4.68, pu=3.56),
+}
+
 # Registro de todos os meses já congelados — chave (ano, mês [1-12]).
 # `fechamento_mes_anterior` usa isso pra achar automaticamente o mês
 # imediatamente anterior ao mês corrente da base ao vivo; não precisa
@@ -93,6 +111,7 @@ _AGOSTO_2026_CLUSTER = {
 _HISTORICO = {
     (2026, 7): {"rotulo": "JULHO", "estado": _JULHO_2026_ESTADO, "cluster": _JULHO_2026_CLUSTER},
     (2026, 8): {"rotulo": "AGOSTO", "estado": _AGOSTO_2026_ESTADO, "cluster": _AGOSTO_2026_CLUSTER},
+    (2026, 9): {"rotulo": "SETEMBRO", "estado": _SETEMBRO_2026_ESTADO, "cluster": _SETEMBRO_2026_CLUSTER},
 }
 
 
