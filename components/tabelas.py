@@ -282,7 +282,40 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
     st.markdown(html, unsafe_allow_html=True)
 
 
-def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str = None):
+_COLS_MES_ANTERIOR = ["Concluída", "Improdutiva", "Técnicos", "Atribuição", "PU", "Eficácia"]
+
+
+def _celulas_mes_anterior(row, is_total: bool) -> str:
+    """Células do bloco 'mês anterior (mesmo dia)' do fechamento diário:
+    valores em cinza (referência, sem cor de meta) — ou 'pílulas' na linha de
+    Total. Dia sem equivalente no mês anterior (ex.: dia 31) vira '—'."""
+    def fmt(coluna):
+        v = row.get(f"Ant {coluna}")
+        if v is None or pd.isna(v):
+            return "—"
+        if coluna == "Eficácia":
+            return f"{v:.0%}"
+        if coluna in ("Atribuição", "PU"):
+            return f"{v:.2f}"
+        return f"{int(v)}"
+
+    partes = []
+    ultima = len(_COLS_MES_ANTERIOR) - 1
+    for i, coluna in enumerate(_COLS_MES_ANTERIOR):
+        txt = fmt(coluna)
+        if is_total:
+            partes.append(f"<td>{pill_total(txt)}</td>")
+        else:
+            borda = f" border-right:2px solid {config.CARD_BORDER};" if i == ultima else ""
+            partes.append(
+                f"<td style='background:rgba(100,116,139,0.08); color:{config.TEXT_MUTED}; "
+                f"font-weight:600;{borda}'>{txt}</td>"
+            )
+    return "".join(partes)
+
+
+def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str = None,
+                              rotulo_anterior: str = None, rotulo_atual: str = None):
     """
     Tabela de fechamento diário (réplica do PAINEL do Excel/Power BI):
     uma linha por dia com Concluída, Improdutiva, Técnicos, Atribuição, PU
@@ -294,6 +327,13 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
     Improdutiva, Técnicos, Atribuição, PU, Eficácia. A última linha pode
     (opcionalmente) já vir com Data == "Total Mês" — caso contrário, use em
     conjunto com a linha de resumo retornada por resumo_mes_por_estado.
+
+    Comparativo dia a dia (opcional): se df_dia trouxer as colunas 'Ant
+    Concluída', 'Ant Improdutiva', 'Ant Técnicos', 'Ant Atribuição', 'Ant PU'
+    e 'Ant Eficácia' (valores do MESMO DIA do mês anterior, congelados), a
+    tabela ganha um bloco extra à esquerda, antes das colunas do mês atual.
+    `rotulo_anterior`/`rotulo_atual` (ex.: SETEMBRO/OUTUBRO) identificam cada
+    bloco no cabeçalho.
     """
     cor_titulo = cor_titulo or config.TLP_ORANGE
 
@@ -310,6 +350,7 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
     # services.chegada.serie_diaria_percentual_dentro), pois a base pode não
     # ter as colunas Janela/Início.
     tem_chegada = "% Chegada" in df_dia.columns
+    tem_anterior = "Ant Concluída" in df_dia.columns
 
     colunas = ["Data", "Concluída", "Improdutiva", "Técnicos", "Atribuição", "PU", "Eficácia"]
     if tem_chegada:
@@ -359,16 +400,34 @@ def tabela_fechamento_diario(df_dia: pd.DataFrame, titulo: str, cor_titulo: str 
             if tem_chegada:
                 cel_chegada = f"<td><span style='color:{cor_chegada}; font-weight:700;'>{chegada_txt}</span></td>"
 
-        partes_linha = [cel_data, cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic]
+        partes_linha = [cel_data]
+        if tem_anterior:
+            partes_linha.append(_celulas_mes_anterior(row, is_total))
+        partes_linha += [cel_concluida, cel_improd, cel_tecnicos, cel_atrib, cel_pu, cel_efic]
         if tem_chegada:
             partes_linha.append(cel_chegada)
         celulas = "".join(partes_linha)
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
 
-    header_html = "".join(
-        f"<th style='text-align:{'left' if c == 'Data' else 'center'};'>{c.upper()}</th>"
-        for c in colunas
-    )
+    def _th(nome, sub=None, estilo_extra=""):
+        # Cabeçalho de LINHA ÚNICA (o CSS do site deixa todo <th> fixo no topo;
+        # duas linhas de cabeçalho se sobreporiam ao rolar) — o mês vai em
+        # texto pequeno embaixo do nome da coluna.
+        rotulo = f"{nome.upper()}"
+        if sub:
+            rotulo += f"<br><span style='font-size:10px; font-weight:600; opacity:0.85;'>{sub}</span>"
+        alinhamento = "left" if nome == "Data" else "center"
+        return f"<th style='text-align:{alinhamento};{estilo_extra}'>{rotulo}</th>"
+
+    if tem_anterior:
+        sub_ant = (rotulo_anterior or "MÊS ANT.").upper()
+        sub_atual = (rotulo_atual or "MÊS ATUAL").upper()
+        estilo_ant = f" background:{config.TEXT}; color:#FFFFFF;"
+        header_html = _th("Data")
+        header_html += "".join(_th(c, sub_ant, estilo_ant) for c in _COLS_MES_ANTERIOR)
+        header_html += "".join(_th(c, sub_atual) for c in colunas if c != "Data")
+    else:
+        header_html = "".join(_th(c) for c in colunas)
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"

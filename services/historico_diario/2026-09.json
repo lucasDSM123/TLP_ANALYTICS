@@ -1,0 +1,6623 @@
+{
+ "Estado": {
+  "RS": {
+   "1": {
+    "concluida": 241,
+    "improdutiva": 95,
+    "tecnicos": 78,
+    "caixa_total": 336.0,
+    "atribuicao": 4.3077,
+    "pu": 3.0897,
+    "eficacia": 0.717262
+   },
+   "2": {
+    "concluida": 237,
+    "improdutiva": 88,
+    "tecnicos": 75,
+    "caixa_total": 327.0,
+    "atribuicao": 4.36,
+    "pu": 3.16,
+    "eficacia": 0.729231
+   },
+   "3": {
+    "concluida": 227,
+    "improdutiva": 93,
+    "tecnicos": 77,
+    "caixa_total": 321.0,
+    "atribuicao": 4.1688,
+    "pu": 2.9481,
+    "eficacia": 0.709375
+   },
+   "4": {
+    "concluida": 209,
+    "improdutiva": 122,
+    "tecnicos": 78,
+    "caixa_total": 331.0,
+    "atribuicao": 4.2436,
+    "pu": 2.6795,
+    "eficacia": 0.63142
+   },
+   "5": {
+    "concluida": 131,
+    "improdutiva": 62,
+    "tecnicos": 46,
+    "caixa_total": 194.0,
+    "atribuicao": 4.2174,
+    "pu": 2.8478,
+    "eficacia": 0.678756
+   },
+   "6": {
+    "concluida": 64,
+    "improdutiva": 24,
+    "tecnicos": 17,
+    "caixa_total": 89.0,
+    "atribuicao": 5.2353,
+    "pu": 3.7647,
+    "eficacia": 0.727273
+   },
+   "7": {
+    "concluida": 143,
+    "improdutiva": 84,
+    "tecnicos": 39,
+    "caixa_total": 227.0,
+    "atribuicao": 5.8205,
+    "pu": 3.6667,
+    "eficacia": 0.629956
+   },
+   "8": {
+    "concluida": 227,
+    "improdutiva": 96,
+    "tecnicos": 70,
+    "caixa_total": 323.0,
+    "atribuicao": 4.6143,
+    "pu": 3.2429,
+    "eficacia": 0.702786
+   },
+   "9": {
+    "concluida": 226,
+    "improdutiva": 94,
+    "tecnicos": 69,
+    "caixa_total": 321.0,
+    "atribuicao": 4.6522,
+    "pu": 3.2754,
+    "eficacia": 0.70625
+   },
+   "10": {
+    "concluida": 246,
+    "improdutiva": 79,
+    "tecnicos": 71,
+    "caixa_total": 325.0,
+    "atribuicao": 4.5775,
+    "pu": 3.4648,
+    "eficacia": 0.756923
+   },
+   "11": {
+    "concluida": 175,
+    "improdutiva": 144,
+    "tecnicos": 69,
+    "caixa_total": 319.0,
+    "atribuicao": 4.6232,
+    "pu": 2.5362,
+    "eficacia": 0.548589
+   },
+   "12": {
+    "concluida": 155,
+    "improdutiva": 84,
+    "tecnicos": 49,
+    "caixa_total": 239.0,
+    "atribuicao": 4.8776,
+    "pu": 3.1633,
+    "eficacia": 0.648536
+   },
+   "13": {
+    "concluida": 46,
+    "improdutiva": 17,
+    "tecnicos": 13,
+    "caixa_total": 63.0,
+    "atribuicao": 4.8462,
+    "pu": 3.5385,
+    "eficacia": 0.730159
+   },
+   "14": {
+    "concluida": 251,
+    "improdutiva": 71,
+    "tecnicos": 74,
+    "caixa_total": 324.0,
+    "atribuicao": 4.3784,
+    "pu": 3.3919,
+    "eficacia": 0.779503
+   },
+   "15": {
+    "concluida": 256,
+    "improdutiva": 89,
+    "tecnicos": 79,
+    "caixa_total": 345.0,
+    "atribuicao": 4.3671,
+    "pu": 3.2405,
+    "eficacia": 0.742029
+   },
+   "16": {
+    "concluida": 240,
+    "improdutiva": 78,
+    "tecnicos": 80,
+    "caixa_total": 319.0,
+    "atribuicao": 3.9875,
+    "pu": 3.0,
+    "eficacia": 0.754717
+   },
+   "17": {
+    "concluida": 239,
+    "improdutiva": 70,
+    "tecnicos": 76,
+    "caixa_total": 309.0,
+    "atribuicao": 4.0658,
+    "pu": 3.1447,
+    "eficacia": 0.773463
+   },
+   "18": {
+    "concluida": 232,
+    "improdutiva": 93,
+    "tecnicos": 79,
+    "caixa_total": 326.0,
+    "atribuicao": 4.1266,
+    "pu": 2.9367,
+    "eficacia": 0.713846
+   },
+   "19": {
+    "concluida": 160,
+    "improdutiva": 72,
+    "tecnicos": 52,
+    "caixa_total": 232.0,
+    "atribuicao": 4.4615,
+    "pu": 3.0769,
+    "eficacia": 0.689655
+   },
+   "20": {
+    "concluida": 57,
+    "improdutiva": 23,
+    "tecnicos": 14,
+    "caixa_total": 81.0,
+    "atribuicao": 5.7857,
+    "pu": 4.0714,
+    "eficacia": 0.7125
+   },
+   "21": {
+    "concluida": 156,
+    "improdutiva": 182,
+    "tecnicos": 72,
+    "caixa_total": 338.0,
+    "atribuicao": 4.6944,
+    "pu": 2.1667,
+    "eficacia": 0.461538
+   },
+   "22": {
+    "concluida": 274,
+    "improdutiva": 98,
+    "tecnicos": 85,
+    "caixa_total": 372.0,
+    "atribuicao": 4.3765,
+    "pu": 3.2235,
+    "eficacia": 0.736559
+   },
+   "23": {
+    "concluida": 289,
+    "improdutiva": 113,
+    "tecnicos": 89,
+    "caixa_total": 402.0,
+    "atribuicao": 4.5169,
+    "pu": 3.2472,
+    "eficacia": 0.718905
+   },
+   "24": {
+    "concluida": 290,
+    "improdutiva": 106,
+    "tecnicos": 88,
+    "caixa_total": 396.0,
+    "atribuicao": 4.5,
+    "pu": 3.2955,
+    "eficacia": 0.732323
+   },
+   "25": {
+    "concluida": 270,
+    "improdutiva": 84,
+    "tecnicos": 86,
+    "caixa_total": 354.0,
+    "atribuicao": 4.1163,
+    "pu": 3.1395,
+    "eficacia": 0.762712
+   },
+   "26": {
+    "concluida": 163,
+    "improdutiva": 78,
+    "tecnicos": 54,
+    "caixa_total": 241.0,
+    "atribuicao": 4.463,
+    "pu": 3.0185,
+    "eficacia": 0.676349
+   },
+   "27": {
+    "concluida": 52,
+    "improdutiva": 37,
+    "tecnicos": 16,
+    "caixa_total": 89.0,
+    "atribuicao": 5.5625,
+    "pu": 3.25,
+    "eficacia": 0.58427
+   },
+   "28": {
+    "concluida": 213,
+    "improdutiva": 137,
+    "tecnicos": 68,
+    "caixa_total": 350.0,
+    "atribuicao": 5.1471,
+    "pu": 3.1324,
+    "eficacia": 0.608571
+   },
+   "29": {
+    "concluida": 190,
+    "improdutiva": 180,
+    "tecnicos": 70,
+    "caixa_total": 370.0,
+    "atribuicao": 5.2857,
+    "pu": 2.7143,
+    "eficacia": 0.513514
+   },
+   "30": {
+    "concluida": 221,
+    "improdutiva": 111,
+    "tecnicos": 72,
+    "caixa_total": 332.0,
+    "atribuicao": 4.6111,
+    "pu": 3.0694,
+    "eficacia": 0.665663
+   }
+  },
+  "SC": {
+   "1": {
+    "concluida": 285,
+    "improdutiva": 84,
+    "tecnicos": 90,
+    "caixa_total": 370.0,
+    "atribuicao": 4.1111,
+    "pu": 3.1667,
+    "eficacia": 0.772358
+   },
+   "2": {
+    "concluida": 272,
+    "improdutiva": 73,
+    "tecnicos": 86,
+    "caixa_total": 345.0,
+    "atribuicao": 4.0116,
+    "pu": 3.1628,
+    "eficacia": 0.788406
+   },
+   "3": {
+    "concluida": 272,
+    "improdutiva": 69,
+    "tecnicos": 87,
+    "caixa_total": 342.0,
+    "atribuicao": 3.931,
+    "pu": 3.1264,
+    "eficacia": 0.797654
+   },
+   "4": {
+    "concluida": 282,
+    "improdutiva": 76,
+    "tecnicos": 90,
+    "caixa_total": 358.0,
+    "atribuicao": 3.9778,
+    "pu": 3.1333,
+    "eficacia": 0.787709
+   },
+   "5": {
+    "concluida": 176,
+    "improdutiva": 90,
+    "tecnicos": 63,
+    "caixa_total": 266.0,
+    "atribuicao": 4.2222,
+    "pu": 2.7937,
+    "eficacia": 0.661654
+   },
+   "6": {
+    "concluida": 32,
+    "improdutiva": 23,
+    "tecnicos": 13,
+    "caixa_total": 55.0,
+    "atribuicao": 4.2308,
+    "pu": 2.4615,
+    "eficacia": 0.581818
+   },
+   "7": {
+    "concluida": 181,
+    "improdutiva": 58,
+    "tecnicos": 56,
+    "caixa_total": 239.0,
+    "atribuicao": 4.2679,
+    "pu": 3.2321,
+    "eficacia": 0.757322
+   },
+   "8": {
+    "concluida": 275,
+    "improdutiva": 77,
+    "tecnicos": 89,
+    "caixa_total": 352.0,
+    "atribuicao": 3.9551,
+    "pu": 3.0899,
+    "eficacia": 0.78125
+   },
+   "9": {
+    "concluida": 262,
+    "improdutiva": 85,
+    "tecnicos": 85,
+    "caixa_total": 347.0,
+    "atribuicao": 4.0824,
+    "pu": 3.0824,
+    "eficacia": 0.755043
+   },
+   "10": {
+    "concluida": 272,
+    "improdutiva": 95,
+    "tecnicos": 89,
+    "caixa_total": 367.0,
+    "atribuicao": 4.1236,
+    "pu": 3.0562,
+    "eficacia": 0.741144
+   },
+   "11": {
+    "concluida": 243,
+    "improdutiva": 157,
+    "tecnicos": 89,
+    "caixa_total": 400.0,
+    "atribuicao": 4.4944,
+    "pu": 2.7303,
+    "eficacia": 0.6075
+   },
+   "12": {
+    "concluida": 202,
+    "improdutiva": 88,
+    "tecnicos": 67,
+    "caixa_total": 290.0,
+    "atribuicao": 4.3284,
+    "pu": 3.0149,
+    "eficacia": 0.696552
+   },
+   "13": {
+    "concluida": 49,
+    "improdutiva": 16,
+    "tecnicos": 13,
+    "caixa_total": 65.0,
+    "atribuicao": 5.0,
+    "pu": 3.7692,
+    "eficacia": 0.753846
+   },
+   "14": {
+    "concluida": 285,
+    "improdutiva": 84,
+    "tecnicos": 92,
+    "caixa_total": 370.0,
+    "atribuicao": 4.0217,
+    "pu": 3.0978,
+    "eficacia": 0.772358
+   },
+   "15": {
+    "concluida": 282,
+    "improdutiva": 76,
+    "tecnicos": 86,
+    "caixa_total": 358.0,
+    "atribuicao": 4.1628,
+    "pu": 3.2791,
+    "eficacia": 0.787709
+   },
+   "16": {
+    "concluida": 289,
+    "improdutiva": 89,
+    "tecnicos": 93,
+    "caixa_total": 378.0,
+    "atribuicao": 4.0645,
+    "pu": 3.1075,
+    "eficacia": 0.76455
+   },
+   "17": {
+    "concluida": 257,
+    "improdutiva": 85,
+    "tecnicos": 85,
+    "caixa_total": 342.0,
+    "atribuicao": 4.0235,
+    "pu": 3.0235,
+    "eficacia": 0.751462
+   },
+   "18": {
+    "concluida": 271,
+    "improdutiva": 62,
+    "tecnicos": 79,
+    "caixa_total": 333.0,
+    "atribuicao": 4.2152,
+    "pu": 3.4304,
+    "eficacia": 0.813814
+   },
+   "19": {
+    "concluida": 139,
+    "improdutiva": 122,
+    "tecnicos": 63,
+    "caixa_total": 261.0,
+    "atribuicao": 4.1429,
+    "pu": 2.2063,
+    "eficacia": 0.532567
+   },
+   "20": {
+    "concluida": 35,
+    "improdutiva": 27,
+    "tecnicos": 13,
+    "caixa_total": 62.0,
+    "atribuicao": 4.7692,
+    "pu": 2.6923,
+    "eficacia": 0.564516
+   },
+   "21": {
+    "concluida": 261,
+    "improdutiva": 105,
+    "tecnicos": 91,
+    "caixa_total": 366.0,
+    "atribuicao": 4.022,
+    "pu": 2.8681,
+    "eficacia": 0.713115
+   },
+   "22": {
+    "concluida": 306,
+    "improdutiva": 73,
+    "tecnicos": 95,
+    "caixa_total": 379.0,
+    "atribuicao": 3.9895,
+    "pu": 3.2211,
+    "eficacia": 0.807388
+   },
+   "23": {
+    "concluida": 282,
+    "improdutiva": 79,
+    "tecnicos": 91,
+    "caixa_total": 361.0,
+    "atribuicao": 3.967,
+    "pu": 3.0989,
+    "eficacia": 0.781163
+   },
+   "24": {
+    "concluida": 295,
+    "improdutiva": 71,
+    "tecnicos": 89,
+    "caixa_total": 366.0,
+    "atribuicao": 4.1124,
+    "pu": 3.3146,
+    "eficacia": 0.806011
+   },
+   "25": {
+    "concluida": 289,
+    "improdutiva": 100,
+    "tecnicos": 91,
+    "caixa_total": 389.0,
+    "atribuicao": 4.2747,
+    "pu": 3.1758,
+    "eficacia": 0.742931
+   },
+   "26": {
+    "concluida": 205,
+    "improdutiva": 66,
+    "tecnicos": 67,
+    "caixa_total": 271.0,
+    "atribuicao": 4.0448,
+    "pu": 3.0597,
+    "eficacia": 0.756458
+   },
+   "27": {
+    "concluida": 45,
+    "improdutiva": 15,
+    "tecnicos": 13,
+    "caixa_total": 60.0,
+    "atribuicao": 4.6154,
+    "pu": 3.4615,
+    "eficacia": 0.75
+   },
+   "28": {
+    "concluida": 270,
+    "improdutiva": 116,
+    "tecnicos": 94,
+    "caixa_total": 386.0,
+    "atribuicao": 4.1064,
+    "pu": 2.8723,
+    "eficacia": 0.699482
+   },
+   "29": {
+    "concluida": 254,
+    "improdutiva": 134,
+    "tecnicos": 98,
+    "caixa_total": 388.0,
+    "atribuicao": 3.9592,
+    "pu": 2.5918,
+    "eficacia": 0.654639
+   },
+   "30": {
+    "concluida": 305,
+    "improdutiva": 97,
+    "tecnicos": 100,
+    "caixa_total": 402.0,
+    "atribuicao": 4.02,
+    "pu": 3.05,
+    "eficacia": 0.758706
+   }
+  }
+ },
+ "Cluster": {
+  "BLUMENAU": {
+   "1": {
+    "concluida": 75,
+    "improdutiva": 28,
+    "tecnicos": 25,
+    "caixa_total": 103.0,
+    "atribuicao": 4.12,
+    "pu": 3.0,
+    "eficacia": 0.728155
+   },
+   "2": {
+    "concluida": 73,
+    "improdutiva": 18,
+    "tecnicos": 24,
+    "caixa_total": 91.0,
+    "atribuicao": 3.7917,
+    "pu": 3.0417,
+    "eficacia": 0.802198
+   },
+   "3": {
+    "concluida": 71,
+    "improdutiva": 12,
+    "tecnicos": 25,
+    "caixa_total": 83.0,
+    "atribuicao": 3.32,
+    "pu": 2.84,
+    "eficacia": 0.855422
+   },
+   "4": {
+    "concluida": 62,
+    "improdutiva": 23,
+    "tecnicos": 21,
+    "caixa_total": 85.0,
+    "atribuicao": 4.0476,
+    "pu": 2.9524,
+    "eficacia": 0.729412
+   },
+   "5": {
+    "concluida": 36,
+    "improdutiva": 24,
+    "tecnicos": 15,
+    "caixa_total": 60.0,
+    "atribuicao": 4.0,
+    "pu": 2.4,
+    "eficacia": 0.6
+   },
+   "6": {
+    "concluida": 13,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 21.0,
+    "atribuicao": 3.5,
+    "pu": 2.1667,
+    "eficacia": 0.619048
+   },
+   "7": {
+    "concluida": 65,
+    "improdutiva": 20,
+    "tecnicos": 19,
+    "caixa_total": 85.0,
+    "atribuicao": 4.4737,
+    "pu": 3.4211,
+    "eficacia": 0.764706
+   },
+   "8": {
+    "concluida": 57,
+    "improdutiva": 23,
+    "tecnicos": 20,
+    "caixa_total": 80.0,
+    "atribuicao": 4.0,
+    "pu": 2.85,
+    "eficacia": 0.7125
+   },
+   "9": {
+    "concluida": 69,
+    "improdutiva": 41,
+    "tecnicos": 27,
+    "caixa_total": 110.0,
+    "atribuicao": 4.0741,
+    "pu": 2.5556,
+    "eficacia": 0.627273
+   },
+   "10": {
+    "concluida": 84,
+    "improdutiva": 34,
+    "tecnicos": 25,
+    "caixa_total": 118.0,
+    "atribuicao": 4.72,
+    "pu": 3.36,
+    "eficacia": 0.711864
+   },
+   "11": {
+    "concluida": 76,
+    "improdutiva": 54,
+    "tecnicos": 26,
+    "caixa_total": 130.0,
+    "atribuicao": 5.0,
+    "pu": 2.9231,
+    "eficacia": 0.584615
+   },
+   "12": {
+    "concluida": 60,
+    "improdutiva": 31,
+    "tecnicos": 22,
+    "caixa_total": 91.0,
+    "atribuicao": 4.1364,
+    "pu": 2.7273,
+    "eficacia": 0.659341
+   },
+   "13": {
+    "concluida": 29,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 40.0,
+    "atribuicao": 5.0,
+    "pu": 3.625,
+    "eficacia": 0.725
+   },
+   "14": {
+    "concluida": 71,
+    "improdutiva": 21,
+    "tecnicos": 21,
+    "caixa_total": 93.0,
+    "atribuicao": 4.4286,
+    "pu": 3.381,
+    "eficacia": 0.771739
+   },
+   "15": {
+    "concluida": 76,
+    "improdutiva": 22,
+    "tecnicos": 22,
+    "caixa_total": 98.0,
+    "atribuicao": 4.4545,
+    "pu": 3.4545,
+    "eficacia": 0.77551
+   },
+   "16": {
+    "concluida": 76,
+    "improdutiva": 23,
+    "tecnicos": 23,
+    "caixa_total": 99.0,
+    "atribuicao": 4.3043,
+    "pu": 3.3043,
+    "eficacia": 0.767677
+   },
+   "17": {
+    "concluida": 71,
+    "improdutiva": 34,
+    "tecnicos": 25,
+    "caixa_total": 105.0,
+    "atribuicao": 4.2,
+    "pu": 2.84,
+    "eficacia": 0.67619
+   },
+   "18": {
+    "concluida": 65,
+    "improdutiva": 13,
+    "tecnicos": 17,
+    "caixa_total": 78.0,
+    "atribuicao": 4.5882,
+    "pu": 3.8235,
+    "eficacia": 0.833333
+   },
+   "19": {
+    "concluida": 41,
+    "improdutiva": 25,
+    "tecnicos": 16,
+    "caixa_total": 66.0,
+    "atribuicao": 4.125,
+    "pu": 2.5625,
+    "eficacia": 0.621212
+   },
+   "20": {
+    "concluida": 17,
+    "improdutiva": 12,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 2.4286,
+    "eficacia": 0.586207
+   },
+   "21": {
+    "concluida": 72,
+    "improdutiva": 20,
+    "tecnicos": 22,
+    "caixa_total": 92.0,
+    "atribuicao": 4.1818,
+    "pu": 3.2727,
+    "eficacia": 0.782609
+   },
+   "22": {
+    "concluida": 71,
+    "improdutiva": 13,
+    "tecnicos": 21,
+    "caixa_total": 84.0,
+    "atribuicao": 4.0,
+    "pu": 3.381,
+    "eficacia": 0.845238
+   },
+   "23": {
+    "concluida": 57,
+    "improdutiva": 18,
+    "tecnicos": 20,
+    "caixa_total": 75.0,
+    "atribuicao": 3.75,
+    "pu": 2.85,
+    "eficacia": 0.76
+   },
+   "24": {
+    "concluida": 72,
+    "improdutiva": 13,
+    "tecnicos": 22,
+    "caixa_total": 85.0,
+    "atribuicao": 3.8636,
+    "pu": 3.2727,
+    "eficacia": 0.847059
+   },
+   "25": {
+    "concluida": 70,
+    "improdutiva": 23,
+    "tecnicos": 21,
+    "caixa_total": 93.0,
+    "atribuicao": 4.4286,
+    "pu": 3.3333,
+    "eficacia": 0.752688
+   },
+   "26": {
+    "concluida": 48,
+    "improdutiva": 12,
+    "tecnicos": 16,
+    "caixa_total": 60.0,
+    "atribuicao": 3.75,
+    "pu": 3.0,
+    "eficacia": 0.8
+   },
+   "27": {
+    "concluida": 22,
+    "improdutiva": 2,
+    "tecnicos": 7,
+    "caixa_total": 24.0,
+    "atribuicao": 3.4286,
+    "pu": 3.1429,
+    "eficacia": 0.916667
+   },
+   "28": {
+    "concluida": 56,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 78.0,
+    "atribuicao": 4.1053,
+    "pu": 2.9474,
+    "eficacia": 0.717949
+   },
+   "29": {
+    "concluida": 52,
+    "improdutiva": 32,
+    "tecnicos": 22,
+    "caixa_total": 84.0,
+    "atribuicao": 3.8182,
+    "pu": 2.3636,
+    "eficacia": 0.619048
+   },
+   "30": {
+    "concluida": 71,
+    "improdutiva": 33,
+    "tecnicos": 24,
+    "caixa_total": 104.0,
+    "atribuicao": 4.3333,
+    "pu": 2.9583,
+    "eficacia": 0.682692
+   }
+  },
+  "CANOAS": {
+   "1": {
+    "concluida": 81,
+    "improdutiva": 9,
+    "tecnicos": 20,
+    "caixa_total": 90.0,
+    "atribuicao": 4.5,
+    "pu": 4.05,
+    "eficacia": 0.9
+   },
+   "2": {
+    "concluida": 75,
+    "improdutiva": 16,
+    "tecnicos": 20,
+    "caixa_total": 91.0,
+    "atribuicao": 4.55,
+    "pu": 3.75,
+    "eficacia": 0.824176
+   },
+   "3": {
+    "concluida": 70,
+    "improdutiva": 17,
+    "tecnicos": 20,
+    "caixa_total": 87.0,
+    "atribuicao": 4.35,
+    "pu": 3.5,
+    "eficacia": 0.804598
+   },
+   "4": {
+    "concluida": 59,
+    "improdutiva": 24,
+    "tecnicos": 21,
+    "caixa_total": 83.0,
+    "atribuicao": 3.9524,
+    "pu": 2.8095,
+    "eficacia": 0.710843
+   },
+   "5": {
+    "concluida": 51,
+    "improdutiva": 15,
+    "tecnicos": 14,
+    "caixa_total": 66.0,
+    "atribuicao": 4.7143,
+    "pu": 3.6429,
+    "eficacia": 0.772727
+   },
+   "6": {
+    "concluida": 27,
+    "improdutiva": 3,
+    "tecnicos": 7,
+    "caixa_total": 30.0,
+    "atribuicao": 4.2857,
+    "pu": 3.8571,
+    "eficacia": 0.9
+   },
+   "7": {
+    "concluida": 55,
+    "improdutiva": 14,
+    "tecnicos": 14,
+    "caixa_total": 69.0,
+    "atribuicao": 4.9286,
+    "pu": 3.9286,
+    "eficacia": 0.797101
+   },
+   "8": {
+    "concluida": 58,
+    "improdutiva": 23,
+    "tecnicos": 18,
+    "caixa_total": 81.0,
+    "atribuicao": 4.5,
+    "pu": 3.2222,
+    "eficacia": 0.716049
+   },
+   "9": {
+    "concluida": 74,
+    "improdutiva": 26,
+    "tecnicos": 20,
+    "caixa_total": 101.0,
+    "atribuicao": 5.05,
+    "pu": 3.7,
+    "eficacia": 0.74
+   },
+   "10": {
+    "concluida": 90,
+    "improdutiva": 21,
+    "tecnicos": 23,
+    "caixa_total": 111.0,
+    "atribuicao": 4.8261,
+    "pu": 3.913,
+    "eficacia": 0.810811
+   },
+   "11": {
+    "concluida": 65,
+    "improdutiva": 24,
+    "tecnicos": 19,
+    "caixa_total": 89.0,
+    "atribuicao": 4.6842,
+    "pu": 3.4211,
+    "eficacia": 0.730337
+   },
+   "12": {
+    "concluida": 52,
+    "improdutiva": 9,
+    "tecnicos": 13,
+    "caixa_total": 61.0,
+    "atribuicao": 4.6923,
+    "pu": 4.0,
+    "eficacia": 0.852459
+   },
+   "13": {
+    "concluida": 15,
+    "improdutiva": 2,
+    "tecnicos": 4,
+    "caixa_total": 17.0,
+    "atribuicao": 4.25,
+    "pu": 3.75,
+    "eficacia": 0.882353
+   },
+   "14": {
+    "concluida": 74,
+    "improdutiva": 12,
+    "tecnicos": 20,
+    "caixa_total": 86.0,
+    "atribuicao": 4.3,
+    "pu": 3.7,
+    "eficacia": 0.860465
+   },
+   "15": {
+    "concluida": 77,
+    "improdutiva": 13,
+    "tecnicos": 19,
+    "caixa_total": 90.0,
+    "atribuicao": 4.7368,
+    "pu": 4.0526,
+    "eficacia": 0.855556
+   },
+   "16": {
+    "concluida": 62,
+    "improdutiva": 19,
+    "tecnicos": 22,
+    "caixa_total": 81.0,
+    "atribuicao": 3.6818,
+    "pu": 2.8182,
+    "eficacia": 0.765432
+   },
+   "17": {
+    "concluida": 75,
+    "improdutiva": 16,
+    "tecnicos": 17,
+    "caixa_total": 91.0,
+    "atribuicao": 5.3529,
+    "pu": 4.4118,
+    "eficacia": 0.824176
+   },
+   "18": {
+    "concluida": 75,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 97.0,
+    "atribuicao": 5.1053,
+    "pu": 3.9474,
+    "eficacia": 0.773196
+   },
+   "19": {
+    "concluida": 50,
+    "improdutiva": 14,
+    "tecnicos": 14,
+    "caixa_total": 64.0,
+    "atribuicao": 4.5714,
+    "pu": 3.5714,
+    "eficacia": 0.78125
+   },
+   "20": {
+    "concluida": 20,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 2.8571,
+    "eficacia": 0.666667
+   },
+   "21": {
+    "concluida": 51,
+    "improdutiva": 55,
+    "tecnicos": 21,
+    "caixa_total": 106.0,
+    "atribuicao": 5.0476,
+    "pu": 2.4286,
+    "eficacia": 0.481132
+   },
+   "22": {
+    "concluida": 86,
+    "improdutiva": 28,
+    "tecnicos": 24,
+    "caixa_total": 114.0,
+    "atribuicao": 4.75,
+    "pu": 3.5833,
+    "eficacia": 0.754386
+   },
+   "23": {
+    "concluida": 107,
+    "improdutiva": 20,
+    "tecnicos": 25,
+    "caixa_total": 127.0,
+    "atribuicao": 5.08,
+    "pu": 4.28,
+    "eficacia": 0.84252
+   },
+   "24": {
+    "concluida": 107,
+    "improdutiva": 36,
+    "tecnicos": 28,
+    "caixa_total": 143.0,
+    "atribuicao": 5.1071,
+    "pu": 3.8214,
+    "eficacia": 0.748252
+   },
+   "25": {
+    "concluida": 93,
+    "improdutiva": 14,
+    "tecnicos": 26,
+    "caixa_total": 107.0,
+    "atribuicao": 4.1154,
+    "pu": 3.5769,
+    "eficacia": 0.869159
+   },
+   "26": {
+    "concluida": 62,
+    "improdutiva": 16,
+    "tecnicos": 18,
+    "caixa_total": 78.0,
+    "atribuicao": 4.3333,
+    "pu": 3.4444,
+    "eficacia": 0.794872
+   },
+   "27": {
+    "concluida": 14,
+    "improdutiva": 12,
+    "tecnicos": 5,
+    "caixa_total": 26.0,
+    "atribuicao": 5.2,
+    "pu": 2.8,
+    "eficacia": 0.538462
+   },
+   "28": {
+    "concluida": 66,
+    "improdutiva": 40,
+    "tecnicos": 21,
+    "caixa_total": 106.0,
+    "atribuicao": 5.0476,
+    "pu": 3.1429,
+    "eficacia": 0.622642
+   },
+   "29": {
+    "concluida": 67,
+    "improdutiva": 42,
+    "tecnicos": 22,
+    "caixa_total": 109.0,
+    "atribuicao": 4.9545,
+    "pu": 3.0455,
+    "eficacia": 0.614679
+   },
+   "30": {
+    "concluida": 78,
+    "improdutiva": 32,
+    "tecnicos": 24,
+    "caixa_total": 110.0,
+    "atribuicao": 4.5833,
+    "pu": 3.25,
+    "eficacia": 0.709091
+   }
+  },
+  "CAXIAS DO SUL": {
+   "26": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   }
+  },
+  "CHAPECÓ": {
+   "1": {
+    "concluida": 14,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 18.0,
+    "atribuicao": 3.0,
+    "pu": 2.3333,
+    "eficacia": 0.777778
+   },
+   "2": {
+    "concluida": 8,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 12.0,
+    "atribuicao": 3.0,
+    "pu": 2.0,
+    "eficacia": 0.666667
+   },
+   "3": {
+    "concluida": 10,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 17.0,
+    "atribuicao": 2.8333,
+    "pu": 1.6667,
+    "eficacia": 0.588235
+   },
+   "4": {
+    "concluida": 10,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 16.0,
+    "atribuicao": 3.2,
+    "pu": 2.0,
+    "eficacia": 0.625
+   },
+   "5": {
+    "concluida": 12,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 2.4,
+    "eficacia": 0.705882
+   },
+   "7": {
+    "concluida": 4,
+    "improdutiva": 4,
+    "tecnicos": 2,
+    "caixa_total": 8.0,
+    "atribuicao": 4.0,
+    "pu": 2.0,
+    "eficacia": 0.5
+   },
+   "8": {
+    "concluida": 14,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 2.8,
+    "eficacia": 0.736842
+   },
+   "9": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "10": {
+    "concluida": 15,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 3.0,
+    "eficacia": 0.833333
+   },
+   "11": {
+    "concluida": 8,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 1.6,
+    "eficacia": 0.470588
+   },
+   "12": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "14": {
+    "concluida": 14,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 17.0,
+    "atribuicao": 2.8333,
+    "pu": 2.3333,
+    "eficacia": 0.823529
+   },
+   "15": {
+    "concluida": 9,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 15.0,
+    "atribuicao": 3.0,
+    "pu": 1.8,
+    "eficacia": 0.6
+   },
+   "16": {
+    "concluida": 14,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 20.0,
+    "atribuicao": 3.3333,
+    "pu": 2.3333,
+    "eficacia": 0.7
+   },
+   "17": {
+    "concluida": 10,
+    "improdutiva": 3,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 2.5,
+    "eficacia": 0.769231
+   },
+   "18": {
+    "concluida": 7,
+    "improdutiva": 6,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 1.75,
+    "eficacia": 0.538462
+   },
+   "19": {
+    "concluida": 6,
+    "improdutiva": 7,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 1.5,
+    "eficacia": 0.461538
+   },
+   "21": {
+    "concluida": 13,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 2.6,
+    "eficacia": 0.722222
+   },
+   "22": {
+    "concluida": 9,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 14.0,
+    "atribuicao": 2.8,
+    "pu": 1.8,
+    "eficacia": 0.642857
+   },
+   "23": {
+    "concluida": 13,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 16.0,
+    "atribuicao": 3.2,
+    "pu": 2.6,
+    "eficacia": 0.8125
+   },
+   "24": {
+    "concluida": 16,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 22.0,
+    "atribuicao": 3.6667,
+    "pu": 2.6667,
+    "eficacia": 0.727273
+   },
+   "25": {
+    "concluida": 7,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 11.0,
+    "atribuicao": 2.2,
+    "pu": 1.4,
+    "eficacia": 0.636364
+   },
+   "26": {
+    "concluida": 10,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 14.0,
+    "atribuicao": 2.8,
+    "pu": 2.0,
+    "eficacia": 0.714286
+   },
+   "28": {
+    "concluida": 11,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 2.2,
+    "eficacia": 0.647059
+   },
+   "29": {
+    "concluida": 9,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 19.0,
+    "atribuicao": 2.7143,
+    "pu": 1.2857,
+    "eficacia": 0.473684
+   },
+   "30": {
+    "concluida": 12,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 15.0,
+    "atribuicao": 2.5,
+    "pu": 2.0,
+    "eficacia": 0.8
+   }
+  },
+  "FLORIANOPOLIS": {
+   "1": {
+    "concluida": 117,
+    "improdutiva": 34,
+    "tecnicos": 36,
+    "caixa_total": 152.0,
+    "atribuicao": 4.2222,
+    "pu": 3.25,
+    "eficacia": 0.774834
+   },
+   "2": {
+    "concluida": 114,
+    "improdutiva": 25,
+    "tecnicos": 33,
+    "caixa_total": 139.0,
+    "atribuicao": 4.2121,
+    "pu": 3.4545,
+    "eficacia": 0.820144
+   },
+   "3": {
+    "concluida": 119,
+    "improdutiva": 29,
+    "tecnicos": 36,
+    "caixa_total": 148.0,
+    "atribuicao": 4.1111,
+    "pu": 3.3056,
+    "eficacia": 0.804054
+   },
+   "4": {
+    "concluida": 113,
+    "improdutiva": 25,
+    "tecnicos": 35,
+    "caixa_total": 138.0,
+    "atribuicao": 3.9429,
+    "pu": 3.2286,
+    "eficacia": 0.818841
+   },
+   "5": {
+    "concluida": 65,
+    "improdutiva": 28,
+    "tecnicos": 23,
+    "caixa_total": 93.0,
+    "atribuicao": 4.0435,
+    "pu": 2.8261,
+    "eficacia": 0.698925
+   },
+   "6": {
+    "concluida": 5,
+    "improdutiva": 5,
+    "tecnicos": 2,
+    "caixa_total": 10.0,
+    "atribuicao": 5.0,
+    "pu": 2.5,
+    "eficacia": 0.5
+   },
+   "7": {
+    "concluida": 52,
+    "improdutiva": 14,
+    "tecnicos": 18,
+    "caixa_total": 66.0,
+    "atribuicao": 3.6667,
+    "pu": 2.8889,
+    "eficacia": 0.787879
+   },
+   "8": {
+    "concluida": 120,
+    "improdutiva": 29,
+    "tecnicos": 37,
+    "caixa_total": 149.0,
+    "atribuicao": 4.027,
+    "pu": 3.2432,
+    "eficacia": 0.805369
+   },
+   "9": {
+    "concluida": 105,
+    "improdutiva": 30,
+    "tecnicos": 33,
+    "caixa_total": 135.0,
+    "atribuicao": 4.0909,
+    "pu": 3.1818,
+    "eficacia": 0.777778
+   },
+   "10": {
+    "concluida": 110,
+    "improdutiva": 34,
+    "tecnicos": 37,
+    "caixa_total": 144.0,
+    "atribuicao": 3.8919,
+    "pu": 2.973,
+    "eficacia": 0.763889
+   },
+   "11": {
+    "concluida": 94,
+    "improdutiva": 64,
+    "tecnicos": 38,
+    "caixa_total": 158.0,
+    "atribuicao": 4.1579,
+    "pu": 2.4737,
+    "eficacia": 0.594937
+   },
+   "12": {
+    "concluida": 69,
+    "improdutiva": 33,
+    "tecnicos": 23,
+    "caixa_total": 102.0,
+    "atribuicao": 4.4348,
+    "pu": 3.0,
+    "eficacia": 0.676471
+   },
+   "13": {
+    "concluida": 8,
+    "improdutiva": 1,
+    "tecnicos": 2,
+    "caixa_total": 9.0,
+    "atribuicao": 4.5,
+    "pu": 4.0,
+    "eficacia": 0.888889
+   },
+   "14": {
+    "concluida": 121,
+    "improdutiva": 36,
+    "tecnicos": 37,
+    "caixa_total": 157.0,
+    "atribuicao": 4.2432,
+    "pu": 3.2703,
+    "eficacia": 0.770701
+   },
+   "15": {
+    "concluida": 120,
+    "improdutiva": 26,
+    "tecnicos": 39,
+    "caixa_total": 146.0,
+    "atribuicao": 3.7436,
+    "pu": 3.0769,
+    "eficacia": 0.821918
+   },
+   "16": {
+    "concluida": 104,
+    "improdutiva": 36,
+    "tecnicos": 37,
+    "caixa_total": 140.0,
+    "atribuicao": 3.7838,
+    "pu": 2.8108,
+    "eficacia": 0.742857
+   },
+   "17": {
+    "concluida": 98,
+    "improdutiva": 25,
+    "tecnicos": 34,
+    "caixa_total": 123.0,
+    "atribuicao": 3.6176,
+    "pu": 2.8824,
+    "eficacia": 0.796748
+   },
+   "18": {
+    "concluida": 108,
+    "improdutiva": 18,
+    "tecnicos": 32,
+    "caixa_total": 126.0,
+    "atribuicao": 3.9375,
+    "pu": 3.375,
+    "eficacia": 0.857143
+   },
+   "19": {
+    "concluida": 53,
+    "improdutiva": 38,
+    "tecnicos": 25,
+    "caixa_total": 91.0,
+    "atribuicao": 3.64,
+    "pu": 2.12,
+    "eficacia": 0.582418
+   },
+   "20": {
+    "concluida": 9,
+    "improdutiva": 2,
+    "tecnicos": 2,
+    "caixa_total": 11.0,
+    "atribuicao": 5.5,
+    "pu": 4.5,
+    "eficacia": 0.818182
+   },
+   "21": {
+    "concluida": 95,
+    "improdutiva": 48,
+    "tecnicos": 37,
+    "caixa_total": 143.0,
+    "atribuicao": 3.8649,
+    "pu": 2.5676,
+    "eficacia": 0.664336
+   },
+   "22": {
+    "concluida": 119,
+    "improdutiva": 28,
+    "tecnicos": 40,
+    "caixa_total": 147.0,
+    "atribuicao": 3.675,
+    "pu": 2.975,
+    "eficacia": 0.809524
+   },
+   "23": {
+    "concluida": 112,
+    "improdutiva": 22,
+    "tecnicos": 36,
+    "caixa_total": 134.0,
+    "atribuicao": 3.7222,
+    "pu": 3.1111,
+    "eficacia": 0.835821
+   },
+   "24": {
+    "concluida": 120,
+    "improdutiva": 23,
+    "tecnicos": 34,
+    "caixa_total": 143.0,
+    "atribuicao": 4.2059,
+    "pu": 3.5294,
+    "eficacia": 0.839161
+   },
+   "25": {
+    "concluida": 123,
+    "improdutiva": 33,
+    "tecnicos": 38,
+    "caixa_total": 156.0,
+    "atribuicao": 4.1053,
+    "pu": 3.2368,
+    "eficacia": 0.788462
+   },
+   "26": {
+    "concluida": 84,
+    "improdutiva": 28,
+    "tecnicos": 27,
+    "caixa_total": 112.0,
+    "atribuicao": 4.1481,
+    "pu": 3.1111,
+    "eficacia": 0.75
+   },
+   "27": {
+    "concluida": 9,
+    "improdutiva": 2,
+    "tecnicos": 2,
+    "caixa_total": 11.0,
+    "atribuicao": 5.5,
+    "pu": 4.5,
+    "eficacia": 0.818182
+   },
+   "28": {
+    "concluida": 102,
+    "improdutiva": 56,
+    "tecnicos": 42,
+    "caixa_total": 158.0,
+    "atribuicao": 3.7619,
+    "pu": 2.4286,
+    "eficacia": 0.64557
+   },
+   "29": {
+    "concluida": 93,
+    "improdutiva": 60,
+    "tecnicos": 38,
+    "caixa_total": 153.0,
+    "atribuicao": 4.0263,
+    "pu": 2.4474,
+    "eficacia": 0.607843
+   },
+   "30": {
+    "concluida": 109,
+    "improdutiva": 38,
+    "tecnicos": 39,
+    "caixa_total": 147.0,
+    "atribuicao": 3.7692,
+    "pu": 2.7949,
+    "eficacia": 0.741497
+   }
+  },
+  "JOINVILLE": {
+   "1": {
+    "concluida": 79,
+    "improdutiva": 18,
+    "tecnicos": 23,
+    "caixa_total": 97.0,
+    "atribuicao": 4.2174,
+    "pu": 3.4348,
+    "eficacia": 0.814433
+   },
+   "2": {
+    "concluida": 77,
+    "improdutiva": 26,
+    "tecnicos": 25,
+    "caixa_total": 103.0,
+    "atribuicao": 4.12,
+    "pu": 3.08,
+    "eficacia": 0.747573
+   },
+   "3": {
+    "concluida": 72,
+    "improdutiva": 21,
+    "tecnicos": 20,
+    "caixa_total": 94.0,
+    "atribuicao": 4.7,
+    "pu": 3.6,
+    "eficacia": 0.774194
+   },
+   "4": {
+    "concluida": 97,
+    "improdutiva": 22,
+    "tecnicos": 29,
+    "caixa_total": 119.0,
+    "atribuicao": 4.1034,
+    "pu": 3.3448,
+    "eficacia": 0.815126
+   },
+   "5": {
+    "concluida": 63,
+    "improdutiva": 33,
+    "tecnicos": 20,
+    "caixa_total": 96.0,
+    "atribuicao": 4.8,
+    "pu": 3.15,
+    "eficacia": 0.65625
+   },
+   "6": {
+    "concluida": 14,
+    "improdutiva": 10,
+    "tecnicos": 5,
+    "caixa_total": 24.0,
+    "atribuicao": 4.8,
+    "pu": 2.8,
+    "eficacia": 0.583333
+   },
+   "7": {
+    "concluida": 60,
+    "improdutiva": 20,
+    "tecnicos": 17,
+    "caixa_total": 80.0,
+    "atribuicao": 4.7059,
+    "pu": 3.5294,
+    "eficacia": 0.75
+   },
+   "8": {
+    "concluida": 84,
+    "improdutiva": 20,
+    "tecnicos": 27,
+    "caixa_total": 104.0,
+    "atribuicao": 3.8519,
+    "pu": 3.1111,
+    "eficacia": 0.807692
+   },
+   "9": {
+    "concluida": 73,
+    "improdutiva": 10,
+    "tecnicos": 20,
+    "caixa_total": 83.0,
+    "atribuicao": 4.15,
+    "pu": 3.65,
+    "eficacia": 0.879518
+   },
+   "10": {
+    "concluida": 63,
+    "improdutiva": 24,
+    "tecnicos": 22,
+    "caixa_total": 87.0,
+    "atribuicao": 3.9545,
+    "pu": 2.8636,
+    "eficacia": 0.724138
+   },
+   "11": {
+    "concluida": 65,
+    "improdutiva": 30,
+    "tecnicos": 20,
+    "caixa_total": 95.0,
+    "atribuicao": 4.75,
+    "pu": 3.25,
+    "eficacia": 0.684211
+   },
+   "12": {
+    "concluida": 58,
+    "improdutiva": 20,
+    "tecnicos": 17,
+    "caixa_total": 78.0,
+    "atribuicao": 4.5882,
+    "pu": 3.4118,
+    "eficacia": 0.74359
+   },
+   "13": {
+    "concluida": 12,
+    "improdutiva": 4,
+    "tecnicos": 3,
+    "caixa_total": 16.0,
+    "atribuicao": 5.3333,
+    "pu": 4.0,
+    "eficacia": 0.75
+   },
+   "14": {
+    "concluida": 79,
+    "improdutiva": 24,
+    "tecnicos": 28,
+    "caixa_total": 103.0,
+    "atribuicao": 3.6786,
+    "pu": 2.8214,
+    "eficacia": 0.76699
+   },
+   "15": {
+    "concluida": 77,
+    "improdutiva": 22,
+    "tecnicos": 20,
+    "caixa_total": 99.0,
+    "atribuicao": 4.95,
+    "pu": 3.85,
+    "eficacia": 0.777778
+   },
+   "16": {
+    "concluida": 95,
+    "improdutiva": 24,
+    "tecnicos": 27,
+    "caixa_total": 119.0,
+    "atribuicao": 4.4074,
+    "pu": 3.5185,
+    "eficacia": 0.798319
+   },
+   "17": {
+    "concluida": 78,
+    "improdutiva": 23,
+    "tecnicos": 22,
+    "caixa_total": 101.0,
+    "atribuicao": 4.5909,
+    "pu": 3.5455,
+    "eficacia": 0.772277
+   },
+   "18": {
+    "concluida": 91,
+    "improdutiva": 25,
+    "tecnicos": 26,
+    "caixa_total": 116.0,
+    "atribuicao": 4.4615,
+    "pu": 3.5,
+    "eficacia": 0.784483
+   },
+   "19": {
+    "concluida": 39,
+    "improdutiva": 52,
+    "tecnicos": 18,
+    "caixa_total": 91.0,
+    "atribuicao": 5.0556,
+    "pu": 2.1667,
+    "eficacia": 0.428571
+   },
+   "20": {
+    "concluida": 9,
+    "improdutiva": 13,
+    "tecnicos": 4,
+    "caixa_total": 22.0,
+    "atribuicao": 5.5,
+    "pu": 2.25,
+    "eficacia": 0.409091
+   },
+   "21": {
+    "concluida": 81,
+    "improdutiva": 32,
+    "tecnicos": 27,
+    "caixa_total": 113.0,
+    "atribuicao": 4.1852,
+    "pu": 3.0,
+    "eficacia": 0.716814
+   },
+   "22": {
+    "concluida": 107,
+    "improdutiva": 27,
+    "tecnicos": 29,
+    "caixa_total": 134.0,
+    "atribuicao": 4.6207,
+    "pu": 3.6897,
+    "eficacia": 0.798507
+   },
+   "23": {
+    "concluida": 100,
+    "improdutiva": 36,
+    "tecnicos": 30,
+    "caixa_total": 136.0,
+    "atribuicao": 4.5333,
+    "pu": 3.3333,
+    "eficacia": 0.735294
+   },
+   "24": {
+    "concluida": 87,
+    "improdutiva": 29,
+    "tecnicos": 27,
+    "caixa_total": 116.0,
+    "atribuicao": 4.2963,
+    "pu": 3.2222,
+    "eficacia": 0.75
+   },
+   "25": {
+    "concluida": 89,
+    "improdutiva": 40,
+    "tecnicos": 27,
+    "caixa_total": 129.0,
+    "atribuicao": 4.7778,
+    "pu": 3.2963,
+    "eficacia": 0.689922
+   },
+   "26": {
+    "concluida": 63,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 85.0,
+    "atribuicao": 4.4737,
+    "pu": 3.3158,
+    "eficacia": 0.741176
+   },
+   "27": {
+    "concluida": 14,
+    "improdutiva": 11,
+    "tecnicos": 4,
+    "caixa_total": 25.0,
+    "atribuicao": 6.25,
+    "pu": 3.5,
+    "eficacia": 0.56
+   },
+   "28": {
+    "concluida": 101,
+    "improdutiva": 32,
+    "tecnicos": 28,
+    "caixa_total": 133.0,
+    "atribuicao": 4.75,
+    "pu": 3.6071,
+    "eficacia": 0.759398
+   },
+   "29": {
+    "concluida": 100,
+    "improdutiva": 32,
+    "tecnicos": 31,
+    "caixa_total": 132.0,
+    "atribuicao": 4.2581,
+    "pu": 3.2258,
+    "eficacia": 0.757576
+   },
+   "30": {
+    "concluida": 113,
+    "improdutiva": 23,
+    "tecnicos": 31,
+    "caixa_total": 136.0,
+    "atribuicao": 4.3871,
+    "pu": 3.6452,
+    "eficacia": 0.830882
+   }
+  },
+  "PELOTAS": {
+   "10": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   }
+  },
+  "PORTO ALEGRE": {
+   "1": {
+    "concluida": 160,
+    "improdutiva": 86,
+    "tecnicos": 58,
+    "caixa_total": 246.0,
+    "atribuicao": 4.2414,
+    "pu": 2.7586,
+    "eficacia": 0.650407
+   },
+   "2": {
+    "concluida": 162,
+    "improdutiva": 72,
+    "tecnicos": 56,
+    "caixa_total": 236.0,
+    "atribuicao": 4.2143,
+    "pu": 2.8929,
+    "eficacia": 0.692308
+   },
+   "3": {
+    "concluida": 157,
+    "improdutiva": 76,
+    "tecnicos": 58,
+    "caixa_total": 234.0,
+    "atribuicao": 4.0345,
+    "pu": 2.7069,
+    "eficacia": 0.67382
+   },
+   "4": {
+    "concluida": 150,
+    "improdutiva": 98,
+    "tecnicos": 58,
+    "caixa_total": 248.0,
+    "atribuicao": 4.2759,
+    "pu": 2.5862,
+    "eficacia": 0.604839
+   },
+   "5": {
+    "concluida": 80,
+    "improdutiva": 47,
+    "tecnicos": 32,
+    "caixa_total": 128.0,
+    "atribuicao": 4.0,
+    "pu": 2.5,
+    "eficacia": 0.629921
+   },
+   "6": {
+    "concluida": 37,
+    "improdutiva": 21,
+    "tecnicos": 12,
+    "caixa_total": 59.0,
+    "atribuicao": 4.9167,
+    "pu": 3.0833,
+    "eficacia": 0.637931
+   },
+   "7": {
+    "concluida": 88,
+    "improdutiva": 70,
+    "tecnicos": 27,
+    "caixa_total": 158.0,
+    "atribuicao": 5.8519,
+    "pu": 3.2593,
+    "eficacia": 0.556962
+   },
+   "8": {
+    "concluida": 169,
+    "improdutiva": 73,
+    "tecnicos": 52,
+    "caixa_total": 242.0,
+    "atribuicao": 4.6538,
+    "pu": 3.25,
+    "eficacia": 0.698347
+   },
+   "9": {
+    "concluida": 152,
+    "improdutiva": 68,
+    "tecnicos": 49,
+    "caixa_total": 220.0,
+    "atribuicao": 4.4898,
+    "pu": 3.102,
+    "eficacia": 0.690909
+   },
+   "10": {
+    "concluida": 156,
+    "improdutiva": 58,
+    "tecnicos": 49,
+    "caixa_total": 214.0,
+    "atribuicao": 4.3673,
+    "pu": 3.1837,
+    "eficacia": 0.728972
+   },
+   "11": {
+    "concluida": 110,
+    "improdutiva": 120,
+    "tecnicos": 50,
+    "caixa_total": 230.0,
+    "atribuicao": 4.6,
+    "pu": 2.2,
+    "eficacia": 0.478261
+   },
+   "12": {
+    "concluida": 103,
+    "improdutiva": 75,
+    "tecnicos": 37,
+    "caixa_total": 178.0,
+    "atribuicao": 4.8108,
+    "pu": 2.7838,
+    "eficacia": 0.578652
+   },
+   "13": {
+    "concluida": 31,
+    "improdutiva": 15,
+    "tecnicos": 10,
+    "caixa_total": 46.0,
+    "atribuicao": 4.6,
+    "pu": 3.1,
+    "eficacia": 0.673913
+   },
+   "14": {
+    "concluida": 177,
+    "improdutiva": 59,
+    "tecnicos": 54,
+    "caixa_total": 238.0,
+    "atribuicao": 4.4074,
+    "pu": 3.2778,
+    "eficacia": 0.75
+   },
+   "15": {
+    "concluida": 179,
+    "improdutiva": 76,
+    "tecnicos": 60,
+    "caixa_total": 255.0,
+    "atribuicao": 4.25,
+    "pu": 2.9833,
+    "eficacia": 0.701961
+   },
+   "16": {
+    "concluida": 178,
+    "improdutiva": 59,
+    "tecnicos": 58,
+    "caixa_total": 238.0,
+    "atribuicao": 4.1034,
+    "pu": 3.069,
+    "eficacia": 0.751055
+   },
+   "17": {
+    "concluida": 164,
+    "improdutiva": 54,
+    "tecnicos": 59,
+    "caixa_total": 218.0,
+    "atribuicao": 3.6949,
+    "pu": 2.7797,
+    "eficacia": 0.752294
+   },
+   "18": {
+    "concluida": 157,
+    "improdutiva": 71,
+    "tecnicos": 60,
+    "caixa_total": 229.0,
+    "atribuicao": 3.8167,
+    "pu": 2.6167,
+    "eficacia": 0.688596
+   },
+   "19": {
+    "concluida": 110,
+    "improdutiva": 58,
+    "tecnicos": 38,
+    "caixa_total": 168.0,
+    "atribuicao": 4.4211,
+    "pu": 2.8947,
+    "eficacia": 0.654762
+   },
+   "20": {
+    "concluida": 37,
+    "improdutiva": 13,
+    "tecnicos": 10,
+    "caixa_total": 50.0,
+    "atribuicao": 5.0,
+    "pu": 3.7,
+    "eficacia": 0.74
+   },
+   "21": {
+    "concluida": 105,
+    "improdutiva": 127,
+    "tecnicos": 53,
+    "caixa_total": 232.0,
+    "atribuicao": 4.3774,
+    "pu": 1.9811,
+    "eficacia": 0.452586
+   },
+   "22": {
+    "concluida": 188,
+    "improdutiva": 70,
+    "tecnicos": 64,
+    "caixa_total": 258.0,
+    "atribuicao": 4.0312,
+    "pu": 2.9375,
+    "eficacia": 0.728682
+   },
+   "23": {
+    "concluida": 182,
+    "improdutiva": 93,
+    "tecnicos": 64,
+    "caixa_total": 275.0,
+    "atribuicao": 4.2969,
+    "pu": 2.8438,
+    "eficacia": 0.661818
+   },
+   "24": {
+    "concluida": 183,
+    "improdutiva": 70,
+    "tecnicos": 63,
+    "caixa_total": 253.0,
+    "atribuicao": 4.0159,
+    "pu": 2.9048,
+    "eficacia": 0.72332
+   },
+   "25": {
+    "concluida": 177,
+    "improdutiva": 70,
+    "tecnicos": 63,
+    "caixa_total": 247.0,
+    "atribuicao": 3.9206,
+    "pu": 2.8095,
+    "eficacia": 0.716599
+   },
+   "26": {
+    "concluida": 101,
+    "improdutiva": 62,
+    "tecnicos": 39,
+    "caixa_total": 163.0,
+    "atribuicao": 4.1795,
+    "pu": 2.5897,
+    "eficacia": 0.619632
+   },
+   "27": {
+    "concluida": 38,
+    "improdutiva": 25,
+    "tecnicos": 12,
+    "caixa_total": 63.0,
+    "atribuicao": 5.25,
+    "pu": 3.1667,
+    "eficacia": 0.603175
+   },
+   "28": {
+    "concluida": 147,
+    "improdutiva": 97,
+    "tecnicos": 48,
+    "caixa_total": 244.0,
+    "atribuicao": 5.0833,
+    "pu": 3.0625,
+    "eficacia": 0.602459
+   },
+   "29": {
+    "concluida": 123,
+    "improdutiva": 138,
+    "tecnicos": 48,
+    "caixa_total": 261.0,
+    "atribuicao": 5.4375,
+    "pu": 2.5625,
+    "eficacia": 0.471264
+   },
+   "30": {
+    "concluida": 143,
+    "improdutiva": 79,
+    "tecnicos": 49,
+    "caixa_total": 222.0,
+    "atribuicao": 4.5306,
+    "pu": 2.9184,
+    "eficacia": 0.644144
+   }
+  }
+ },
+ "Supervisor": {
+  "ANDERSON LUIS MONTEIRO PORTALLI": {
+   "1": {
+    "concluida": 86,
+    "improdutiva": 9,
+    "tecnicos": 21,
+    "caixa_total": 95.0,
+    "atribuicao": 4.5238,
+    "pu": 4.0952,
+    "eficacia": 0.905263
+   },
+   "2": {
+    "concluida": 76,
+    "improdutiva": 16,
+    "tecnicos": 20,
+    "caixa_total": 92.0,
+    "atribuicao": 4.6,
+    "pu": 3.8,
+    "eficacia": 0.826087
+   },
+   "3": {
+    "concluida": 70,
+    "improdutiva": 17,
+    "tecnicos": 20,
+    "caixa_total": 87.0,
+    "atribuicao": 4.35,
+    "pu": 3.5,
+    "eficacia": 0.804598
+   },
+   "4": {
+    "concluida": 53,
+    "improdutiva": 23,
+    "tecnicos": 19,
+    "caixa_total": 76.0,
+    "atribuicao": 4.0,
+    "pu": 2.7895,
+    "eficacia": 0.697368
+   },
+   "5": {
+    "concluida": 47,
+    "improdutiva": 15,
+    "tecnicos": 13,
+    "caixa_total": 62.0,
+    "atribuicao": 4.7692,
+    "pu": 3.6154,
+    "eficacia": 0.758065
+   },
+   "6": {
+    "concluida": 21,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 24.0,
+    "atribuicao": 4.8,
+    "pu": 4.2,
+    "eficacia": 0.875
+   },
+   "7": {
+    "concluida": 52,
+    "improdutiva": 14,
+    "tecnicos": 12,
+    "caixa_total": 66.0,
+    "atribuicao": 5.5,
+    "pu": 4.3333,
+    "eficacia": 0.787879
+   },
+   "8": {
+    "concluida": 58,
+    "improdutiva": 23,
+    "tecnicos": 18,
+    "caixa_total": 81.0,
+    "atribuicao": 4.5,
+    "pu": 3.2222,
+    "eficacia": 0.716049
+   },
+   "9": {
+    "concluida": 74,
+    "improdutiva": 26,
+    "tecnicos": 20,
+    "caixa_total": 101.0,
+    "atribuicao": 5.05,
+    "pu": 3.7,
+    "eficacia": 0.74
+   },
+   "10": {
+    "concluida": 85,
+    "improdutiva": 17,
+    "tecnicos": 21,
+    "caixa_total": 102.0,
+    "atribuicao": 4.8571,
+    "pu": 4.0476,
+    "eficacia": 0.833333
+   },
+   "11": {
+    "concluida": 65,
+    "improdutiva": 24,
+    "tecnicos": 19,
+    "caixa_total": 89.0,
+    "atribuicao": 4.6842,
+    "pu": 3.4211,
+    "eficacia": 0.730337
+   },
+   "12": {
+    "concluida": 53,
+    "improdutiva": 9,
+    "tecnicos": 13,
+    "caixa_total": 62.0,
+    "atribuicao": 4.7692,
+    "pu": 4.0769,
+    "eficacia": 0.854839
+   },
+   "13": {
+    "concluida": 16,
+    "improdutiva": 2,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 4.0,
+    "eficacia": 0.888889
+   },
+   "14": {
+    "concluida": 74,
+    "improdutiva": 12,
+    "tecnicos": 20,
+    "caixa_total": 86.0,
+    "atribuicao": 4.3,
+    "pu": 3.7,
+    "eficacia": 0.860465
+   },
+   "15": {
+    "concluida": 77,
+    "improdutiva": 13,
+    "tecnicos": 19,
+    "caixa_total": 90.0,
+    "atribuicao": 4.7368,
+    "pu": 4.0526,
+    "eficacia": 0.855556
+   },
+   "16": {
+    "concluida": 62,
+    "improdutiva": 19,
+    "tecnicos": 22,
+    "caixa_total": 81.0,
+    "atribuicao": 3.6818,
+    "pu": 2.8182,
+    "eficacia": 0.765432
+   },
+   "17": {
+    "concluida": 75,
+    "improdutiva": 16,
+    "tecnicos": 17,
+    "caixa_total": 91.0,
+    "atribuicao": 5.3529,
+    "pu": 4.4118,
+    "eficacia": 0.824176
+   },
+   "18": {
+    "concluida": 75,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 97.0,
+    "atribuicao": 5.1053,
+    "pu": 3.9474,
+    "eficacia": 0.773196
+   },
+   "19": {
+    "concluida": 50,
+    "improdutiva": 14,
+    "tecnicos": 14,
+    "caixa_total": 64.0,
+    "atribuicao": 4.5714,
+    "pu": 3.5714,
+    "eficacia": 0.78125
+   },
+   "20": {
+    "concluida": 18,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 24.0,
+    "atribuicao": 6.0,
+    "pu": 4.5,
+    "eficacia": 0.782609
+   },
+   "21": {
+    "concluida": 51,
+    "improdutiva": 54,
+    "tecnicos": 19,
+    "caixa_total": 105.0,
+    "atribuicao": 5.5263,
+    "pu": 2.6842,
+    "eficacia": 0.485714
+   },
+   "22": {
+    "concluida": 77,
+    "improdutiva": 20,
+    "tecnicos": 19,
+    "caixa_total": 97.0,
+    "atribuicao": 5.1053,
+    "pu": 4.0526,
+    "eficacia": 0.793814
+   },
+   "23": {
+    "concluida": 93,
+    "improdutiva": 19,
+    "tecnicos": 22,
+    "caixa_total": 112.0,
+    "atribuicao": 5.0909,
+    "pu": 4.2273,
+    "eficacia": 0.830357
+   },
+   "24": {
+    "concluida": 89,
+    "improdutiva": 26,
+    "tecnicos": 21,
+    "caixa_total": 115.0,
+    "atribuicao": 5.4762,
+    "pu": 4.2381,
+    "eficacia": 0.773913
+   },
+   "25": {
+    "concluida": 78,
+    "improdutiva": 10,
+    "tecnicos": 21,
+    "caixa_total": 88.0,
+    "atribuicao": 4.1905,
+    "pu": 3.7143,
+    "eficacia": 0.886364
+   },
+   "26": {
+    "concluida": 57,
+    "improdutiva": 16,
+    "tecnicos": 15,
+    "caixa_total": 73.0,
+    "atribuicao": 4.8667,
+    "pu": 3.8,
+    "eficacia": 0.780822
+   },
+   "27": {
+    "concluida": 11,
+    "improdutiva": 7,
+    "tecnicos": 3,
+    "caixa_total": 18.0,
+    "atribuicao": 6.0,
+    "pu": 3.6667,
+    "eficacia": 0.611111
+   },
+   "28": {
+    "concluida": 63,
+    "improdutiva": 36,
+    "tecnicos": 20,
+    "caixa_total": 99.0,
+    "atribuicao": 4.95,
+    "pu": 3.15,
+    "eficacia": 0.636364
+   },
+   "29": {
+    "concluida": 60,
+    "improdutiva": 40,
+    "tecnicos": 20,
+    "caixa_total": 100.0,
+    "atribuicao": 5.0,
+    "pu": 3.0,
+    "eficacia": 0.6
+   },
+   "30": {
+    "concluida": 74,
+    "improdutiva": 31,
+    "tecnicos": 22,
+    "caixa_total": 105.0,
+    "atribuicao": 4.7727,
+    "pu": 3.3636,
+    "eficacia": 0.704762
+   }
+  },
+  "BUCKET": {
+   "1": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "2": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "3": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "4": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "5": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "6": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "7": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "8": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "9": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "10": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "11": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "12": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "13": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "14": {
+    "concluida": 1,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 2.0,
+    "atribuicao": 2.0,
+    "pu": 1.0,
+    "eficacia": 0.5
+   },
+   "15": {
+    "concluida": 3,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "16": {
+    "concluida": 4,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "17": {
+    "concluida": 2,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 3.0,
+    "atribuicao": 3.0,
+    "pu": 2.0,
+    "eficacia": 0.666667
+   },
+   "18": {
+    "concluida": 2,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 2.0,
+    "eficacia": 0.5
+   },
+   "19": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "20": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "21": {
+    "concluida": 4,
+    "improdutiva": 3,
+    "tecnicos": 1,
+    "caixa_total": 7.0,
+    "atribuicao": 7.0,
+    "pu": 4.0,
+    "eficacia": 0.571429
+   },
+   "22": {
+    "concluida": 1,
+    "improdutiva": 4,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 1.0,
+    "eficacia": 0.2
+   },
+   "23": {
+    "concluida": 4,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 4.0,
+    "eficacia": 1.0
+   },
+   "24": {
+    "concluida": 6,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 8.0,
+    "atribuicao": 8.0,
+    "pu": 6.0,
+    "eficacia": 0.75
+   },
+   "25": {
+    "concluida": 4,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "26": {
+    "concluida": 4,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 4.0,
+    "eficacia": 1.0
+   },
+   "27": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "28": {
+    "concluida": 3,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 3.0,
+    "atribuicao": 3.0,
+    "pu": 3.0,
+    "eficacia": 1.0
+   },
+   "29": {
+    "concluida": 5,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 5.0,
+    "eficacia": 1.0
+   },
+   "30": {
+    "concluida": 2,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 3.0,
+    "atribuicao": 3.0,
+    "pu": 2.0,
+    "eficacia": 0.666667
+   }
+  },
+  "DANIEL COSTA": {
+   "1": {
+    "concluida": 23,
+    "improdutiva": 8,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 3.2857,
+    "eficacia": 0.741935
+   },
+   "2": {
+    "concluida": 24,
+    "improdutiva": 10,
+    "tecnicos": 8,
+    "caixa_total": 34.0,
+    "atribuicao": 4.25,
+    "pu": 3.0,
+    "eficacia": 0.705882
+   },
+   "3": {
+    "concluida": 18,
+    "improdutiva": 8,
+    "tecnicos": 5,
+    "caixa_total": 26.0,
+    "atribuicao": 5.2,
+    "pu": 3.6,
+    "eficacia": 0.692308
+   },
+   "4": {
+    "concluida": 38,
+    "improdutiva": 5,
+    "tecnicos": 10,
+    "caixa_total": 43.0,
+    "atribuicao": 4.3,
+    "pu": 3.8,
+    "eficacia": 0.883721
+   },
+   "5": {
+    "concluida": 13,
+    "improdutiva": 9,
+    "tecnicos": 4,
+    "caixa_total": 22.0,
+    "atribuicao": 5.5,
+    "pu": 3.25,
+    "eficacia": 0.590909
+   },
+   "6": {
+    "concluida": 4,
+    "improdutiva": 5,
+    "tecnicos": 2,
+    "caixa_total": 9.0,
+    "atribuicao": 4.5,
+    "pu": 2.0,
+    "eficacia": 0.444444
+   },
+   "7": {
+    "concluida": 10,
+    "improdutiva": 8,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 2.5,
+    "eficacia": 0.555556
+   },
+   "8": {
+    "concluida": 28,
+    "improdutiva": 9,
+    "tecnicos": 9,
+    "caixa_total": 37.0,
+    "atribuicao": 4.1111,
+    "pu": 3.1111,
+    "eficacia": 0.756757
+   },
+   "9": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "10": {
+    "concluida": 16,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 2.6667,
+    "eficacia": 0.615385
+   },
+   "11": {
+    "concluida": 15,
+    "improdutiva": 8,
+    "tecnicos": 4,
+    "caixa_total": 23.0,
+    "atribuicao": 5.75,
+    "pu": 3.75,
+    "eficacia": 0.652174
+   },
+   "12": {
+    "concluida": 17,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 26.0,
+    "atribuicao": 5.2,
+    "pu": 3.4,
+    "eficacia": 0.653846
+   },
+   "13": {
+    "concluida": 2,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 2.0,
+    "eficacia": 0.5
+   },
+   "14": {
+    "concluida": 18,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 24.0,
+    "atribuicao": 3.4286,
+    "pu": 2.5714,
+    "eficacia": 0.75
+   },
+   "15": {
+    "concluida": 10,
+    "improdutiva": 2,
+    "tecnicos": 2,
+    "caixa_total": 12.0,
+    "atribuicao": 6.0,
+    "pu": 5.0,
+    "eficacia": 0.833333
+   },
+   "16": {
+    "concluida": 26,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 33.0,
+    "atribuicao": 4.7143,
+    "pu": 3.7143,
+    "eficacia": 0.787879
+   },
+   "17": {
+    "concluida": 15,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 20.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "18": {
+    "concluida": 20,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 3.3333,
+    "eficacia": 0.833333
+   },
+   "19": {
+    "concluida": 11,
+    "improdutiva": 9,
+    "tecnicos": 4,
+    "caixa_total": 20.0,
+    "atribuicao": 5.0,
+    "pu": 2.75,
+    "eficacia": 0.55
+   },
+   "20": {
+    "concluida": 3,
+    "improdutiva": 3,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 3.0,
+    "eficacia": 0.5
+   },
+   "21": {
+    "concluida": 22,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.1429,
+    "eficacia": 0.785714
+   },
+   "22": {
+    "concluida": 28,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 36.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "23": {
+    "concluida": 26,
+    "improdutiva": 12,
+    "tecnicos": 9,
+    "caixa_total": 38.0,
+    "atribuicao": 4.2222,
+    "pu": 2.8889,
+    "eficacia": 0.684211
+   },
+   "24": {
+    "concluida": 25,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 33.0,
+    "atribuicao": 4.125,
+    "pu": 3.125,
+    "eficacia": 0.757576
+   },
+   "25": {
+    "concluida": 21,
+    "improdutiva": 14,
+    "tecnicos": 8,
+    "caixa_total": 35.0,
+    "atribuicao": 4.375,
+    "pu": 2.625,
+    "eficacia": 0.6
+   },
+   "26": {
+    "concluida": 14,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "27": {
+    "concluida": 5,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 5.0,
+    "eficacia": 0.833333
+   },
+   "28": {
+    "concluida": 28,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 39.0,
+    "atribuicao": 4.875,
+    "pu": 3.5,
+    "eficacia": 0.717949
+   },
+   "29": {
+    "concluida": 18,
+    "improdutiva": 15,
+    "tecnicos": 7,
+    "caixa_total": 33.0,
+    "atribuicao": 4.7143,
+    "pu": 2.5714,
+    "eficacia": 0.545455
+   },
+   "30": {
+    "concluida": 21,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 3.0,
+    "eficacia": 0.807692
+   }
+  },
+  "EDEQUE DARLON PILON": {
+   "1": {
+    "concluida": 23,
+    "improdutiva": 4,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.2857,
+    "eficacia": 0.851852
+   },
+   "2": {
+    "concluida": 23,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 2.875,
+    "eficacia": 0.766667
+   },
+   "3": {
+    "concluida": 22,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 27.0,
+    "atribuicao": 3.375,
+    "pu": 2.75,
+    "eficacia": 0.814815
+   },
+   "4": {
+    "concluida": 19,
+    "improdutiva": 3,
+    "tecnicos": 7,
+    "caixa_total": 22.0,
+    "atribuicao": 3.1429,
+    "pu": 2.7143,
+    "eficacia": 0.863636
+   },
+   "5": {
+    "concluida": 15,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 21.0,
+    "atribuicao": 3.5,
+    "pu": 2.5,
+    "eficacia": 0.714286
+   },
+   "7": {
+    "concluida": 11,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 14.0,
+    "atribuicao": 2.8,
+    "pu": 2.2,
+    "eficacia": 0.785714
+   },
+   "8": {
+    "concluida": 22,
+    "improdutiva": 3,
+    "tecnicos": 7,
+    "caixa_total": 25.0,
+    "atribuicao": 3.5714,
+    "pu": 3.1429,
+    "eficacia": 0.88
+   },
+   "9": {
+    "concluida": 14,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 22.0,
+    "atribuicao": 3.6667,
+    "pu": 2.3333,
+    "eficacia": 0.636364
+   },
+   "10": {
+    "concluida": 21,
+    "improdutiva": 8,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 3.0,
+    "eficacia": 0.724138
+   },
+   "11": {
+    "concluida": 14,
+    "improdutiva": 14,
+    "tecnicos": 8,
+    "caixa_total": 28.0,
+    "atribuicao": 3.5,
+    "pu": 1.75,
+    "eficacia": 0.5
+   },
+   "12": {
+    "concluida": 14,
+    "improdutiva": 12,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 2.3333,
+    "eficacia": 0.538462
+   },
+   "14": {
+    "concluida": 29,
+    "improdutiva": 3,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 3.625,
+    "eficacia": 0.90625
+   },
+   "15": {
+    "concluida": 25,
+    "improdutiva": 6,
+    "tecnicos": 10,
+    "caixa_total": 31.0,
+    "atribuicao": 3.1,
+    "pu": 2.5,
+    "eficacia": 0.806452
+   },
+   "16": {
+    "concluida": 24,
+    "improdutiva": 1,
+    "tecnicos": 7,
+    "caixa_total": 25.0,
+    "atribuicao": 3.5714,
+    "pu": 3.4286,
+    "eficacia": 0.96
+   },
+   "17": {
+    "concluida": 21,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 26.0,
+    "atribuicao": 3.25,
+    "pu": 2.625,
+    "eficacia": 0.807692
+   },
+   "18": {
+    "concluida": 16,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 20.0,
+    "atribuicao": 3.3333,
+    "pu": 2.6667,
+    "eficacia": 0.8
+   },
+   "19": {
+    "concluida": 10,
+    "improdutiva": 11,
+    "tecnicos": 7,
+    "caixa_total": 21.0,
+    "atribuicao": 3.0,
+    "pu": 1.4286,
+    "eficacia": 0.47619
+   },
+   "21": {
+    "concluida": 15,
+    "improdutiva": 13,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 2.1429,
+    "eficacia": 0.535714
+   },
+   "22": {
+    "concluida": 35,
+    "improdutiva": 8,
+    "tecnicos": 12,
+    "caixa_total": 43.0,
+    "atribuicao": 3.5833,
+    "pu": 2.9167,
+    "eficacia": 0.813953
+   },
+   "23": {
+    "concluida": 33,
+    "improdutiva": 7,
+    "tecnicos": 12,
+    "caixa_total": 40.0,
+    "atribuicao": 3.3333,
+    "pu": 2.75,
+    "eficacia": 0.825
+   },
+   "24": {
+    "concluida": 31,
+    "improdutiva": 7,
+    "tecnicos": 10,
+    "caixa_total": 38.0,
+    "atribuicao": 3.8,
+    "pu": 3.1,
+    "eficacia": 0.815789
+   },
+   "25": {
+    "concluida": 26,
+    "improdutiva": 9,
+    "tecnicos": 11,
+    "caixa_total": 35.0,
+    "atribuicao": 3.1818,
+    "pu": 2.3636,
+    "eficacia": 0.742857
+   },
+   "26": {
+    "concluida": 13,
+    "improdutiva": 9,
+    "tecnicos": 6,
+    "caixa_total": 22.0,
+    "atribuicao": 3.6667,
+    "pu": 2.1667,
+    "eficacia": 0.590909
+   },
+   "28": {
+    "concluida": 24,
+    "improdutiva": 17,
+    "tecnicos": 10,
+    "caixa_total": 41.0,
+    "atribuicao": 4.1,
+    "pu": 2.4,
+    "eficacia": 0.585366
+   },
+   "29": {
+    "concluida": 19,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 27.0,
+    "atribuicao": 3.375,
+    "pu": 2.375,
+    "eficacia": 0.703704
+   },
+   "30": {
+    "concluida": 20,
+    "improdutiva": 10,
+    "tecnicos": 10,
+    "caixa_total": 30.0,
+    "atribuicao": 3.0,
+    "pu": 2.0,
+    "eficacia": 0.666667
+   }
+  },
+  "EVERTON COSTA TEIXEIRA": {
+   "1": {
+    "concluida": 13,
+    "improdutiva": 2,
+    "tecnicos": 3,
+    "caixa_total": 15.0,
+    "atribuicao": 5.0,
+    "pu": 4.3333,
+    "eficacia": 0.866667
+   },
+   "2": {
+    "concluida": 10,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 15.0,
+    "atribuicao": 3.75,
+    "pu": 2.5,
+    "eficacia": 0.666667
+   },
+   "3": {
+    "concluida": 10,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 16.0,
+    "atribuicao": 4.0,
+    "pu": 2.5,
+    "eficacia": 0.666667
+   },
+   "4": {
+    "concluida": 17,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 21.0,
+    "atribuicao": 4.2,
+    "pu": 3.4,
+    "eficacia": 0.809524
+   },
+   "5": {
+    "concluida": 19,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 3.8,
+    "eficacia": 0.826087
+   },
+   "6": {
+    "concluida": 4,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 4.0,
+    "eficacia": 1.0
+   },
+   "7": {
+    "concluida": 8,
+    "improdutiva": 1,
+    "tecnicos": 2,
+    "caixa_total": 9.0,
+    "atribuicao": 4.5,
+    "pu": 4.0,
+    "eficacia": 0.888889
+   },
+   "8": {
+    "concluida": 16,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 20.0,
+    "atribuicao": 4.0,
+    "pu": 3.2,
+    "eficacia": 0.8
+   },
+   "9": {
+    "concluida": 18,
+    "improdutiva": 1,
+    "tecnicos": 4,
+    "caixa_total": 19.0,
+    "atribuicao": 4.75,
+    "pu": 4.5,
+    "eficacia": 0.947368
+   },
+   "10": {
+    "concluida": 12,
+    "improdutiva": 6,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 3.0,
+    "eficacia": 0.666667
+   },
+   "11": {
+    "concluida": 13,
+    "improdutiva": 10,
+    "tecnicos": 4,
+    "caixa_total": 23.0,
+    "atribuicao": 5.75,
+    "pu": 3.25,
+    "eficacia": 0.565217
+   },
+   "12": {
+    "concluida": 8,
+    "improdutiva": 2,
+    "tecnicos": 3,
+    "caixa_total": 10.0,
+    "atribuicao": 3.3333,
+    "pu": 2.6667,
+    "eficacia": 0.8
+   },
+   "13": {
+    "concluida": 5,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 7.0,
+    "atribuicao": 7.0,
+    "pu": 5.0,
+    "eficacia": 0.714286
+   },
+   "14": {
+    "concluida": 9,
+    "improdutiva": 7,
+    "tecnicos": 5,
+    "caixa_total": 16.0,
+    "atribuicao": 3.2,
+    "pu": 1.8,
+    "eficacia": 0.5625
+   },
+   "15": {
+    "concluida": 16,
+    "improdutiva": 7,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 3.2,
+    "eficacia": 0.695652
+   },
+   "16": {
+    "concluida": 11,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 15.0,
+    "atribuicao": 3.75,
+    "pu": 2.75,
+    "eficacia": 0.733333
+   },
+   "17": {
+    "concluida": 15,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 20.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "18": {
+    "concluida": 18,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 3.6,
+    "eficacia": 0.782609
+   },
+   "19": {
+    "concluida": 10,
+    "improdutiva": 13,
+    "tecnicos": 4,
+    "caixa_total": 23.0,
+    "atribuicao": 5.75,
+    "pu": 2.5,
+    "eficacia": 0.434783
+   },
+   "21": {
+    "concluida": 12,
+    "improdutiva": 10,
+    "tecnicos": 5,
+    "caixa_total": 22.0,
+    "atribuicao": 4.4,
+    "pu": 2.4,
+    "eficacia": 0.545455
+   },
+   "22": {
+    "concluida": 14,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 2.8,
+    "eficacia": 0.608696
+   },
+   "23": {
+    "concluida": 18,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 28.0,
+    "atribuicao": 4.6667,
+    "pu": 3.0,
+    "eficacia": 0.642857
+   },
+   "24": {
+    "concluida": 14,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 2.8,
+    "eficacia": 0.608696
+   },
+   "25": {
+    "concluida": 24,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 32.0,
+    "atribuicao": 5.3333,
+    "pu": 4.0,
+    "eficacia": 0.75
+   },
+   "26": {
+    "concluida": 8,
+    "improdutiva": 4,
+    "tecnicos": 2,
+    "caixa_total": 12.0,
+    "atribuicao": 6.0,
+    "pu": 4.0,
+    "eficacia": 0.666667
+   },
+   "27": {
+    "concluida": 6,
+    "improdutiva": 7,
+    "tecnicos": 2,
+    "caixa_total": 13.0,
+    "atribuicao": 6.5,
+    "pu": 3.0,
+    "eficacia": 0.461538
+   },
+   "28": {
+    "concluida": 17,
+    "improdutiva": 13,
+    "tecnicos": 6,
+    "caixa_total": 30.0,
+    "atribuicao": 5.0,
+    "pu": 2.8333,
+    "eficacia": 0.566667
+   },
+   "29": {
+    "concluida": 20,
+    "improdutiva": 5,
+    "tecnicos": 6,
+    "caixa_total": 25.0,
+    "atribuicao": 4.1667,
+    "pu": 3.3333,
+    "eficacia": 0.8
+   },
+   "30": {
+    "concluida": 24,
+    "improdutiva": 1,
+    "tecnicos": 7,
+    "caixa_total": 25.0,
+    "atribuicao": 3.5714,
+    "pu": 3.4286,
+    "eficacia": 0.96
+   }
+  },
+  "JOAO FABIO DOS SANTOS CARDOSO": {
+   "1": {
+    "concluida": 45,
+    "improdutiva": 18,
+    "tecnicos": 17,
+    "caixa_total": 63.0,
+    "atribuicao": 3.7059,
+    "pu": 2.6471,
+    "eficacia": 0.714286
+   },
+   "2": {
+    "concluida": 47,
+    "improdutiva": 16,
+    "tecnicos": 16,
+    "caixa_total": 63.0,
+    "atribuicao": 3.9375,
+    "pu": 2.9375,
+    "eficacia": 0.746032
+   },
+   "3": {
+    "concluida": 42,
+    "improdutiva": 26,
+    "tecnicos": 16,
+    "caixa_total": 68.0,
+    "atribuicao": 4.25,
+    "pu": 2.625,
+    "eficacia": 0.617647
+   },
+   "4": {
+    "concluida": 47,
+    "improdutiva": 28,
+    "tecnicos": 19,
+    "caixa_total": 75.0,
+    "atribuicao": 3.9474,
+    "pu": 2.4737,
+    "eficacia": 0.626667
+   },
+   "5": {
+    "concluida": 21,
+    "improdutiva": 12,
+    "tecnicos": 9,
+    "caixa_total": 34.0,
+    "atribuicao": 3.7778,
+    "pu": 2.3333,
+    "eficacia": 0.636364
+   },
+   "6": {
+    "concluida": 13,
+    "improdutiva": 11,
+    "tecnicos": 5,
+    "caixa_total": 24.0,
+    "atribuicao": 4.8,
+    "pu": 2.6,
+    "eficacia": 0.541667
+   },
+   "7": {
+    "concluida": 22,
+    "improdutiva": 28,
+    "tecnicos": 8,
+    "caixa_total": 50.0,
+    "atribuicao": 6.25,
+    "pu": 2.75,
+    "eficacia": 0.44
+   },
+   "8": {
+    "concluida": 40,
+    "improdutiva": 26,
+    "tecnicos": 16,
+    "caixa_total": 66.0,
+    "atribuicao": 4.125,
+    "pu": 2.5,
+    "eficacia": 0.606061
+   },
+   "9": {
+    "concluida": 38,
+    "improdutiva": 23,
+    "tecnicos": 14,
+    "caixa_total": 61.0,
+    "atribuicao": 4.3571,
+    "pu": 2.7143,
+    "eficacia": 0.622951
+   },
+   "10": {
+    "concluida": 45,
+    "improdutiva": 25,
+    "tecnicos": 16,
+    "caixa_total": 70.0,
+    "atribuicao": 4.375,
+    "pu": 2.8125,
+    "eficacia": 0.642857
+   },
+   "11": {
+    "concluida": 30,
+    "improdutiva": 40,
+    "tecnicos": 16,
+    "caixa_total": 70.0,
+    "atribuicao": 4.375,
+    "pu": 1.875,
+    "eficacia": 0.428571
+   },
+   "12": {
+    "concluida": 26,
+    "improdutiva": 33,
+    "tecnicos": 12,
+    "caixa_total": 59.0,
+    "atribuicao": 4.9167,
+    "pu": 2.1667,
+    "eficacia": 0.440678
+   },
+   "13": {
+    "concluida": 13,
+    "improdutiva": 7,
+    "tecnicos": 4,
+    "caixa_total": 20.0,
+    "atribuicao": 5.0,
+    "pu": 3.25,
+    "eficacia": 0.65
+   },
+   "14": {
+    "concluida": 49,
+    "improdutiva": 16,
+    "tecnicos": 16,
+    "caixa_total": 65.0,
+    "atribuicao": 4.0625,
+    "pu": 3.0625,
+    "eficacia": 0.753846
+   },
+   "15": {
+    "concluida": 38,
+    "improdutiva": 17,
+    "tecnicos": 15,
+    "caixa_total": 55.0,
+    "atribuicao": 3.6667,
+    "pu": 2.5333,
+    "eficacia": 0.690909
+   },
+   "16": {
+    "concluida": 41,
+    "improdutiva": 15,
+    "tecnicos": 14,
+    "caixa_total": 56.0,
+    "atribuicao": 4.0,
+    "pu": 2.9286,
+    "eficacia": 0.732143
+   },
+   "17": {
+    "concluida": 38,
+    "improdutiva": 18,
+    "tecnicos": 14,
+    "caixa_total": 56.0,
+    "atribuicao": 4.0,
+    "pu": 2.7143,
+    "eficacia": 0.678571
+   },
+   "18": {
+    "concluida": 37,
+    "improdutiva": 20,
+    "tecnicos": 15,
+    "caixa_total": 58.0,
+    "atribuicao": 3.8667,
+    "pu": 2.4667,
+    "eficacia": 0.649123
+   },
+   "19": {
+    "concluida": 36,
+    "improdutiva": 15,
+    "tecnicos": 11,
+    "caixa_total": 51.0,
+    "atribuicao": 4.6364,
+    "pu": 3.2727,
+    "eficacia": 0.705882
+   },
+   "20": {
+    "concluida": 14,
+    "improdutiva": 8,
+    "tecnicos": 4,
+    "caixa_total": 22.0,
+    "atribuicao": 5.5,
+    "pu": 3.5,
+    "eficacia": 0.636364
+   },
+   "21": {
+    "concluida": 36,
+    "improdutiva": 37,
+    "tecnicos": 15,
+    "caixa_total": 73.0,
+    "atribuicao": 4.8667,
+    "pu": 2.4,
+    "eficacia": 0.493151
+   },
+   "22": {
+    "concluida": 37,
+    "improdutiva": 23,
+    "tecnicos": 14,
+    "caixa_total": 60.0,
+    "atribuicao": 4.2857,
+    "pu": 2.6429,
+    "eficacia": 0.616667
+   },
+   "23": {
+    "concluida": 49,
+    "improdutiva": 21,
+    "tecnicos": 15,
+    "caixa_total": 70.0,
+    "atribuicao": 4.6667,
+    "pu": 3.2667,
+    "eficacia": 0.7
+   },
+   "24": {
+    "concluida": 53,
+    "improdutiva": 20,
+    "tecnicos": 15,
+    "caixa_total": 73.0,
+    "atribuicao": 4.8667,
+    "pu": 3.5333,
+    "eficacia": 0.726027
+   },
+   "25": {
+    "concluida": 45,
+    "improdutiva": 10,
+    "tecnicos": 13,
+    "caixa_total": 55.0,
+    "atribuicao": 4.2308,
+    "pu": 3.4615,
+    "eficacia": 0.818182
+   },
+   "26": {
+    "concluida": 30,
+    "improdutiva": 19,
+    "tecnicos": 11,
+    "caixa_total": 49.0,
+    "atribuicao": 4.4545,
+    "pu": 2.7273,
+    "eficacia": 0.612245
+   },
+   "27": {
+    "concluida": 16,
+    "improdutiva": 14,
+    "tecnicos": 5,
+    "caixa_total": 30.0,
+    "atribuicao": 6.0,
+    "pu": 3.2,
+    "eficacia": 0.533333
+   },
+   "28": {
+    "concluida": 39,
+    "improdutiva": 32,
+    "tecnicos": 13,
+    "caixa_total": 71.0,
+    "atribuicao": 5.4615,
+    "pu": 3.0,
+    "eficacia": 0.549296
+   },
+   "29": {
+    "concluida": 36,
+    "improdutiva": 40,
+    "tecnicos": 14,
+    "caixa_total": 76.0,
+    "atribuicao": 5.4286,
+    "pu": 2.5714,
+    "eficacia": 0.473684
+   },
+   "30": {
+    "concluida": 44,
+    "improdutiva": 20,
+    "tecnicos": 14,
+    "caixa_total": 64.0,
+    "atribuicao": 4.5714,
+    "pu": 3.1429,
+    "eficacia": 0.6875
+   }
+  },
+  "JOSUE DE LIMA ALVES": {
+   "1": {
+    "concluida": 46,
+    "improdutiva": 21,
+    "tecnicos": 14,
+    "caixa_total": 67.0,
+    "atribuicao": 4.7857,
+    "pu": 3.2857,
+    "eficacia": 0.686567
+   },
+   "2": {
+    "concluida": 44,
+    "improdutiva": 6,
+    "tecnicos": 12,
+    "caixa_total": 50.0,
+    "atribuicao": 4.1667,
+    "pu": 3.6667,
+    "eficacia": 0.88
+   },
+   "3": {
+    "concluida": 51,
+    "improdutiva": 16,
+    "tecnicos": 15,
+    "caixa_total": 67.0,
+    "atribuicao": 4.4667,
+    "pu": 3.4,
+    "eficacia": 0.761194
+   },
+   "4": {
+    "concluida": 54,
+    "improdutiva": 12,
+    "tecnicos": 15,
+    "caixa_total": 66.0,
+    "atribuicao": 4.4,
+    "pu": 3.6,
+    "eficacia": 0.818182
+   },
+   "5": {
+    "concluida": 30,
+    "improdutiva": 13,
+    "tecnicos": 9,
+    "caixa_total": 43.0,
+    "atribuicao": 4.7778,
+    "pu": 3.3333,
+    "eficacia": 0.697674
+   },
+   "7": {
+    "concluida": 14,
+    "improdutiva": 3,
+    "tecnicos": 4,
+    "caixa_total": 17.0,
+    "atribuicao": 4.25,
+    "pu": 3.5,
+    "eficacia": 0.823529
+   },
+   "8": {
+    "concluida": 54,
+    "improdutiva": 12,
+    "tecnicos": 15,
+    "caixa_total": 66.0,
+    "atribuicao": 4.4,
+    "pu": 3.6,
+    "eficacia": 0.818182
+   },
+   "9": {
+    "concluida": 48,
+    "improdutiva": 10,
+    "tecnicos": 14,
+    "caixa_total": 58.0,
+    "atribuicao": 4.1429,
+    "pu": 3.4286,
+    "eficacia": 0.827586
+   },
+   "10": {
+    "concluida": 49,
+    "improdutiva": 13,
+    "tecnicos": 15,
+    "caixa_total": 62.0,
+    "atribuicao": 4.1333,
+    "pu": 3.2667,
+    "eficacia": 0.790323
+   },
+   "11": {
+    "concluida": 41,
+    "improdutiva": 31,
+    "tecnicos": 16,
+    "caixa_total": 72.0,
+    "atribuicao": 4.5,
+    "pu": 2.5625,
+    "eficacia": 0.569444
+   },
+   "12": {
+    "concluida": 33,
+    "improdutiva": 14,
+    "tecnicos": 10,
+    "caixa_total": 47.0,
+    "atribuicao": 4.7,
+    "pu": 3.3,
+    "eficacia": 0.702128
+   },
+   "14": {
+    "concluida": 52,
+    "improdutiva": 14,
+    "tecnicos": 15,
+    "caixa_total": 66.0,
+    "atribuicao": 4.4,
+    "pu": 3.4667,
+    "eficacia": 0.787879
+   },
+   "15": {
+    "concluida": 51,
+    "improdutiva": 11,
+    "tecnicos": 16,
+    "caixa_total": 62.0,
+    "atribuicao": 3.875,
+    "pu": 3.1875,
+    "eficacia": 0.822581
+   },
+   "16": {
+    "concluida": 50,
+    "improdutiva": 19,
+    "tecnicos": 17,
+    "caixa_total": 69.0,
+    "atribuicao": 4.0588,
+    "pu": 2.9412,
+    "eficacia": 0.724638
+   },
+   "17": {
+    "concluida": 45,
+    "improdutiva": 14,
+    "tecnicos": 15,
+    "caixa_total": 59.0,
+    "atribuicao": 3.9333,
+    "pu": 3.0,
+    "eficacia": 0.762712
+   },
+   "18": {
+    "concluida": 51,
+    "improdutiva": 10,
+    "tecnicos": 15,
+    "caixa_total": 61.0,
+    "atribuicao": 4.0667,
+    "pu": 3.4,
+    "eficacia": 0.836066
+   },
+   "19": {
+    "concluida": 20,
+    "improdutiva": 12,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 2.5,
+    "eficacia": 0.625
+   },
+   "20": {
+    "concluida": 5,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 5.0,
+    "eficacia": 0.833333
+   },
+   "21": {
+    "concluida": 45,
+    "improdutiva": 19,
+    "tecnicos": 17,
+    "caixa_total": 64.0,
+    "atribuicao": 3.7647,
+    "pu": 2.6471,
+    "eficacia": 0.703125
+   },
+   "22": {
+    "concluida": 52,
+    "improdutiva": 18,
+    "tecnicos": 18,
+    "caixa_total": 70.0,
+    "atribuicao": 3.8889,
+    "pu": 2.8889,
+    "eficacia": 0.742857
+   },
+   "23": {
+    "concluida": 48,
+    "improdutiva": 17,
+    "tecnicos": 16,
+    "caixa_total": 65.0,
+    "atribuicao": 4.0625,
+    "pu": 3.0,
+    "eficacia": 0.738462
+   },
+   "24": {
+    "concluida": 55,
+    "improdutiva": 14,
+    "tecnicos": 15,
+    "caixa_total": 69.0,
+    "atribuicao": 4.6,
+    "pu": 3.6667,
+    "eficacia": 0.797101
+   },
+   "25": {
+    "concluida": 59,
+    "improdutiva": 19,
+    "tecnicos": 17,
+    "caixa_total": 78.0,
+    "atribuicao": 4.5882,
+    "pu": 3.4706,
+    "eficacia": 0.75641
+   },
+   "26": {
+    "concluida": 31,
+    "improdutiva": 7,
+    "tecnicos": 9,
+    "caixa_total": 38.0,
+    "atribuicao": 4.2222,
+    "pu": 3.4444,
+    "eficacia": 0.815789
+   },
+   "28": {
+    "concluida": 44,
+    "improdutiva": 19,
+    "tecnicos": 17,
+    "caixa_total": 63.0,
+    "atribuicao": 3.7059,
+    "pu": 2.5882,
+    "eficacia": 0.698413
+   },
+   "29": {
+    "concluida": 34,
+    "improdutiva": 34,
+    "tecnicos": 15,
+    "caixa_total": 68.0,
+    "atribuicao": 4.5333,
+    "pu": 2.2667,
+    "eficacia": 0.5
+   },
+   "30": {
+    "concluida": 45,
+    "improdutiva": 15,
+    "tecnicos": 15,
+    "caixa_total": 60.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   }
+  },
+  "MARCELO PAVANATI": {
+   "1": {
+    "concluida": 27,
+    "improdutiva": 8,
+    "tecnicos": 9,
+    "caixa_total": 35.0,
+    "atribuicao": 3.8889,
+    "pu": 3.0,
+    "eficacia": 0.771429
+   },
+   "2": {
+    "concluida": 26,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 32.0,
+    "atribuicao": 4.5714,
+    "pu": 3.7143,
+    "eficacia": 0.8125
+   },
+   "3": {
+    "concluida": 31,
+    "improdutiva": 4,
+    "tecnicos": 9,
+    "caixa_total": 35.0,
+    "atribuicao": 3.8889,
+    "pu": 3.4444,
+    "eficacia": 0.885714
+   },
+   "4": {
+    "concluida": 20,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 28.0,
+    "atribuicao": 3.5,
+    "pu": 2.5,
+    "eficacia": 0.714286
+   },
+   "5": {
+    "concluida": 10,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 15.0,
+    "atribuicao": 3.75,
+    "pu": 2.5,
+    "eficacia": 0.666667
+   },
+   "7": {
+    "concluida": 14,
+    "improdutiva": 2,
+    "tecnicos": 4,
+    "caixa_total": 16.0,
+    "atribuicao": 4.0,
+    "pu": 3.5,
+    "eficacia": 0.875
+   },
+   "8": {
+    "concluida": 24,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 29.0,
+    "atribuicao": 3.625,
+    "pu": 3.0,
+    "eficacia": 0.827586
+   },
+   "9": {
+    "concluida": 27,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 32.0,
+    "atribuicao": 4.5714,
+    "pu": 3.8571,
+    "eficacia": 0.84375
+   },
+   "10": {
+    "concluida": 19,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 26.0,
+    "atribuicao": 3.25,
+    "pu": 2.375,
+    "eficacia": 0.730769
+   },
+   "11": {
+    "concluida": 22,
+    "improdutiva": 8,
+    "tecnicos": 7,
+    "caixa_total": 30.0,
+    "atribuicao": 4.2857,
+    "pu": 3.1429,
+    "eficacia": 0.733333
+   },
+   "12": {
+    "concluida": 12,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 17.0,
+    "atribuicao": 4.25,
+    "pu": 3.0,
+    "eficacia": 0.705882
+   },
+   "13": {
+    "concluida": 4,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "14": {
+    "concluida": 18,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 2.5714,
+    "eficacia": 0.642857
+   },
+   "15": {
+    "concluida": 25,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 3.125,
+    "eficacia": 0.833333
+   },
+   "16": {
+    "concluida": 20,
+    "improdutiva": 10,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 2.5,
+    "eficacia": 0.666667
+   },
+   "17": {
+    "concluida": 15,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 24.0,
+    "atribuicao": 3.4286,
+    "pu": 2.1429,
+    "eficacia": 0.625
+   },
+   "18": {
+    "concluida": 28,
+    "improdutiva": 3,
+    "tecnicos": 8,
+    "caixa_total": 31.0,
+    "atribuicao": 3.875,
+    "pu": 3.5,
+    "eficacia": 0.903226
+   },
+   "19": {
+    "concluida": 14,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 2.3333,
+    "eficacia": 0.583333
+   },
+   "21": {
+    "concluida": 15,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 25.0,
+    "atribuicao": 4.1667,
+    "pu": 2.5,
+    "eficacia": 0.6
+   },
+   "22": {
+    "concluida": 24,
+    "improdutiva": 6,
+    "tecnicos": 9,
+    "caixa_total": 30.0,
+    "atribuicao": 3.3333,
+    "pu": 2.6667,
+    "eficacia": 0.8
+   },
+   "23": {
+    "concluida": 24,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "24": {
+    "concluida": 16,
+    "improdutiva": 11,
+    "tecnicos": 7,
+    "caixa_total": 27.0,
+    "atribuicao": 3.8571,
+    "pu": 2.2857,
+    "eficacia": 0.592593
+   },
+   "25": {
+    "concluida": 33,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 40.0,
+    "atribuicao": 5.0,
+    "pu": 4.125,
+    "eficacia": 0.825
+   },
+   "26": {
+    "concluida": 20,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 26.0,
+    "atribuicao": 5.2,
+    "pu": 4.0,
+    "eficacia": 0.769231
+   },
+   "27": {
+    "concluida": 4,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 4.0,
+    "eficacia": 0.666667
+   },
+   "28": {
+    "concluida": 15,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 24.0,
+    "atribuicao": 3.4286,
+    "pu": 2.1429,
+    "eficacia": 0.625
+   },
+   "29": {
+    "concluida": 25,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 3.125,
+    "eficacia": 0.78125
+   },
+   "30": {
+    "concluida": 22,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.6667,
+    "eficacia": 0.846154
+   }
+  },
+  "MARIO ALEJANDRO CATANO": {
+   "1": {
+    "concluida": 26,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 31.0,
+    "atribuicao": 3.875,
+    "pu": 3.25,
+    "eficacia": 0.83871
+   },
+   "2": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 8,
+    "caixa_total": 29.0,
+    "atribuicao": 3.625,
+    "pu": 2.875,
+    "eficacia": 0.793103
+   },
+   "3": {
+    "concluida": 22,
+    "improdutiva": 5,
+    "tecnicos": 6,
+    "caixa_total": 27.0,
+    "atribuicao": 4.5,
+    "pu": 3.6667,
+    "eficacia": 0.814815
+   },
+   "4": {
+    "concluida": 18,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 27.0,
+    "atribuicao": 3.8571,
+    "pu": 2.5714,
+    "eficacia": 0.666667
+   },
+   "5": {
+    "concluida": 14,
+    "improdutiva": 13,
+    "tecnicos": 5,
+    "caixa_total": 27.0,
+    "atribuicao": 5.4,
+    "pu": 2.8,
+    "eficacia": 0.518519
+   },
+   "6": {
+    "concluida": 6,
+    "improdutiva": 5,
+    "tecnicos": 2,
+    "caixa_total": 11.0,
+    "atribuicao": 5.5,
+    "pu": 3.0,
+    "eficacia": 0.545455
+   },
+   "7": {
+    "concluida": 27,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 32.0,
+    "atribuicao": 4.5714,
+    "pu": 3.8571,
+    "eficacia": 0.84375
+   },
+   "8": {
+    "concluida": 23,
+    "improdutiva": 3,
+    "tecnicos": 8,
+    "caixa_total": 26.0,
+    "atribuicao": 3.25,
+    "pu": 2.875,
+    "eficacia": 0.884615
+   },
+   "9": {
+    "concluida": 21,
+    "improdutiva": 5,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.5,
+    "eficacia": 0.807692
+   },
+   "10": {
+    "concluida": 20,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 25.0,
+    "atribuicao": 3.5714,
+    "pu": 2.8571,
+    "eficacia": 0.8
+   },
+   "11": {
+    "concluida": 19,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.7143,
+    "eficacia": 0.730769
+   },
+   "12": {
+    "concluida": 24,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 3.4286,
+    "eficacia": 0.774194
+   },
+   "13": {
+    "concluida": 5,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 5.0,
+    "eficacia": 1.0
+   },
+   "14": {
+    "concluida": 22,
+    "improdutiva": 4,
+    "tecnicos": 8,
+    "caixa_total": 26.0,
+    "atribuicao": 3.25,
+    "pu": 2.75,
+    "eficacia": 0.846154
+   },
+   "15": {
+    "concluida": 25,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 32.0,
+    "atribuicao": 4.5714,
+    "pu": 3.5714,
+    "eficacia": 0.78125
+   },
+   "16": {
+    "concluida": 34,
+    "improdutiva": 6,
+    "tecnicos": 10,
+    "caixa_total": 40.0,
+    "atribuicao": 4.0,
+    "pu": 3.4,
+    "eficacia": 0.85
+   },
+   "17": {
+    "concluida": 35,
+    "improdutiva": 13,
+    "tecnicos": 11,
+    "caixa_total": 48.0,
+    "atribuicao": 4.3636,
+    "pu": 3.1818,
+    "eficacia": 0.729167
+   },
+   "18": {
+    "concluida": 34,
+    "improdutiva": 12,
+    "tecnicos": 11,
+    "caixa_total": 46.0,
+    "atribuicao": 4.1818,
+    "pu": 3.0909,
+    "eficacia": 0.73913
+   },
+   "19": {
+    "concluida": 13,
+    "improdutiva": 18,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 1.8571,
+    "eficacia": 0.419355
+   },
+   "20": {
+    "concluida": 6,
+    "improdutiva": 10,
+    "tecnicos": 3,
+    "caixa_total": 16.0,
+    "atribuicao": 5.3333,
+    "pu": 2.0,
+    "eficacia": 0.375
+   },
+   "21": {
+    "concluida": 25,
+    "improdutiva": 11,
+    "tecnicos": 9,
+    "caixa_total": 36.0,
+    "atribuicao": 4.0,
+    "pu": 2.7778,
+    "eficacia": 0.694444
+   },
+   "22": {
+    "concluida": 41,
+    "improdutiva": 7,
+    "tecnicos": 11,
+    "caixa_total": 48.0,
+    "atribuicao": 4.3636,
+    "pu": 3.7273,
+    "eficacia": 0.854167
+   },
+   "23": {
+    "concluida": 37,
+    "improdutiva": 12,
+    "tecnicos": 11,
+    "caixa_total": 49.0,
+    "atribuicao": 4.4545,
+    "pu": 3.3636,
+    "eficacia": 0.755102
+   },
+   "24": {
+    "concluida": 23,
+    "improdutiva": 12,
+    "tecnicos": 10,
+    "caixa_total": 35.0,
+    "atribuicao": 3.5,
+    "pu": 2.3,
+    "eficacia": 0.657143
+   },
+   "25": {
+    "concluida": 33,
+    "improdutiva": 16,
+    "tecnicos": 11,
+    "caixa_total": 49.0,
+    "atribuicao": 4.4545,
+    "pu": 3.0,
+    "eficacia": 0.673469
+   },
+   "26": {
+    "concluida": 23,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 32.0,
+    "atribuicao": 4.5714,
+    "pu": 3.2857,
+    "eficacia": 0.71875
+   },
+   "28": {
+    "concluida": 30,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 35.0,
+    "atribuicao": 5.0,
+    "pu": 4.2857,
+    "eficacia": 0.857143
+   },
+   "29": {
+    "concluida": 30,
+    "improdutiva": 7,
+    "tecnicos": 9,
+    "caixa_total": 37.0,
+    "atribuicao": 4.1111,
+    "pu": 3.3333,
+    "eficacia": 0.810811
+   },
+   "30": {
+    "concluida": 40,
+    "improdutiva": 11,
+    "tecnicos": 10,
+    "caixa_total": 51.0,
+    "atribuicao": 5.1,
+    "pu": 4.0,
+    "eficacia": 0.784314
+   }
+  },
+  "ORLANDO MAIA JUNIOR": {
+   "1": {
+    "concluida": 18,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.0,
+    "eficacia": 0.692308
+   },
+   "2": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 29.0,
+    "atribuicao": 4.8333,
+    "pu": 3.8333,
+    "eficacia": 0.793103
+   },
+   "3": {
+    "concluida": 23,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.8333,
+    "eficacia": 0.884615
+   },
+   "4": {
+    "concluida": 24,
+    "improdutiva": 4,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.4286,
+    "eficacia": 0.857143
+   },
+   "5": {
+    "concluida": 17,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 2.8333,
+    "eficacia": 0.708333
+   },
+   "7": {
+    "concluida": 15,
+    "improdutiva": 6,
+    "tecnicos": 4,
+    "caixa_total": 21.0,
+    "atribuicao": 5.25,
+    "pu": 3.75,
+    "eficacia": 0.714286
+   },
+   "8": {
+    "concluida": 17,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 21.0,
+    "atribuicao": 4.2,
+    "pu": 3.4,
+    "eficacia": 0.809524
+   },
+   "9": {
+    "concluida": 19,
+    "improdutiva": 0,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.8,
+    "eficacia": 1.0
+   },
+   "10": {
+    "concluida": 15,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 3.0,
+    "eficacia": 0.833333
+   },
+   "11": {
+    "concluida": 19,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 25.0,
+    "atribuicao": 4.1667,
+    "pu": 3.1667,
+    "eficacia": 0.76
+   },
+   "12": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "14": {
+    "concluida": 30,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 37.0,
+    "atribuicao": 4.625,
+    "pu": 3.75,
+    "eficacia": 0.810811
+   },
+   "15": {
+    "concluida": 37,
+    "improdutiva": 8,
+    "tecnicos": 10,
+    "caixa_total": 45.0,
+    "atribuicao": 4.5,
+    "pu": 3.7,
+    "eficacia": 0.822222
+   },
+   "16": {
+    "concluida": 36,
+    "improdutiva": 12,
+    "tecnicos": 11,
+    "caixa_total": 48.0,
+    "atribuicao": 4.3636,
+    "pu": 3.2727,
+    "eficacia": 0.75
+   },
+   "17": {
+    "concluida": 29,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 34.0,
+    "atribuicao": 4.25,
+    "pu": 3.625,
+    "eficacia": 0.852941
+   },
+   "18": {
+    "concluida": 33,
+    "improdutiva": 12,
+    "tecnicos": 10,
+    "caixa_total": 45.0,
+    "atribuicao": 4.5,
+    "pu": 3.3,
+    "eficacia": 0.733333
+   },
+   "19": {
+    "concluida": 10,
+    "improdutiva": 12,
+    "tecnicos": 5,
+    "caixa_total": 22.0,
+    "atribuicao": 4.4,
+    "pu": 2.0,
+    "eficacia": 0.454545
+   },
+   "21": {
+    "concluida": 25,
+    "improdutiva": 9,
+    "tecnicos": 8,
+    "caixa_total": 34.0,
+    "atribuicao": 4.25,
+    "pu": 3.125,
+    "eficacia": 0.735294
+   },
+   "22": {
+    "concluida": 39,
+    "improdutiva": 5,
+    "tecnicos": 10,
+    "caixa_total": 44.0,
+    "atribuicao": 4.4,
+    "pu": 3.9,
+    "eficacia": 0.886364
+   },
+   "23": {
+    "concluida": 28,
+    "improdutiva": 7,
+    "tecnicos": 9,
+    "caixa_total": 35.0,
+    "atribuicao": 3.8889,
+    "pu": 3.1111,
+    "eficacia": 0.8
+   },
+   "24": {
+    "concluida": 34,
+    "improdutiva": 6,
+    "tecnicos": 9,
+    "caixa_total": 40.0,
+    "atribuicao": 4.4444,
+    "pu": 3.7778,
+    "eficacia": 0.85
+   },
+   "25": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 3.2857,
+    "eficacia": 0.793103
+   },
+   "26": {
+    "concluida": 18,
+    "improdutiva": 5,
+    "tecnicos": 6,
+    "caixa_total": 23.0,
+    "atribuicao": 3.8333,
+    "pu": 3.0,
+    "eficacia": 0.782609
+   },
+   "27": {
+    "concluida": 3,
+    "improdutiva": 3,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 3.0,
+    "eficacia": 0.5
+   },
+   "28": {
+    "concluida": 26,
+    "improdutiva": 3,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 3.7143,
+    "eficacia": 0.896552
+   },
+   "29": {
+    "concluida": 32,
+    "improdutiva": 5,
+    "tecnicos": 9,
+    "caixa_total": 37.0,
+    "atribuicao": 4.1111,
+    "pu": 3.5556,
+    "eficacia": 0.864865
+   },
+   "30": {
+    "concluida": 28,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 34.0,
+    "atribuicao": 4.8571,
+    "pu": 4.0,
+    "eficacia": 0.823529
+   }
+  },
+  "PAULO ROBERTO JESUS BRANCO": {
+   "1": {
+    "concluida": 30,
+    "improdutiva": 16,
+    "tecnicos": 12,
+    "caixa_total": 46.0,
+    "atribuicao": 3.8333,
+    "pu": 2.5,
+    "eficacia": 0.652174
+   },
+   "2": {
+    "concluida": 33,
+    "improdutiva": 6,
+    "tecnicos": 11,
+    "caixa_total": 39.0,
+    "atribuicao": 3.5455,
+    "pu": 3.0,
+    "eficacia": 0.846154
+   },
+   "3": {
+    "concluida": 27,
+    "improdutiva": 3,
+    "tecnicos": 11,
+    "caixa_total": 30.0,
+    "atribuicao": 2.7273,
+    "pu": 2.4545,
+    "eficacia": 0.9
+   },
+   "4": {
+    "concluida": 23,
+    "improdutiva": 9,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 2.875,
+    "eficacia": 0.71875
+   },
+   "5": {
+    "concluida": 16,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 2.6667,
+    "eficacia": 0.666667
+   },
+   "6": {
+    "concluida": 7,
+    "improdutiva": 2,
+    "tecnicos": 3,
+    "caixa_total": 9.0,
+    "atribuicao": 3.0,
+    "pu": 2.3333,
+    "eficacia": 0.777778
+   },
+   "7": {
+    "concluida": 31,
+    "improdutiva": 11,
+    "tecnicos": 10,
+    "caixa_total": 42.0,
+    "atribuicao": 4.2,
+    "pu": 3.1,
+    "eficacia": 0.738095
+   },
+   "8": {
+    "concluida": 21,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 2.625,
+    "eficacia": 0.65625
+   },
+   "9": {
+    "concluida": 44,
+    "improdutiva": 16,
+    "tecnicos": 14,
+    "caixa_total": 60.0,
+    "atribuicao": 4.2857,
+    "pu": 3.1429,
+    "eficacia": 0.733333
+   },
+   "10": {
+    "concluida": 37,
+    "improdutiva": 13,
+    "tecnicos": 11,
+    "caixa_total": 50.0,
+    "atribuicao": 4.5455,
+    "pu": 3.3636,
+    "eficacia": 0.74
+   },
+   "11": {
+    "concluida": 38,
+    "improdutiva": 24,
+    "tecnicos": 12,
+    "caixa_total": 62.0,
+    "atribuicao": 5.1667,
+    "pu": 3.1667,
+    "eficacia": 0.612903
+   },
+   "12": {
+    "concluida": 29,
+    "improdutiva": 13,
+    "tecnicos": 10,
+    "caixa_total": 42.0,
+    "atribuicao": 4.2,
+    "pu": 2.9,
+    "eficacia": 0.690476
+   },
+   "13": {
+    "concluida": 6,
+    "improdutiva": 7,
+    "tecnicos": 3,
+    "caixa_total": 13.0,
+    "atribuicao": 4.3333,
+    "pu": 2.0,
+    "eficacia": 0.461538
+   },
+   "14": {
+    "concluida": 33,
+    "improdutiva": 10,
+    "tecnicos": 10,
+    "caixa_total": 44.0,
+    "atribuicao": 4.4,
+    "pu": 3.3,
+    "eficacia": 0.767442
+   },
+   "15": {
+    "concluida": 34,
+    "improdutiva": 13,
+    "tecnicos": 11,
+    "caixa_total": 47.0,
+    "atribuicao": 4.2727,
+    "pu": 3.0909,
+    "eficacia": 0.723404
+   },
+   "16": {
+    "concluida": 37,
+    "improdutiva": 13,
+    "tecnicos": 12,
+    "caixa_total": 50.0,
+    "atribuicao": 4.1667,
+    "pu": 3.0833,
+    "eficacia": 0.74
+   },
+   "17": {
+    "concluida": 27,
+    "improdutiva": 13,
+    "tecnicos": 10,
+    "caixa_total": 40.0,
+    "atribuicao": 4.0,
+    "pu": 2.7,
+    "eficacia": 0.675
+   },
+   "18": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 29.0,
+    "atribuicao": 4.8333,
+    "pu": 3.8333,
+    "eficacia": 0.793103
+   },
+   "19": {
+    "concluida": 24,
+    "improdutiva": 9,
+    "tecnicos": 8,
+    "caixa_total": 33.0,
+    "atribuicao": 4.125,
+    "pu": 3.0,
+    "eficacia": 0.727273
+   },
+   "20": {
+    "concluida": 7,
+    "improdutiva": 7,
+    "tecnicos": 4,
+    "caixa_total": 14.0,
+    "atribuicao": 3.5,
+    "pu": 1.75,
+    "eficacia": 0.5
+   },
+   "21": {
+    "concluida": 35,
+    "improdutiva": 6,
+    "tecnicos": 9,
+    "caixa_total": 41.0,
+    "atribuicao": 4.5556,
+    "pu": 3.8889,
+    "eficacia": 0.853659
+   },
+   "22": {
+    "concluida": 29,
+    "improdutiva": 5,
+    "tecnicos": 9,
+    "caixa_total": 34.0,
+    "atribuicao": 3.7778,
+    "pu": 3.2222,
+    "eficacia": 0.852941
+   },
+   "23": {
+    "concluida": 24,
+    "improdutiva": 6,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 3.0,
+    "eficacia": 0.8
+   },
+   "24": {
+    "concluida": 33,
+    "improdutiva": 9,
+    "tecnicos": 12,
+    "caixa_total": 42.0,
+    "atribuicao": 3.5,
+    "pu": 2.75,
+    "eficacia": 0.785714
+   },
+   "25": {
+    "concluida": 33,
+    "improdutiva": 12,
+    "tecnicos": 10,
+    "caixa_total": 45.0,
+    "atribuicao": 4.5,
+    "pu": 3.3,
+    "eficacia": 0.733333
+   },
+   "26": {
+    "concluida": 27,
+    "improdutiva": 5,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 3.375,
+    "eficacia": 0.84375
+   },
+   "27": {
+    "concluida": 17,
+    "improdutiva": 1,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 3.4,
+    "eficacia": 0.944444
+   },
+   "28": {
+    "concluida": 23,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.2857,
+    "eficacia": 0.821429
+   },
+   "29": {
+    "concluida": 23,
+    "improdutiva": 12,
+    "tecnicos": 10,
+    "caixa_total": 35.0,
+    "atribuicao": 3.5,
+    "pu": 2.3,
+    "eficacia": 0.657143
+   },
+   "30": {
+    "concluida": 32,
+    "improdutiva": 8,
+    "tecnicos": 10,
+    "caixa_total": 40.0,
+    "atribuicao": 4.0,
+    "pu": 3.2,
+    "eficacia": 0.8
+   }
+  },
+  "RAFAEL MUNIZ CASTILHO": {
+   "1": {
+    "concluida": 24,
+    "improdutiva": 6,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 3.0,
+    "eficacia": 0.8
+   },
+   "2": {
+    "concluida": 24,
+    "improdutiva": 12,
+    "tecnicos": 8,
+    "caixa_total": 36.0,
+    "atribuicao": 4.5,
+    "pu": 3.0,
+    "eficacia": 0.666667
+   },
+   "3": {
+    "concluida": 21,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 28.0,
+    "atribuicao": 4.6667,
+    "pu": 3.5,
+    "eficacia": 0.75
+   },
+   "4": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 3.2857,
+    "eficacia": 0.793103
+   },
+   "5": {
+    "concluida": 10,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 14.0,
+    "atribuicao": 3.5,
+    "pu": 2.5,
+    "eficacia": 0.714286
+   },
+   "6": {
+    "concluida": 5,
+    "improdutiva": 5,
+    "tecnicos": 2,
+    "caixa_total": 10.0,
+    "atribuicao": 5.0,
+    "pu": 2.5,
+    "eficacia": 0.5
+   },
+   "7": {
+    "concluida": 13,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 2.6,
+    "eficacia": 0.684211
+   },
+   "8": {
+    "concluida": 20,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 2.8571,
+    "eficacia": 0.689655
+   },
+   "9": {
+    "concluida": 16,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 23.0,
+    "atribuicao": 3.8333,
+    "pu": 2.6667,
+    "eficacia": 0.695652
+   },
+   "10": {
+    "concluida": 21,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 27.0,
+    "atribuicao": 3.8571,
+    "pu": 3.0,
+    "eficacia": 0.777778
+   },
+   "11": {
+    "concluida": 20,
+    "improdutiva": 13,
+    "tecnicos": 8,
+    "caixa_total": 33.0,
+    "atribuicao": 4.125,
+    "pu": 2.5,
+    "eficacia": 0.606061
+   },
+   "12": {
+    "concluida": 12,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 16.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "13": {
+    "concluida": 4,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 4.0,
+    "atribuicao": 4.0,
+    "pu": 4.0,
+    "eficacia": 1.0
+   },
+   "14": {
+    "concluida": 22,
+    "improdutiva": 9,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 3.1429,
+    "eficacia": 0.709677
+   },
+   "15": {
+    "concluida": 23,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 3.2857,
+    "eficacia": 0.793103
+   },
+   "16": {
+    "concluida": 16,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 23.0,
+    "atribuicao": 3.2857,
+    "pu": 2.2857,
+    "eficacia": 0.695652
+   },
+   "17": {
+    "concluida": 21,
+    "improdutiva": 1,
+    "tecnicos": 6,
+    "caixa_total": 22.0,
+    "atribuicao": 3.6667,
+    "pu": 3.5,
+    "eficacia": 0.954545
+   },
+   "18": {
+    "concluida": 18,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 21.0,
+    "atribuicao": 4.2,
+    "pu": 3.6,
+    "eficacia": 0.857143
+   },
+   "19": {
+    "concluida": 9,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 14.0,
+    "atribuicao": 3.5,
+    "pu": 2.25,
+    "eficacia": 0.642857
+   },
+   "20": {
+    "concluida": 4,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "21": {
+    "concluida": 21,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 29.0,
+    "atribuicao": 3.625,
+    "pu": 2.625,
+    "eficacia": 0.724138
+   },
+   "22": {
+    "concluida": 21,
+    "improdutiva": 4,
+    "tecnicos": 7,
+    "caixa_total": 25.0,
+    "atribuicao": 3.5714,
+    "pu": 3.0,
+    "eficacia": 0.84
+   },
+   "23": {
+    "concluida": 17,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 20.0,
+    "atribuicao": 3.3333,
+    "pu": 2.8333,
+    "eficacia": 0.85
+   },
+   "24": {
+    "concluida": 28,
+    "improdutiva": 2,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 3.5,
+    "eficacia": 0.933333
+   },
+   "25": {
+    "concluida": 20,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 28.0,
+    "atribuicao": 3.5,
+    "pu": 2.5,
+    "eficacia": 0.714286
+   },
+   "26": {
+    "concluida": 20,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.8571,
+    "eficacia": 0.769231
+   },
+   "27": {
+    "concluida": 5,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 5.0,
+    "atribuicao": 5.0,
+    "pu": 5.0,
+    "eficacia": 1.0
+   },
+   "28": {
+    "concluida": 19,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 2.375,
+    "eficacia": 0.633333
+   },
+   "29": {
+    "concluida": 15,
+    "improdutiva": 11,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.1429,
+    "eficacia": 0.576923
+   },
+   "30": {
+    "concluida": 22,
+    "improdutiva": 9,
+    "tecnicos": 8,
+    "caixa_total": 31.0,
+    "atribuicao": 3.875,
+    "pu": 2.75,
+    "eficacia": 0.709677
+   }
+  },
+  "RICARDO SCHVARTZHAUPT": {
+   "1": {
+    "concluida": 53,
+    "improdutiva": 39,
+    "tecnicos": 21,
+    "caixa_total": 92.0,
+    "atribuicao": 4.381,
+    "pu": 2.5238,
+    "eficacia": 0.576087
+   },
+   "2": {
+    "concluida": 55,
+    "improdutiva": 27,
+    "tecnicos": 20,
+    "caixa_total": 83.0,
+    "atribuicao": 4.15,
+    "pu": 2.75,
+    "eficacia": 0.670732
+   },
+   "3": {
+    "concluida": 70,
+    "improdutiva": 23,
+    "tecnicos": 22,
+    "caixa_total": 93.0,
+    "atribuicao": 4.2273,
+    "pu": 3.1818,
+    "eficacia": 0.752688
+   },
+   "4": {
+    "concluida": 68,
+    "improdutiva": 30,
+    "tecnicos": 21,
+    "caixa_total": 98.0,
+    "atribuicao": 4.6667,
+    "pu": 3.2381,
+    "eficacia": 0.693878
+   },
+   "5": {
+    "concluida": 33,
+    "improdutiva": 17,
+    "tecnicos": 12,
+    "caixa_total": 50.0,
+    "atribuicao": 4.1667,
+    "pu": 2.75,
+    "eficacia": 0.66
+   },
+   "6": {
+    "concluida": 27,
+    "improdutiva": 8,
+    "tecnicos": 6,
+    "caixa_total": 35.0,
+    "atribuicao": 5.8333,
+    "pu": 4.5,
+    "eficacia": 0.771429
+   },
+   "7": {
+    "concluida": 35,
+    "improdutiva": 19,
+    "tecnicos": 9,
+    "caixa_total": 54.0,
+    "atribuicao": 6.0,
+    "pu": 3.8889,
+    "eficacia": 0.648148
+   },
+   "8": {
+    "concluida": 62,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 84.0,
+    "atribuicao": 4.4211,
+    "pu": 3.2632,
+    "eficacia": 0.738095
+   },
+   "9": {
+    "concluida": 68,
+    "improdutiva": 22,
+    "tecnicos": 19,
+    "caixa_total": 90.0,
+    "atribuicao": 4.7368,
+    "pu": 3.5789,
+    "eficacia": 0.755556
+   },
+   "10": {
+    "concluida": 62,
+    "improdutiva": 18,
+    "tecnicos": 18,
+    "caixa_total": 80.0,
+    "atribuicao": 4.4444,
+    "pu": 3.4444,
+    "eficacia": 0.775
+   },
+   "11": {
+    "concluida": 50,
+    "improdutiva": 41,
+    "tecnicos": 20,
+    "caixa_total": 91.0,
+    "atribuicao": 4.55,
+    "pu": 2.5,
+    "eficacia": 0.549451
+   },
+   "12": {
+    "concluida": 38,
+    "improdutiva": 19,
+    "tecnicos": 12,
+    "caixa_total": 57.0,
+    "atribuicao": 4.75,
+    "pu": 3.1667,
+    "eficacia": 0.666667
+   },
+   "13": {
+    "concluida": 17,
+    "improdutiva": 8,
+    "tecnicos": 5,
+    "caixa_total": 25.0,
+    "atribuicao": 5.0,
+    "pu": 3.4,
+    "eficacia": 0.68
+   },
+   "14": {
+    "concluida": 72,
+    "improdutiva": 16,
+    "tecnicos": 19,
+    "caixa_total": 88.0,
+    "atribuicao": 4.6316,
+    "pu": 3.7895,
+    "eficacia": 0.818182
+   },
+   "15": {
+    "concluida": 57,
+    "improdutiva": 29,
+    "tecnicos": 20,
+    "caixa_total": 86.0,
+    "atribuicao": 4.3,
+    "pu": 2.85,
+    "eficacia": 0.662791
+   },
+   "16": {
+    "concluida": 61,
+    "improdutiva": 21,
+    "tecnicos": 19,
+    "caixa_total": 82.0,
+    "atribuicao": 4.3158,
+    "pu": 3.2105,
+    "eficacia": 0.743902
+   },
+   "17": {
+    "concluida": 63,
+    "improdutiva": 15,
+    "tecnicos": 19,
+    "caixa_total": 78.0,
+    "atribuicao": 4.1053,
+    "pu": 3.3158,
+    "eficacia": 0.807692
+   },
+   "18": {
+    "concluida": 53,
+    "improdutiva": 18,
+    "tecnicos": 19,
+    "caixa_total": 71.0,
+    "atribuicao": 3.7368,
+    "pu": 2.7895,
+    "eficacia": 0.746479
+   },
+   "19": {
+    "concluida": 33,
+    "improdutiva": 23,
+    "tecnicos": 12,
+    "caixa_total": 56.0,
+    "atribuicao": 4.6667,
+    "pu": 2.75,
+    "eficacia": 0.589286
+   },
+   "20": {
+    "concluida": 20,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 29.0,
+    "atribuicao": 5.8,
+    "pu": 4.0,
+    "eficacia": 0.689655
+   },
+   "21": {
+    "concluida": 38,
+    "improdutiva": 46,
+    "tecnicos": 18,
+    "caixa_total": 84.0,
+    "atribuicao": 4.6667,
+    "pu": 2.1111,
+    "eficacia": 0.452381
+   },
+   "22": {
+    "concluida": 67,
+    "improdutiva": 17,
+    "tecnicos": 20,
+    "caixa_total": 84.0,
+    "atribuicao": 4.2,
+    "pu": 3.35,
+    "eficacia": 0.797619
+   },
+   "23": {
+    "concluida": 63,
+    "improdutiva": 29,
+    "tecnicos": 20,
+    "caixa_total": 92.0,
+    "atribuicao": 4.6,
+    "pu": 3.15,
+    "eficacia": 0.684783
+   },
+   "24": {
+    "concluida": 59,
+    "improdutiva": 16,
+    "tecnicos": 20,
+    "caixa_total": 75.0,
+    "atribuicao": 3.75,
+    "pu": 2.95,
+    "eficacia": 0.786667
+   },
+   "25": {
+    "concluida": 56,
+    "improdutiva": 20,
+    "tecnicos": 20,
+    "caixa_total": 76.0,
+    "atribuicao": 3.8,
+    "pu": 2.8,
+    "eficacia": 0.736842
+   },
+   "26": {
+    "concluida": 39,
+    "improdutiva": 22,
+    "tecnicos": 14,
+    "caixa_total": 61.0,
+    "atribuicao": 4.3571,
+    "pu": 2.7857,
+    "eficacia": 0.639344
+   },
+   "27": {
+    "concluida": 20,
+    "improdutiva": 15,
+    "tecnicos": 7,
+    "caixa_total": 35.0,
+    "atribuicao": 5.0,
+    "pu": 2.8571,
+    "eficacia": 0.571429
+   },
+   "28": {
+    "concluida": 61,
+    "improdutiva": 33,
+    "tecnicos": 17,
+    "caixa_total": 94.0,
+    "atribuicao": 5.5294,
+    "pu": 3.5882,
+    "eficacia": 0.648936
+   },
+   "29": {
+    "concluida": 52,
+    "improdutiva": 49,
+    "tecnicos": 18,
+    "caixa_total": 101.0,
+    "atribuicao": 5.6111,
+    "pu": 2.8889,
+    "eficacia": 0.514851
+   },
+   "30": {
+    "concluida": 45,
+    "improdutiva": 32,
+    "tecnicos": 16,
+    "caixa_total": 77.0,
+    "atribuicao": 4.8125,
+    "pu": 2.8125,
+    "eficacia": 0.584416
+   }
+  },
+  "RODRIGO MEREDIGYA GONCALVES": {
+   "1": {
+    "concluida": 14,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 18.0,
+    "atribuicao": 3.0,
+    "pu": 2.3333,
+    "eficacia": 0.777778
+   },
+   "2": {
+    "concluida": 8,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 12.0,
+    "atribuicao": 3.0,
+    "pu": 2.0,
+    "eficacia": 0.666667
+   },
+   "3": {
+    "concluida": 10,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 17.0,
+    "atribuicao": 2.8333,
+    "pu": 1.6667,
+    "eficacia": 0.588235
+   },
+   "4": {
+    "concluida": 10,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 16.0,
+    "atribuicao": 3.2,
+    "pu": 2.0,
+    "eficacia": 0.625
+   },
+   "5": {
+    "concluida": 12,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 2.4,
+    "eficacia": 0.705882
+   },
+   "7": {
+    "concluida": 4,
+    "improdutiva": 4,
+    "tecnicos": 2,
+    "caixa_total": 8.0,
+    "atribuicao": 4.0,
+    "pu": 2.0,
+    "eficacia": 0.5
+   },
+   "8": {
+    "concluida": 14,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 2.8,
+    "eficacia": 0.736842
+   },
+   "9": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "10": {
+    "concluida": 15,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 3.0,
+    "eficacia": 0.833333
+   },
+   "11": {
+    "concluida": 8,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 1.6,
+    "eficacia": 0.470588
+   },
+   "12": {
+    "concluida": 15,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 19.0,
+    "atribuicao": 3.8,
+    "pu": 3.0,
+    "eficacia": 0.789474
+   },
+   "14": {
+    "concluida": 14,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 17.0,
+    "atribuicao": 2.8333,
+    "pu": 2.3333,
+    "eficacia": 0.823529
+   },
+   "15": {
+    "concluida": 9,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 15.0,
+    "atribuicao": 3.0,
+    "pu": 1.8,
+    "eficacia": 0.6
+   },
+   "16": {
+    "concluida": 14,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 20.0,
+    "atribuicao": 3.3333,
+    "pu": 2.3333,
+    "eficacia": 0.7
+   },
+   "17": {
+    "concluida": 10,
+    "improdutiva": 3,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 2.5,
+    "eficacia": 0.769231
+   },
+   "18": {
+    "concluida": 7,
+    "improdutiva": 6,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 1.75,
+    "eficacia": 0.538462
+   },
+   "19": {
+    "concluida": 6,
+    "improdutiva": 7,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 1.5,
+    "eficacia": 0.461538
+   },
+   "21": {
+    "concluida": 13,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 18.0,
+    "atribuicao": 3.6,
+    "pu": 2.6,
+    "eficacia": 0.722222
+   },
+   "22": {
+    "concluida": 9,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 14.0,
+    "atribuicao": 2.8,
+    "pu": 1.8,
+    "eficacia": 0.642857
+   },
+   "23": {
+    "concluida": 13,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 16.0,
+    "atribuicao": 3.2,
+    "pu": 2.6,
+    "eficacia": 0.8125
+   },
+   "24": {
+    "concluida": 16,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 22.0,
+    "atribuicao": 3.6667,
+    "pu": 2.6667,
+    "eficacia": 0.727273
+   },
+   "25": {
+    "concluida": 7,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 11.0,
+    "atribuicao": 2.2,
+    "pu": 1.4,
+    "eficacia": 0.636364
+   },
+   "26": {
+    "concluida": 10,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 14.0,
+    "atribuicao": 2.8,
+    "pu": 2.0,
+    "eficacia": 0.714286
+   },
+   "28": {
+    "concluida": 11,
+    "improdutiva": 6,
+    "tecnicos": 5,
+    "caixa_total": 17.0,
+    "atribuicao": 3.4,
+    "pu": 2.2,
+    "eficacia": 0.647059
+   },
+   "29": {
+    "concluida": 9,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 19.0,
+    "atribuicao": 2.7143,
+    "pu": 1.2857,
+    "eficacia": 0.473684
+   },
+   "30": {
+    "concluida": 12,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 15.0,
+    "atribuicao": 2.5,
+    "pu": 2.0,
+    "eficacia": 0.8
+   }
+  },
+  "THIAGO VINICIUS MODESTO MONTEIRO": {
+   "1": {
+    "concluida": 20,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 30.0,
+    "atribuicao": 4.2857,
+    "pu": 2.8571,
+    "eficacia": 0.666667
+   },
+   "2": {
+    "concluida": 19,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.7143,
+    "eficacia": 0.730769
+   },
+   "3": {
+    "concluida": 20,
+    "improdutiva": 7,
+    "tecnicos": 8,
+    "caixa_total": 27.0,
+    "atribuicao": 3.375,
+    "pu": 2.5,
+    "eficacia": 0.740741
+   },
+   "4": {
+    "concluida": 18,
+    "improdutiva": 8,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.5714,
+    "eficacia": 0.692308
+   },
+   "5": {
+    "concluida": 6,
+    "improdutiva": 7,
+    "tecnicos": 4,
+    "caixa_total": 13.0,
+    "atribuicao": 3.25,
+    "pu": 1.5,
+    "eficacia": 0.461538
+   },
+   "6": {
+    "concluida": 3,
+    "improdutiva": 0,
+    "tecnicos": 1,
+    "caixa_total": 3.0,
+    "atribuicao": 3.0,
+    "pu": 3.0,
+    "eficacia": 1.0
+   },
+   "7": {
+    "concluida": 20,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 25.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "8": {
+    "concluida": 22,
+    "improdutiva": 8,
+    "tecnicos": 8,
+    "caixa_total": 30.0,
+    "atribuicao": 3.75,
+    "pu": 2.75,
+    "eficacia": 0.733333
+   },
+   "9": {
+    "concluida": 12,
+    "improdutiva": 15,
+    "tecnicos": 8,
+    "caixa_total": 27.0,
+    "atribuicao": 3.375,
+    "pu": 1.5,
+    "eficacia": 0.444444
+   },
+   "10": {
+    "concluida": 24,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 35.0,
+    "atribuicao": 4.375,
+    "pu": 3.0,
+    "eficacia": 0.685714
+   },
+   "11": {
+    "concluida": 22,
+    "improdutiva": 18,
+    "tecnicos": 8,
+    "caixa_total": 40.0,
+    "atribuicao": 5.0,
+    "pu": 2.75,
+    "eficacia": 0.55
+   },
+   "12": {
+    "concluida": 10,
+    "improdutiva": 6,
+    "tecnicos": 4,
+    "caixa_total": 16.0,
+    "atribuicao": 4.0,
+    "pu": 2.5,
+    "eficacia": 0.625
+   },
+   "13": {
+    "concluida": 11,
+    "improdutiva": 1,
+    "tecnicos": 2,
+    "caixa_total": 12.0,
+    "atribuicao": 6.0,
+    "pu": 5.5,
+    "eficacia": 0.916667
+   },
+   "14": {
+    "concluida": 22,
+    "improdutiva": 6,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.1429,
+    "eficacia": 0.785714
+   },
+   "15": {
+    "concluida": 26,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 30.0,
+    "atribuicao": 5.0,
+    "pu": 4.3333,
+    "eficacia": 0.866667
+   },
+   "16": {
+    "concluida": 19,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.1667,
+    "eficacia": 0.730769
+   },
+   "17": {
+    "concluida": 19,
+    "improdutiva": 10,
+    "tecnicos": 7,
+    "caixa_total": 29.0,
+    "atribuicao": 4.1429,
+    "pu": 2.7143,
+    "eficacia": 0.655172
+   },
+   "18": {
+    "concluida": 20,
+    "improdutiva": 4,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 3.3333,
+    "eficacia": 0.833333
+   },
+   "19": {
+    "concluida": 5,
+    "improdutiva": 11,
+    "tecnicos": 4,
+    "caixa_total": 16.0,
+    "atribuicao": 4.0,
+    "pu": 1.25,
+    "eficacia": 0.3125
+   },
+   "20": {
+    "concluida": 7,
+    "improdutiva": 2,
+    "tecnicos": 2,
+    "caixa_total": 9.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "21": {
+    "concluida": 16,
+    "improdutiva": 7,
+    "tecnicos": 6,
+    "caixa_total": 23.0,
+    "atribuicao": 3.8333,
+    "pu": 2.6667,
+    "eficacia": 0.695652
+   },
+   "22": {
+    "concluida": 18,
+    "improdutiva": 4,
+    "tecnicos": 7,
+    "caixa_total": 22.0,
+    "atribuicao": 3.1429,
+    "pu": 2.5714,
+    "eficacia": 0.818182
+   },
+   "23": {
+    "concluida": 16,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 21.0,
+    "atribuicao": 3.0,
+    "pu": 2.2857,
+    "eficacia": 0.761905
+   },
+   "24": {
+    "concluida": 21,
+    "improdutiva": 3,
+    "tecnicos": 6,
+    "caixa_total": 24.0,
+    "atribuicao": 4.0,
+    "pu": 3.5,
+    "eficacia": 0.875
+   },
+   "25": {
+    "concluida": 22,
+    "improdutiva": 10,
+    "tecnicos": 8,
+    "caixa_total": 32.0,
+    "atribuicao": 4.0,
+    "pu": 2.75,
+    "eficacia": 0.6875
+   },
+   "26": {
+    "concluida": 15,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 21.0,
+    "atribuicao": 3.5,
+    "pu": 2.5,
+    "eficacia": 0.714286
+   },
+   "27": {
+    "concluida": 5,
+    "improdutiva": 1,
+    "tecnicos": 2,
+    "caixa_total": 6.0,
+    "atribuicao": 3.0,
+    "pu": 2.5,
+    "eficacia": 0.833333
+   },
+   "28": {
+    "concluida": 16,
+    "improdutiva": 12,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 2.2857,
+    "eficacia": 0.571429
+   },
+   "29": {
+    "concluida": 14,
+    "improdutiva": 12,
+    "tecnicos": 7,
+    "caixa_total": 26.0,
+    "atribuicao": 3.7143,
+    "pu": 2.0,
+    "eficacia": 0.538462
+   },
+   "30": {
+    "concluida": 23,
+    "improdutiva": 11,
+    "tecnicos": 8,
+    "caixa_total": 34.0,
+    "atribuicao": 4.25,
+    "pu": 2.875,
+    "eficacia": 0.676471
+   }
+  },
+  "TIAGO MARLON DOS SANTOS": {
+   "1": {
+    "concluida": 25,
+    "improdutiva": 2,
+    "tecnicos": 6,
+    "caixa_total": 27.0,
+    "atribuicao": 4.5,
+    "pu": 4.1667,
+    "eficacia": 0.925926
+   },
+   "2": {
+    "concluida": 21,
+    "improdutiva": 5,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 3.5,
+    "eficacia": 0.807692
+   },
+   "3": {
+    "concluida": 24,
+    "improdutiva": 2,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 4.0,
+    "eficacia": 0.923077
+   },
+   "4": {
+    "concluida": 21,
+    "improdutiva": 6,
+    "tecnicos": 6,
+    "caixa_total": 27.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "5": {
+    "concluida": 14,
+    "improdutiva": 9,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 2.8,
+    "eficacia": 0.608696
+   },
+   "6": {
+    "concluida": 3,
+    "improdutiva": 6,
+    "tecnicos": 2,
+    "caixa_total": 9.0,
+    "atribuicao": 4.5,
+    "pu": 1.5,
+    "eficacia": 0.333333
+   },
+   "7": {
+    "concluida": 14,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "8": {
+    "concluida": 14,
+    "improdutiva": 4,
+    "tecnicos": 4,
+    "caixa_total": 18.0,
+    "atribuicao": 4.5,
+    "pu": 3.5,
+    "eficacia": 0.777778
+   },
+   "9": {
+    "concluida": 13,
+    "improdutiva": 10,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 2.6,
+    "eficacia": 0.565217
+   },
+   "10": {
+    "concluida": 23,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 33.0,
+    "atribuicao": 5.5,
+    "pu": 3.8333,
+    "eficacia": 0.69697
+   },
+   "11": {
+    "concluida": 12,
+    "improdutiva": 9,
+    "tecnicos": 4,
+    "caixa_total": 21.0,
+    "atribuicao": 5.25,
+    "pu": 3.0,
+    "eficacia": 0.571429
+   },
+   "12": {
+    "concluida": 13,
+    "improdutiva": 8,
+    "tecnicos": 4,
+    "caixa_total": 21.0,
+    "atribuicao": 5.25,
+    "pu": 3.25,
+    "eficacia": 0.619048
+   },
+   "13": {
+    "concluida": 12,
+    "improdutiva": 3,
+    "tecnicos": 3,
+    "caixa_total": 15.0,
+    "atribuicao": 5.0,
+    "pu": 4.0,
+    "eficacia": 0.8
+   },
+   "14": {
+    "concluida": 16,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 21.0,
+    "atribuicao": 5.25,
+    "pu": 4.0,
+    "eficacia": 0.761905
+   },
+   "15": {
+    "concluida": 16,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 21.0,
+    "atribuicao": 4.2,
+    "pu": 3.2,
+    "eficacia": 0.761905
+   },
+   "16": {
+    "concluida": 20,
+    "improdutiva": 3,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 4.0,
+    "eficacia": 0.869565
+   },
+   "17": {
+    "concluida": 19,
+    "improdutiva": 10,
+    "tecnicos": 6,
+    "caixa_total": 29.0,
+    "atribuicao": 4.8333,
+    "pu": 3.1667,
+    "eficacia": 0.655172
+   },
+   "18": {
+    "concluida": 19,
+    "improdutiva": 2,
+    "tecnicos": 4,
+    "caixa_total": 21.0,
+    "atribuicao": 5.25,
+    "pu": 4.75,
+    "eficacia": 0.904762
+   },
+   "19": {
+    "concluida": 12,
+    "improdutiva": 5,
+    "tecnicos": 4,
+    "caixa_total": 17.0,
+    "atribuicao": 4.25,
+    "pu": 3.0,
+    "eficacia": 0.705882
+   },
+   "20": {
+    "concluida": 3,
+    "improdutiva": 3,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 3.0,
+    "eficacia": 0.5
+   },
+   "21": {
+    "concluida": 21,
+    "improdutiva": 7,
+    "tecnicos": 7,
+    "caixa_total": 28.0,
+    "atribuicao": 4.0,
+    "pu": 3.0,
+    "eficacia": 0.75
+   },
+   "22": {
+    "concluida": 28,
+    "improdutiva": 5,
+    "tecnicos": 7,
+    "caixa_total": 33.0,
+    "atribuicao": 4.7143,
+    "pu": 4.0,
+    "eficacia": 0.848485
+   },
+   "23": {
+    "concluida": 20,
+    "improdutiva": 11,
+    "tecnicos": 7,
+    "caixa_total": 31.0,
+    "atribuicao": 4.4286,
+    "pu": 2.8571,
+    "eficacia": 0.645161
+   },
+   "24": {
+    "concluida": 24,
+    "improdutiva": 2,
+    "tecnicos": 6,
+    "caixa_total": 26.0,
+    "atribuicao": 4.3333,
+    "pu": 4.0,
+    "eficacia": 0.923077
+   },
+   "25": {
+    "concluida": 20,
+    "improdutiva": 4,
+    "tecnicos": 5,
+    "caixa_total": 24.0,
+    "atribuicao": 4.8,
+    "pu": 4.0,
+    "eficacia": 0.833333
+   },
+   "26": {
+    "concluida": 6,
+    "improdutiva": 1,
+    "tecnicos": 2,
+    "caixa_total": 7.0,
+    "atribuicao": 3.5,
+    "pu": 3.0,
+    "eficacia": 0.857143
+   },
+   "27": {
+    "concluida": 0,
+    "improdutiva": 0,
+    "tecnicos": 0,
+    "caixa_total": 0.0,
+    "atribuicao": 0.0,
+    "pu": 0.0,
+    "eficacia": 1.0
+   },
+   "28": {
+    "concluida": 17,
+    "improdutiva": 5,
+    "tecnicos": 5,
+    "caixa_total": 22.0,
+    "atribuicao": 4.4,
+    "pu": 3.4,
+    "eficacia": 0.772727
+   },
+   "29": {
+    "concluida": 15,
+    "improdutiva": 8,
+    "tecnicos": 5,
+    "caixa_total": 23.0,
+    "atribuicao": 4.6,
+    "pu": 3.0,
+    "eficacia": 0.652174
+   },
+   "30": {
+    "concluida": 16,
+    "improdutiva": 14,
+    "tecnicos": 6,
+    "caixa_total": 30.0,
+    "atribuicao": 5.0,
+    "pu": 2.6667,
+    "eficacia": 0.533333
+   }
+  },
+  "WANDER LOHAN MARCON PEREIRA": {
+   "1": {
+    "concluida": 53,
+    "improdutiva": 19,
+    "tecnicos": 16,
+    "caixa_total": 72.0,
+    "atribuicao": 4.5,
+    "pu": 3.3125,
+    "eficacia": 0.736111
+   },
+   "2": {
+    "concluida": 53,
+    "improdutiva": 22,
+    "tecnicos": 16,
+    "caixa_total": 76.0,
+    "atribuicao": 4.75,
+    "pu": 3.3125,
+    "eficacia": 0.706667
+   },
+   "3": {
+    "concluida": 38,
+    "improdutiva": 24,
+    "tecnicos": 16,
+    "caixa_total": 63.0,
+    "atribuicao": 3.9375,
+    "pu": 2.375,
+    "eficacia": 0.612903
+   },
+   "4": {
+    "concluida": 38,
+    "improdutiva": 37,
+    "tecnicos": 17,
+    "caixa_total": 75.0,
+    "atribuicao": 4.4118,
+    "pu": 2.2353,
+    "eficacia": 0.506667
+   },
+   "5": {
+    "concluida": 30,
+    "improdutiva": 18,
+    "tecnicos": 12,
+    "caixa_total": 48.0,
+    "atribuicao": 4.0,
+    "pu": 2.5,
+    "eficacia": 0.625
+   },
+   "6": {
+    "concluida": 3,
+    "improdutiva": 2,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 3.0,
+    "eficacia": 0.6
+   },
+   "7": {
+    "concluida": 34,
+    "improdutiva": 23,
+    "tecnicos": 10,
+    "caixa_total": 57.0,
+    "atribuicao": 5.7,
+    "pu": 3.4,
+    "eficacia": 0.596491
+   },
+   "8": {
+    "concluida": 67,
+    "improdutiva": 25,
+    "tecnicos": 17,
+    "caixa_total": 92.0,
+    "atribuicao": 5.4118,
+    "pu": 3.9412,
+    "eficacia": 0.728261
+   },
+   "9": {
+    "concluida": 46,
+    "improdutiva": 23,
+    "tecnicos": 16,
+    "caixa_total": 69.0,
+    "atribuicao": 4.3125,
+    "pu": 2.875,
+    "eficacia": 0.666667
+   },
+   "10": {
+    "concluida": 54,
+    "improdutiva": 19,
+    "tecnicos": 16,
+    "caixa_total": 73.0,
+    "atribuicao": 4.5625,
+    "pu": 3.375,
+    "eficacia": 0.739726
+   },
+   "11": {
+    "concluida": 30,
+    "improdutiva": 39,
+    "tecnicos": 14,
+    "caixa_total": 69.0,
+    "atribuicao": 4.9286,
+    "pu": 2.1429,
+    "eficacia": 0.434783
+   },
+   "12": {
+    "concluida": 38,
+    "improdutiva": 23,
+    "tecnicos": 12,
+    "caixa_total": 61.0,
+    "atribuicao": 5.0833,
+    "pu": 3.1667,
+    "eficacia": 0.622951
+   },
+   "14": {
+    "concluida": 55,
+    "improdutiva": 26,
+    "tecnicos": 18,
+    "caixa_total": 83.0,
+    "atribuicao": 4.6111,
+    "pu": 3.0556,
+    "eficacia": 0.679012
+   },
+   "15": {
+    "concluida": 66,
+    "improdutiva": 25,
+    "tecnicos": 18,
+    "caixa_total": 91.0,
+    "atribuicao": 5.0556,
+    "pu": 3.6667,
+    "eficacia": 0.725275
+   },
+   "16": {
+    "concluida": 54,
+    "improdutiva": 16,
+    "tecnicos": 17,
+    "caixa_total": 71.0,
+    "atribuicao": 4.1765,
+    "pu": 3.1765,
+    "eficacia": 0.771429
+   },
+   "17": {
+    "concluida": 47,
+    "improdutiva": 12,
+    "tecnicos": 18,
+    "caixa_total": 59.0,
+    "atribuicao": 3.2778,
+    "pu": 2.6111,
+    "eficacia": 0.79661
+   },
+   "18": {
+    "concluida": 49,
+    "improdutiva": 22,
+    "tecnicos": 18,
+    "caixa_total": 71.0,
+    "atribuicao": 3.9444,
+    "pu": 2.7222,
+    "eficacia": 0.690141
+   },
+   "19": {
+    "concluida": 36,
+    "improdutiva": 20,
+    "tecnicos": 13,
+    "caixa_total": 56.0,
+    "atribuicao": 4.3077,
+    "pu": 2.7692,
+    "eficacia": 0.642857
+   },
+   "20": {
+    "concluida": 5,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 5.0,
+    "eficacia": 0.833333
+   },
+   "21": {
+    "concluida": 23,
+    "improdutiva": 36,
+    "tecnicos": 16,
+    "caixa_total": 59.0,
+    "atribuicao": 3.6875,
+    "pu": 1.4375,
+    "eficacia": 0.389831
+   },
+   "22": {
+    "concluida": 60,
+    "improdutiva": 23,
+    "tecnicos": 18,
+    "caixa_total": 83.0,
+    "atribuicao": 4.6111,
+    "pu": 3.3333,
+    "eficacia": 0.722892
+   },
+   "23": {
+    "concluida": 58,
+    "improdutiva": 22,
+    "tecnicos": 18,
+    "caixa_total": 80.0,
+    "atribuicao": 4.4444,
+    "pu": 3.2222,
+    "eficacia": 0.725
+   },
+   "24": {
+    "concluida": 58,
+    "improdutiva": 24,
+    "tecnicos": 18,
+    "caixa_total": 82.0,
+    "atribuicao": 4.5556,
+    "pu": 3.2222,
+    "eficacia": 0.707317
+   },
+   "25": {
+    "concluida": 55,
+    "improdutiva": 26,
+    "tecnicos": 18,
+    "caixa_total": 81.0,
+    "atribuicao": 4.5,
+    "pu": 3.0556,
+    "eficacia": 0.679012
+   },
+   "26": {
+    "concluida": 33,
+    "improdutiva": 21,
+    "tecnicos": 13,
+    "caixa_total": 54.0,
+    "atribuicao": 4.1538,
+    "pu": 2.5385,
+    "eficacia": 0.611111
+   },
+   "27": {
+    "concluida": 5,
+    "improdutiva": 1,
+    "tecnicos": 1,
+    "caixa_total": 6.0,
+    "atribuicao": 6.0,
+    "pu": 5.0,
+    "eficacia": 0.833333
+   },
+   "28": {
+    "concluida": 47,
+    "improdutiva": 36,
+    "tecnicos": 17,
+    "caixa_total": 83.0,
+    "atribuicao": 4.8824,
+    "pu": 2.7647,
+    "eficacia": 0.566265
+   },
+   "29": {
+    "concluida": 37,
+    "improdutiva": 51,
+    "tecnicos": 17,
+    "caixa_total": 88.0,
+    "atribuicao": 5.1765,
+    "pu": 2.1765,
+    "eficacia": 0.420455
+   },
+   "30": {
+    "concluida": 56,
+    "improdutiva": 27,
+    "tecnicos": 19,
+    "caixa_total": 83.0,
+    "atribuicao": 4.3684,
+    "pu": 2.9474,
+    "eficacia": 0.674699
+   }
+  }
+ }
+}

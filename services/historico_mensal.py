@@ -31,8 +31,13 @@ Nenhuma outra mudança de código é necessária — a tela passa a comparar
 com o mês novo automaticamente assim que a base ao vivo virar o mês.
 """
 
+import json
 import unicodedata
+from functools import lru_cache
+from pathlib import Path
 from datetime import date
+
+import pandas as pd
 
 
 def _normalizar(texto: str) -> str:
@@ -103,6 +108,30 @@ _SETEMBRO_2026_CLUSTER = {
     "CANOAS":         dict(eficacia=0.76, concluida=1935, improdutiva=604,  tecnicos=543,  atribuicao=4.68, pu=3.56),
 }
 
+# Setembro/2026 — nível Supervisor. Diferente de Estado/Cluster, NÃO vem do
+# painel do Excel: foi gerado a partir da base completa de Setembro com a
+# mesma regra de cálculo do site (services.grupos.resumo_mes_por_grupo) e
+# congelado aqui. Soma dos supervisores confere com o total de SC + RS.
+_SETEMBRO_2026_SUPERVISOR = {
+    "ANDERSON LUIS MONTEIRO PORTALLI":   dict(eficacia=0.7673, concluida=1840, improdutiva=558, tecnicos=502, atribuicao=4.78, pu=3.67),
+    "BUCKET":                            dict(eficacia=0.7258, concluida=45, improdutiva=17, tecnicos=14, atribuicao=4.43, pu=3.21),
+    "DANIEL COSTA":                      dict(eficacia=0.713, concluida=534, improdutiva=215, tecnicos=169, atribuicao=4.43, pu=3.16),
+    "EDEQUE DARLON PILON":               dict(eficacia=0.7384, concluida=539, improdutiva=191, tecnicos=207, atribuicao=3.53, pu=2.60),
+    "EVERTON COSTA TEIXEIRA":            dict(eficacia=0.7047, concluida=389, improdutiva=163, tecnicos=123, atribuicao=4.50, pu=3.16),
+    "JOAO FABIO DOS SANTOS CARDOSO":     dict(eficacia=0.6258, concluida=1067, improdutiva=638, tecnicos=386, atribuicao=4.42, pu=2.76),
+    "JOSUE DE LIMA ALVES":               dict(eficacia=0.745, concluida=1151, improdutiva=394, tecnicos=365, atribuicao=4.23, pu=3.15),
+    "MARCELO PAVANATI":                  dict(eficacia=0.7537, concluida=554, improdutiva=181, tecnicos=185, atribuicao=3.97, pu=2.99),
+    "MARIO ALEJANDRO CATANO":            dict(eficacia=0.7484, concluida=699, improdutiva=235, tecnicos=221, atribuicao=4.23, pu=3.16),
+    "ORLANDO MAIA JUNIOR":               dict(eficacia=0.797, concluida=636, improdutiva=162, tecnicos=186, atribuicao=4.29, pu=3.42),
+    "PAULO ROBERTO JESUS BRANCO":        dict(eficacia=0.7421, concluida=803, improdutiva=279, tecnicos=268, atribuicao=4.04, pu=3.00),
+    "RAFAEL MUNIZ CASTILHO":             dict(eficacia=0.7417, concluida=514, improdutiva=179, tecnicos=178, atribuicao=3.89, pu=2.89),
+    "RICARDO SCHVARTZHAUPT":             dict(eficacia=0.6805, concluida=1497, improdutiva=703, tecnicos=487, atribuicao=4.52, pu=3.07),
+    "RODRIGO MEREDIGYA GONCALVES":       dict(eficacia=0.6835, concluida=285, improdutiva=132, tecnicos=131, atribuicao=3.18, pu=2.18),
+    "THIAGO VINICIUS MODESTO MONTEIRO":  dict(eficacia=0.6925, concluida=491, improdutiva=218, tecnicos=179, atribuicao=3.96, pu=2.74),
+    "TIAGO MARLON DOS SANTOS":           dict(eficacia=0.7411, concluida=481, improdutiva=168, tecnicos=140, atribuicao=4.64, pu=3.44),
+    "WANDER LOHAN MARCON PEREIRA":       dict(eficacia=0.6494, concluida=1228, improdutiva=663, tecnicos=421, atribuicao=4.51, pu=2.92),
+}
+
 # Registro de todos os meses já congelados — chave (ano, mês [1-12]).
 # `fechamento_mes_anterior` usa isso pra achar automaticamente o mês
 # imediatamente anterior ao mês corrente da base ao vivo; não precisa
@@ -111,7 +140,8 @@ _SETEMBRO_2026_CLUSTER = {
 _HISTORICO = {
     (2026, 7): {"rotulo": "JULHO", "estado": _JULHO_2026_ESTADO, "cluster": _JULHO_2026_CLUSTER},
     (2026, 8): {"rotulo": "AGOSTO", "estado": _AGOSTO_2026_ESTADO, "cluster": _AGOSTO_2026_CLUSTER},
-    (2026, 9): {"rotulo": "SETEMBRO", "estado": _SETEMBRO_2026_ESTADO, "cluster": _SETEMBRO_2026_CLUSTER},
+    (2026, 9): {"rotulo": "SETEMBRO", "estado": _SETEMBRO_2026_ESTADO, "cluster": _SETEMBRO_2026_CLUSTER,
+                "supervisor": _SETEMBRO_2026_SUPERVISOR},
 }
 
 
@@ -131,7 +161,7 @@ def fechamento_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster",
                              data_referencia: date = None) -> dict | None:
     """
     Retorna o fechamento congelado do mês ANTERIOR a `data_referencia`
-    (por padrão, o mês anterior a hoje) para um Estado ou Cluster pelo
+    (por padrão, o mês anterior a hoje) para um Estado, Cluster ou Supervisor pelo
     nome, ou `None` se esse mês específico ainda não tiver sido congelado
     aqui, ou se o Estado/Cluster não tiver referência cadastrada nele —
     nos dois casos a comparação simplesmente não é exibida, em vez de
@@ -140,7 +170,8 @@ def fechamento_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster",
     bloco = _HISTORICO.get(mes_referencia_anterior(data_referencia))
     if not bloco:
         return None
-    tabela = bloco["estado"] if coluna_grupo == "Estado" else bloco["cluster"]
+    chave_tabela = {"Estado": "estado", "Supervisor": "supervisor"}.get(coluna_grupo, "cluster")
+    tabela = bloco.get(chave_tabela) or {}
     chave = _normalizar(nome_grupo)
     for nome, valores in tabela.items():
         if _normalizar(nome) == chave:
@@ -153,3 +184,49 @@ def rotulo_mes_anterior(data_referencia: date = None) -> str:
     vazia se esse mês ainda não tiver sido congelado."""
     bloco = _HISTORICO.get(mes_referencia_anterior(data_referencia))
     return bloco["rotulo"] if bloco else ""
+
+
+# ---------------------------------------------------------------------------
+# Fechamento DIÁRIO congelado (dia a dia do mês fechado)
+# ---------------------------------------------------------------------------
+# Um arquivo JSON por mês em services/historico_diario/AAAA-MM.json, gerado
+# por `python congelar_mes.py <base.xlsx> <ano> <mês>` (Estado, Cluster e
+# Supervisor). É usado na matriz "Fechamento Diário" da aba Acumulado Mês
+# para mostrar, ao lado de cada dia do mês atual, o MESMO DIA do mês anterior.
+_PASTA_DIARIO = Path(__file__).parent / "historico_diario"
+
+_COLUNAS_DIARIO = {
+    "concluida": "Concluída", "improdutiva": "Improdutiva", "tecnicos": "Técnicos",
+    "caixa_total": "Caixa Total", "atribuicao": "Atribuição", "pu": "PU", "eficacia": "Eficácia",
+}
+
+
+@lru_cache(maxsize=None)
+def _carregar_diario(ano: int, mes: int) -> dict | None:
+    arquivo = _PASTA_DIARIO / f"{ano}-{mes:02d}.json"
+    if not arquivo.exists():
+        return None
+    try:
+        return json.loads(arquivo.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def fechamento_diario_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster",
+                                    data_referencia: date = None) -> pd.DataFrame | None:
+    """
+    Fechamento diário congelado do mês ANTERIOR a `data_referencia` para um
+    Estado, Cluster ou Supervisor. Retorna um DataFrame indexado pelo DIA do
+    mês (1–31) com as colunas Concluída, Improdutiva, Técnicos, Caixa Total,
+    Atribuição, PU e Eficácia — ou `None` se esse mês não tiver arquivo
+    congelado ou o grupo não existir nele.
+    """
+    dados = _carregar_diario(*mes_referencia_anterior(data_referencia))
+    if not dados:
+        return None
+    chave = _normalizar(nome_grupo)
+    for nome, dias in (dados.get(coluna_grupo) or {}).items():
+        if _normalizar(nome) == chave:
+            df = pd.DataFrame.from_dict({int(d): v for d, v in dias.items()}, orient="index")
+            return df.rename(columns=_COLUNAS_DIARIO).sort_index()
+    return None

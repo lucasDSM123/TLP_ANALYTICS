@@ -9,8 +9,9 @@ from components.charts import (
 )
 from components.tabelas import tabela_fechamento_diario, tabela_consolidado_grupo, tabela_comparativo_mensal
 from components.print_button import area_com_print, sanitizar_chave
-from services.grupos import serie_diaria_por_grupo, resumo_mes_por_grupo, resumo_mes_total
+from services.grupos import serie_diaria_por_grupo, resumo_mes_por_grupo, resumo_mes_total, _linha_resumo_soma
 from services import historico_mensal
+from services.loader import carregar_base
 from services.chegada import (
     calcular_indicador_chegada, resumo_geral as resumo_geral_chegada, percentual_dentro_por_grupo,
     serie_diaria_percentual_dentro,
@@ -70,33 +71,112 @@ def _cor_grupo(indice: int, valor: str, coluna_grupo: str) -> str:
     return config.CHART_COLORWAY[indice % len(config.CHART_COLORWAY)]
 
 
-def _somente_mes_corrente(df: pd.DataFrame) -> pd.DataFrame:
-    """Mantém só as linhas do mês da data mais recente da base.
+_COLS_ANTERIOR = ["Concluída", "Improdutiva", "Técnicos", "Atribuição", "PU", "Eficácia"]
 
-    A base ao vivo pode trazer dias do mês anterior (ex.: 30/09 junto com
-    01/10). Sem este corte, esses dias entravam no acumulado do mês novo
-    (e na comparação com o mês anterior congelado), inflando os números.
-    """
+
+def _anexar_mes_anterior(df_dia_grupo: pd.DataFrame, linha_total: dict, grupo: str,
+                         coluna_grupo: str, diario_base=None):
+    """Anexa ao fechamento diário do grupo as colunas 'Ant ...' com o MESMO DIA
+    do mês anterior (dia 1 com dia 1, dia 2 com dia 2...), e à linha de total o
+    acumulado do mês anterior ATÉ O MESMO DIA (dias 1..N, onde N é o último dia
+    do mês atual) — assim o Total Mês compara período com período.
+
+    Fonte: fechamento diário congelado (services/historico_diario). Se o mês
+    anterior ainda não foi congelado, usa `diario_base()` (callable que devolve
+    a série diária calculada da base, se o mês anterior ainda estiver no banco).
+    Sem nenhuma das duas, devolve tudo como veio (a tabela fica sem o bloco).
+    Retorna (df_dia_grupo, linha_total, rotulo_mes_anterior)."""
+    if df_dia_grupo.empty:
+        return df_dia_grupo, linha_total, ""
+
+    data_ref = df_dia_grupo["Data"].max()
+    ant = historico_mensal.fechamento_diario_mes_anterior(grupo, coluna_grupo, data_referencia=data_ref)
+    rotulo = historico_mensal.rotulo_mes_anterior(data_ref)
+
+    if (ant is None or ant.empty) and diario_base is not None:
+        serie = diario_base()
+        if serie is not None and not serie.empty:
+            sub = serie[serie[coluna_grupo] == grupo]
+            if not sub.empty:
+                ant = sub.assign(_dia=sub["Data"].apply(lambda d: d.day)).set_index("_dia").sort_index()
+                mes_ant = 12 if data_ref.month == 1 else data_ref.month - 1
+                rotulo = _MESES_PT[mes_ant]
+
+    if ant is None or ant.empty:
+        return df_dia_grupo, linha_total, ""
+
+    dias = df_dia_grupo["Data"].apply(lambda d: d.day)
+    df_dia_grupo = df_dia_grupo.copy()
+    for coluna in _COLS_ANTERIOR:
+        df_dia_grupo[f"Ant {coluna}"] = dias.map(ant[coluna])
+
+    total_ant = _linha_resumo_soma(grupo, coluna_grupo, ant[ant.index <= dias.max()])
+    linha_total = dict(linha_total)
+    for coluna in _COLS_ANTERIOR:
+        linha_total[f"Ant {coluna}"] = total_ant[coluna]
+    return df_dia_grupo, linha_total, rotulo
+
+
+def _datas(serie: pd.Series) -> pd.Series:
+    """Converte a coluna Data (texto dd/mm/aa) em datetime."""
+    datas = pd.to_datetime(serie, format="%d/%m/%y", errors="coerce")
+    if datas.isna().all():
+        datas = pd.to_datetime(serie, dayfirst=True, errors="coerce")
+    return datas
+
+
+def _meses_disponiveis(df: pd.DataFrame) -> list[tuple[int, int]]:
+    """Lista de (ano, mês) presentes na base, do mais recente ao mais antigo."""
+    if df.empty or "Data" not in df.columns:
+        return []
+    datas = _datas(df["Data"]).dropna()
+    meses = {(d.year, d.month) for d in datas}
+    return sorted(meses, reverse=True)
+
+
+def _filtrar_mes(df: pd.DataFrame, ano: int, mes: int) -> pd.DataFrame:
+    """Mantém só as linhas do mês/ano informado."""
     if df.empty or "Data" not in df.columns:
         return df
-    datas = pd.to_datetime(df["Data"], format="%d/%m/%y", errors="coerce")
-    if datas.isna().all():
-        datas = pd.to_datetime(df["Data"], dayfirst=True, errors="coerce")
-    if datas.isna().all():
-        return df
-    ref = datas.max()
-    mask = (datas.dt.year == ref.year) & (datas.dt.month == ref.month)
-    return df[mask]
+    datas = _datas(df["Data"])
+    return df[(datas.dt.year == ano) & (datas.dt.month == mes)]
+
+
+def _base_mes_anterior(ano: int, mes: int) -> pd.DataFrame:
+    """Base completa do mês anterior a (ano, mês), vinda do banco, com os
+    mesmos filtros de Estado/Cluster/Cidade/Coordenador marcados no topo
+    (o filtro de Data não se aplica: aqui queremos o mês fechado inteiro).
+    Usada na comparação de Supervisor, que não tem fechamento congelado."""
+    base = carregar_base()
+    if base is None or base.empty:
+        return pd.DataFrame()
+    for coluna, chave in (("Estado", "filtro_sel_estado"), ("Cluster", "filtro_sel_cluster"),
+                          ("Cidade", "filtro_sel_cidade"), ("Coordenador", "filtro_sel_coordenador")):
+        selecao = st.session_state.get(chave) or []
+        if selecao and coluna in base.columns:
+            base = base[base[coluna].isin(selecao)]
+    ano_ant, mes_ant = (ano - 1, 12) if mes == 1 else (ano, mes - 1)
+    return _filtrar_mes(base, ano_ant, mes_ant)
 
 
 def render(df, indicadores):
 
     secao_titulo("Acumulado Mês", "Fechamento mensal consolidado — réplica do PAINEL do Excel/Power BI")
 
-    # Acumulado Mês considera apenas o mês corrente (data mais recente da
-    # base) — dias do mês anterior presentes na base não entram aqui.
-    df = _somente_mes_corrente(df)
-    indicadores = indicadores.__class__(df)
+    # Seletor de mês: a base pode conter mais de um mês (ex.: Setembro
+    # inteiro + 01/10). Por padrão mostra o mês mais recente; dá pra
+    # escolher um mês anterior para ver o fechamento diário dele.
+    meses = _meses_disponiveis(df)
+    if meses:
+        rotulos_meses = {m: f"{_MESES_PT[m[1]].capitalize()}/{m[0]}" for m in meses}
+        mes_sel = st.radio(
+            "Mês", options=meses, format_func=lambda m: rotulos_meses[m],
+            horizontal=True, key="acumulado_mes_mes",
+        )
+        df = _filtrar_mes(df, *mes_sel)
+        indicadores = indicadores.__class__(df)
+    else:
+        mes_sel = None
 
     # ====== RESUMO GERAL DO PERÍODO FILTRADO ======
     hc = indicadores.hc_real()
@@ -185,6 +265,26 @@ def render(df, indicadores):
     if resumo_grupo.empty or serie_grupo.empty:
         st.info("Sem dados para os filtros selecionados.")
     else:
+        # Comparativo de Supervisor: fechamento do mês anterior calculado da base.
+        resumo_anterior, rotulo_mes_anterior_base = None, ""
+        if coluna_grupo == "Supervisor" and mes_sel:
+            base_ant = _base_mes_anterior(*mes_sel)
+            if not base_ant.empty and coluna_grupo in base_ant.columns:
+                resumo_anterior = resumo_mes_por_grupo(base_ant, coluna_grupo)
+                mes_ant_num = 12 if mes_sel[1] == 1 else mes_sel[1] - 1
+                rotulo_mes_anterior_base = _MESES_PT[mes_ant_num]
+
+        # Fallback do diário do mês anterior (só se ele NÃO estiver congelado e
+        # ainda estiver no banco) — calculado uma única vez, sob demanda.
+        _cache_diario_base = {}
+
+        def _diario_base():
+            if "serie" not in _cache_diario_base:
+                base_ant = _base_mes_anterior(*mes_sel) if mes_sel else pd.DataFrame()
+                ok = not base_ant.empty and coluna_grupo in base_ant.columns
+                _cache_diario_base["serie"] = serie_diaria_por_grupo(base_ant, coluna_grupo) if ok else pd.DataFrame()
+            return _cache_diario_base["serie"]
+
         grupos = [g for g in resumo_grupo[coluna_grupo] if g != "Total"]
         abas = st.tabs(grupos) if grupos else []
 
@@ -210,17 +310,31 @@ def render(df, indicadores):
                     linha_total["% Chegada"] = mapa_chegada.get(grupo)
                 cor = _cor_grupo(i, grupo, coluna_grupo)
 
-                mes_anterior = historico_mensal.fechamento_mes_anterior(
-                    grupo, coluna_grupo, data_referencia=df_dia_grupo["Data"].max() if not df_dia_grupo.empty else None,
+                # Mesmo dia do mês anterior ao lado de cada dia (congelado).
+                df_dia_grupo, linha_total, rotulo_dia_anterior = _anexar_mes_anterior(
+                    df_dia_grupo, linha_total, grupo, coluna_grupo, diario_base=_diario_base,
                 )
+
+                data_ref = df_dia_grupo["Data"].max() if not df_dia_grupo.empty else None
+                mes_anterior = historico_mensal.fechamento_mes_anterior(
+                    grupo, coluna_grupo, data_referencia=data_ref,
+                )
+                rotulo_anterior = historico_mensal.rotulo_mes_anterior(data_ref)
+
+                # Supervisor não tem fechamento congelado: o mês anterior sai
+                # da própria base (mesma regra de cálculo do mês atual).
+                if mes_anterior is None and resumo_anterior is not None and not resumo_anterior.empty:
+                    linha_ant = resumo_anterior[resumo_anterior[coluna_grupo] == grupo]
+                    if not linha_ant.empty:
+                        mes_anterior = _linha_total_para_comparativo(linha_ant.iloc[0].to_dict())
+                        rotulo_anterior = rotulo_mes_anterior_base
+
                 if mes_anterior:
                     with area_com_print(f"acumulado_mes_comparativo_{grupo}",
                                          nome_arquivo=f"comparativo_mensal_{grupo}"):
                         tabela_comparativo_mensal(
                             grupo, mes_anterior, _linha_total_para_comparativo(linha_total),
-                            rotulo_mes_anterior=historico_mensal.rotulo_mes_anterior(
-                                df_dia_grupo["Data"].max() if not df_dia_grupo.empty else None,
-                            ),
+                            rotulo_mes_anterior=rotulo_anterior,
                             rotulo_mes_atual=_rotulo_mes_atual(df_dia_grupo),
                         )
                     st.write("")
@@ -230,6 +344,8 @@ def render(df, indicadores):
                     tabela_fechamento_diario(
                         _com_total_mes(df_dia_grupo, linha_total, coluna_grupo),
                         f"FECHAMENTO DIÁRIO — {grupo}", cor_titulo=cor,
+                        rotulo_anterior=rotulo_dia_anterior,
+                        rotulo_atual=_rotulo_mes_atual(df_dia_grupo),
                     )
 
                 num_dias = len(df_dia_grupo)
