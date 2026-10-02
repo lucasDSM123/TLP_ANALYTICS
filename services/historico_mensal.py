@@ -38,6 +38,7 @@ from pathlib import Path
 from datetime import date
 
 import pandas as pd
+import streamlit as st
 
 
 def _normalizar(texto: str) -> str:
@@ -157,6 +158,29 @@ def mes_referencia_anterior(data_referencia: date = None) -> tuple[int, int]:
     return _mes_anterior(ref.year, ref.month)
 
 
+_ROTULOS_MES = {1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL", 5: "MAIO", 6: "JUNHO",
+                7: "JULHO", 8: "AGOSTO", 9: "SETEMBRO", 10: "OUTUBRO", 11: "NOVEMBRO", 12: "DEZEMBRO"}
+
+
+@st.cache_data(show_spinner=False, ttl=600)
+def _congelado_neon(ano: int, mes: int) -> dict | None:
+    """Mês congelado AUTOMATICAMENTE na virada (tabela fechamento_congelado do
+    Neon — ver services/congelamento_automatico.py). None se não houver."""
+    from services.congelamento_automatico import ler_congelado
+    return ler_congelado(ano, mes)
+
+
+def _diario_neon(nome_grupo: str, coluna_grupo: str, ano: int, mes: int) -> pd.DataFrame | None:
+    dados = _congelado_neon(ano, mes)
+    if not dados:
+        return None
+    chave = _normalizar(nome_grupo)
+    for nome, df in (dados.get(coluna_grupo) or {}).items():
+        if _normalizar(nome) == chave:
+            return df
+    return None
+
+
 def fechamento_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster",
                              data_referencia: date = None) -> dict | None:
     """
@@ -167,23 +191,39 @@ def fechamento_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster",
     nos dois casos a comparação simplesmente não é exibida, em vez de
     cair para um mês antigo por engano.
     """
-    bloco = _HISTORICO.get(mes_referencia_anterior(data_referencia))
-    if not bloco:
-        return None
+    ano, mes = mes_referencia_anterior(data_referencia)
+    bloco = _HISTORICO.get((ano, mes))
     chave_tabela = {"Estado": "estado", "Supervisor": "supervisor"}.get(coluna_grupo, "cluster")
-    tabela = bloco.get(chave_tabela) or {}
-    chave = _normalizar(nome_grupo)
-    for nome, valores in tabela.items():
-        if _normalizar(nome) == chave:
-            return dict(valores)
-    return None
+    tabela = bloco.get(chave_tabela) if bloco else None
+
+    if tabela is not None:
+        # Cadastrado à mão (números oficiais do painel): é a palavra final —
+        # inclusive para grupos deixados de fora de propósito (ex.: Lages).
+        chave = _normalizar(nome_grupo)
+        for nome, valores in tabela.items():
+            if _normalizar(nome) == chave:
+                return dict(valores)
+        return None
+
+    # Plano automático: mês congelado na virada (tabela do Neon).
+    diario = _diario_neon(nome_grupo, coluna_grupo, ano, mes)
+    if diario is None or diario.empty:
+        return None
+    from services.grupos import _linha_resumo_soma  # import tardio: evita ciclo
+    total = _linha_resumo_soma(nome_grupo, coluna_grupo, diario)
+    return dict(eficacia=total["Eficácia"], concluida=int(total["Concluída"]),
+                improdutiva=int(total["Improdutiva"]), tecnicos=int(total["Técnicos"]),
+                atribuicao=total["Atribuição"], pu=total["PU"])
 
 
 def rotulo_mes_anterior(data_referencia: date = None) -> str:
     """Rótulo (ex.: 'AGOSTO') do mês usado como comparação, ou string
     vazia se esse mês ainda não tiver sido congelado."""
-    bloco = _HISTORICO.get(mes_referencia_anterior(data_referencia))
-    return bloco["rotulo"] if bloco else ""
+    ano, mes = mes_referencia_anterior(data_referencia)
+    bloco = _HISTORICO.get((ano, mes))
+    if bloco:
+        return bloco["rotulo"]
+    return _ROTULOS_MES[mes] if _congelado_neon(ano, mes) else ""
 
 
 # ---------------------------------------------------------------------------
@@ -221,12 +261,13 @@ def fechamento_diario_mes_anterior(nome_grupo: str, coluna_grupo: str = "Cluster
     Atribuição, PU e Eficácia — ou `None` se esse mês não tiver arquivo
     congelado ou o grupo não existir nele.
     """
-    dados = _carregar_diario(*mes_referencia_anterior(data_referencia))
-    if not dados:
+    ano, mes = mes_referencia_anterior(data_referencia)
+    dados = _carregar_diario(ano, mes)  # arquivo JSON cadastrado à mão (vence)
+    if dados:
+        chave = _normalizar(nome_grupo)
+        for nome, dias in (dados.get(coluna_grupo) or {}).items():
+            if _normalizar(nome) == chave:
+                df = pd.DataFrame.from_dict({int(d): v for d, v in dias.items()}, orient="index")
+                return df.rename(columns=_COLUNAS_DIARIO).sort_index()
         return None
-    chave = _normalizar(nome_grupo)
-    for nome, dias in (dados.get(coluna_grupo) or {}).items():
-        if _normalizar(nome) == chave:
-            df = pd.DataFrame.from_dict({int(d): v for d, v in dias.items()}, orient="index")
-            return df.rename(columns=_COLUNAS_DIARIO).sort_index()
-    return None
+    return _diario_neon(nome_grupo, coluna_grupo, ano, mes)  # plano automático

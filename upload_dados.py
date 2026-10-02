@@ -1,11 +1,12 @@
 import sys
 import time
 from pathlib import Path
+
 import pandas as pd
 from services.database import enviar_dados_para_neon
 from services.historico_intradia import registrar_snapshot
 
-CAMINHO_ARQUIVO = Path(__file__).resolve().parent / "data" / "PRODUCAO_TLP_TRATADA.xlsx"
+CAMINHO_ARQUIVO = Path("data/PRODUCAO_TLP_TRATADA.xlsx")
 NOME_TABELA = "producao_tlp_tratada"
 COLUNA_CHAVE = "numero_atividade"
 
@@ -55,6 +56,18 @@ def executar_upload() -> bool:
 
     if total_antes != total_depois:
         print(f"🧹 Removidas {total_antes - total_depois} linhas duplicadas em '{COLUNA_CHAVE}'.")
+
+    # Virada de mês: congela o mês anterior (ainda no Neon) ANTES do envio, que
+    # apaga do Neon o que não vem no arquivo. Falha aqui NUNCA bloqueia o upload.
+    try:
+        from services.congelamento_automatico import congelar_virada
+        congelados = congelar_virada(df)
+        if congelados:
+            print(f"❄️  Meses congelados automaticamente: "
+                  f"{', '.join(f'{m:02d}/{a}' for a, m in congelados)}")
+    except Exception as e:
+        print(f"⚠️ Congelamento automático do mês anterior não executado ({e}). "
+              f"O upload segue normalmente.")
 
     print(f"🚀 Enviando/Atualizando {len(df)} registros no Neon...")
 
