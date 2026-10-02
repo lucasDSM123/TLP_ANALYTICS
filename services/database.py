@@ -6,11 +6,26 @@ import pandas as pd
 import config
 
 
+def _normalizar_url(url: str) -> str:
+    """
+    Força o driver psycopg2 (o único instalado — ver requirements.txt, e o que
+    o upload usa para o COPY). Sem isso, uma URL com `postgresql+psycopg://`
+    (psycopg v3) ou `postgres://` quebra no Streamlit Cloud com
+    "ModuleNotFoundError: No module named 'psycopg'" / "Can't load plugin".
+    """
+    if not url:
+        return url
+    for prefixo in ("postgres://", "postgresql+psycopg://", "postgresql://"):
+        if url.startswith(prefixo):
+            return "postgresql+psycopg2://" + url[len(prefixo):]
+    return url
+
+
 def obter_engine():
     """
     Retorna a instância do engine do SQLAlchemy configurada com a URL do banco.
     """
-    return create_engine(config.DATABASE_URL)
+    return create_engine(_normalizar_url(config.DATABASE_URL))
 
 
 def _validar_identificador(nome: str) -> str:
