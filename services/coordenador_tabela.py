@@ -26,6 +26,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
     eficacia = ind.eficacia_caixa()
     projecao = ind.projecao()["GERAL"]
     projecao_pu = ind.projecao_pu()["GERAL"]
+    projecao_pu_vivo = ind.projecao_pu_vivo()["GERAL"]
     iniciada = ind.iniciada()["TOTAL"]
 
     ok_ba = int(((sub["Status"] == "Concluída") & (sub["Lado"] == "BA")).sum()) if "Lado" in sub.columns else 0
@@ -63,6 +64,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
         "Eficácia": eficacia,
         "Projeção": projecao,
         "Projeção PU": projecao_pu,
+        "Projeção PU Vivo": projecao_pu_vivo,
         "Meta": meta,
         "Gap": gap,
     }

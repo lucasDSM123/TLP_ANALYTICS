@@ -29,6 +29,7 @@ def render(df, indicadores: Indicadores):
     media = indicadores.media_atribuicao()
     projecao_pu = indicadores.projecao_pu()
     pu_vivo = indicadores.pu_vivo()
+    projecao_pu_vivo = indicadores.projecao_pu_vivo()
 
     # ====== INDICADORES PRINCIPAIS ======
     secao_titulo("Indicadores Principais", "Visão consolidada da operação")
@@ -67,7 +68,9 @@ def render(df, indicadores: Indicadores):
             card("PU", f"{pu['GERAL']:.2f}", "#7B8CDE",
                  pu_site=pu["GERAL"], pu_vivo_valor=pu_vivo["GERAL"])
         with col6:
-            card("PROJEÇÃO PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE")
+            card("PROJEÇÃO PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE",
+                 pu_site=projecao_pu["GERAL"], pu_vivo_valor=projecao_pu_vivo["GERAL"],
+                 rotulo_vivo="Proj. PU Vivo")
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -272,4 +275,6 @@ def render(df, indicadores: Indicadores):
             with col3:
                 card("Projeção BA", projecao["BA"], "#00C9A7")
                 card("Projeção TT", projecao["TT"], "#FF5C5C")
-                card("Projeção PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE")
+                card("Projeção PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE",
+                     pu_site=projecao_pu["GERAL"], pu_vivo_valor=projecao_pu_vivo["GERAL"],
+                     rotulo_vivo="Proj. PU Vivo")

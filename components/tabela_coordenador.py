@@ -17,12 +17,13 @@ def _seta_gap(valor: float) -> str:
     return "▲" if valor >= 0 else "▼"
 
 
-def _cel_pu_vivo(row: dict, total: bool = False) -> str:
+def _cel_pu_vivo(row: dict, total: bool = False, chave: str = "PU Vivo") -> str:
     """Célula extra 'PU Vivo' (fórmula da Vivo), exibida ao lado de PU
-    quando o toggle "Ver PU VIVO" está marcado (ver components/pu_vivo.py)."""
-    if not pu_vivo_ativo() or "PU Vivo" not in row:
+    quando o toggle "Ver PU VIVO" está marcado (ver components/pu_vivo.py).
+    Com chave='Projeção PU Vivo' vira a célula da Projeção PU VIVO."""
+    if not pu_vivo_ativo() or chave not in row:
         return ""
-    txt = f"{row['PU Vivo']:.2f}"
+    txt = f"{row[chave]:.2f}"
     if total:
         return f"<td>{pill_total(txt)}</td>"
     return f"<td style='font-weight:700; color:#0369A1;'>{txt}</td>"
@@ -60,6 +61,7 @@ def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> st
         f"<td>{pill(eficacia_pct, cor_faixa(row['Eficácia'], config.META_EFICACIA_ALVO), cor_faixa_bg(row['Eficácia'], config.META_EFICACIA_ALVO))}</td>",
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{projecao_fmt}</td>",
         f"<td>{pill(txt_proj_pu, cor_faixa(row['Projeção PU'], config.META_PU_ALVO), cor_faixa_bg(row['Projeção PU'], config.META_PU_ALVO))}</td>",
+        _cel_pu_vivo(row, chave="Projeção PU Vivo"),
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['Meta']}</td>",
         f"<td>{pill(txt_gap, '#15803D' if row['Gap'] >= 0 else config.TLP_RED, 'rgba(34,197,94,0.14)' if row['Gap'] >= 0 else 'rgba(240,68,56,0.10)')}</td>",
     ])
@@ -105,6 +107,7 @@ def _celula_total_geral(row: dict) -> str:
         f"<td>{pill_total(eficacia_pct)}</td>",
         f"<td>{pill_total(projecao_fmt)}</td>",
         f"<td>{pill_total(txt_proj_pu)}</td>",
+        _cel_pu_vivo(row, total=True, chave="Projeção PU Vivo"),
         f"<td>{pill_total(row['Meta'])}</td>",
         f"<td>{pill_total(txt_gap)}</td>",
     ])
@@ -123,7 +126,11 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
 
     colunas_antes = ["COORDENADOR", "SUPERVISOR", "HC ATIVO", "CAIXA TOTAL", "ESTEIRA"]
     colunas_depois = ["PU"] + (["PU VIVO"] if pu_vivo_ativo() else [])
-    colunas_final = ["INICIADA", "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU", "META", "GAP"]
+    colunas_final = (
+        ["INICIADA", "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU"]
+        + (["PROJEÇÃO PU VIVO"] if pu_vivo_ativo() else [])
+        + ["META", "GAP"]
+    )
 
     linhas_html = []
     for grupo in grupos:

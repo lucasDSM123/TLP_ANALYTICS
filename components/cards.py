@@ -49,7 +49,7 @@ def _fundo_icone_rgba(cor_hex: str, alpha: float = 0.16) -> str:
 
 
 def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: str = None,
-         pu_site: float = None, pu_vivo_valor: float = None):
+         pu_site: float = None, pu_vivo_valor: float = None, rotulo_vivo: str = "PU Vivo"):
     """
     Renderiza um card KPI com título, valor, cor de destaque e subtítulo opcional.
 
@@ -66,6 +66,8 @@ def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: st
             subtítulo — ex.: "PU Vivo: 1.68 (▲ 6%)".
         pu_vivo_valor: valor de PU no padrão do Backoffice Regional Sul
             (ver services/indicadores.py -> pu_vivo*()).
+        rotulo_vivo: texto que antecede o valor na linha comparativa
+            (padrão "PU Vivo"; use "Proj. PU Vivo" no card de Projeção PU).
     """
     # Sempre renderiza o parágrafo do subtítulo (mesmo vazio) para que todos
     # os cards tenham exatamente a mesma estrutura/altura, com ou sem subtítulo.
@@ -77,7 +79,7 @@ def card(title: str, value, color: str = "#2E63C7", subtitle: str = "", icon: st
     if pu_site is not None and pu_vivo_valor is not None:
         from components.pu_vivo import pu_vivo_ativo, texto_comparativo_pu, cor_comparativo_pu
         if pu_vivo_ativo():
-            texto = texto_comparativo_pu(pu_site, pu_vivo_valor)
+            texto = texto_comparativo_pu(pu_site, pu_vivo_valor, rotulo_vivo)
             if texto:
                 cor_pv = cor_comparativo_pu(pu_site, pu_vivo_valor)
                 pu_vivo_html = f'<p class="kpi-subtitle" style="color:{cor_pv}; font-weight:700;">{texto}</p>'

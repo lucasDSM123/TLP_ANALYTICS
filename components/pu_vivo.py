@@ -19,7 +19,7 @@ def pu_vivo_ativo() -> bool:
     return bool(st.session_state.get("mostrar_pu_vivo", False))
 
 
-def texto_comparativo_pu(pu_site: float, pu_vivo_valor: float) -> str:
+def texto_comparativo_pu(pu_site: float, pu_vivo_valor: float, rotulo: str = "PU Vivo") -> str:
     """
     Monta o texto 'PU Vivo: X.XX (▲/▼ Y%)' comparando o PU do nosso site
     com o PU Vivo, para usar como subtítulo de card ou célula extra de
@@ -33,7 +33,7 @@ def texto_comparativo_pu(pu_site: float, pu_vivo_valor: float) -> str:
     else:
         diff_pct = (pu_vivo_valor - pu_site) / pu_site * 100
         seta = f" ({'▲' if diff_pct >= 0 else '▼'} {abs(diff_pct):.0f}%)"
-    return f"PU Vivo: {pu_vivo_valor:.2f}{seta}"
+    return f"{rotulo}: {pu_vivo_valor:.2f}{seta}"
 
 
 def cor_comparativo_pu(pu_site: float, pu_vivo_valor: float) -> str:

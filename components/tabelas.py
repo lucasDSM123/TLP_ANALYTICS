@@ -10,17 +10,20 @@ from components.tabela_expansivel import ativar_tabelas_expansiveis
 from components.pu_vivo import pu_vivo_ativo
 
 
-def _cel_pu_vivo(row: dict, peso: str = "600", total: bool = False) -> str:
+def _cel_pu_vivo(row: dict, peso: str = "600", total: bool = False, chave: str = "PU Vivo") -> str:
     """
     Célula extra 'PU Vivo' (fórmula do Backoffice Regional Sul / Vivo),
     inserida logo depois da coluna PU quando o toggle "Ver PU VIVO" está
     marcado E a linha tem a chave 'PU Vivo' (nem toda tabela recalcula
     matriz por Lado, então a chave pode não existir — nesse caso a célula
     fica vazia em vez de quebrar).
+
+    `chave` permite reaproveitar a mesma célula para 'Proj. PU Vivo'
+    (Projeção PU calculada em cima do PU VIVO).
     """
-    if "PU Vivo" not in row:
+    if chave not in row:
         return ""
-    valor = row["PU Vivo"]
+    valor = row[chave]
     txt = f"{valor:.2f}"
     if total:
         return f"<td>{pill_total(txt)}</td>"
@@ -60,6 +63,9 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     if mostrar_pu_vivo:
         colunas.append("PU Vivo")
     colunas += ["OK", "NOK", "Iniciada", "Eficácia", "Proj.", "Proj. PU"]
+    mostrar_proj_pu_vivo = mostrar_pu_vivo and "Proj. PU Vivo" in df_matriz.columns
+    if mostrar_proj_pu_vivo:
+        colunas.append("Proj. PU Vivo")
 
     # NOTA: todo o HTML abaixo é montado SEM indentação (linhas começando na
     # coluna 0) de propósito. Se strings HTML multi-linha passadas para
@@ -95,6 +101,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_efic = f"<td>{pill_total(eficacia_pct)}</td>"
             cel_proj = f"<td>{pill_total(row['Proj.'])}</td>"
             cel_proj_pu = f"<td>{pill_total(proj_pu_txt)}</td>"
+            cel_proj_pu_vivo = _cel_pu_vivo(row, total=True, chave="Proj. PU Vivo") if mostrar_proj_pu_vivo else ""
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
             cor_texto = config.TEXT
@@ -112,10 +119,12 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_efic = f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>"
             cel_proj = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>"
             cel_proj_pu = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>"
+            cel_proj_pu_vivo = _cel_pu_vivo(row, peso=peso, chave="Proj. PU Vivo") if mostrar_proj_pu_vivo else ""
 
         celulas = "".join([
             cel_cluster, cel_hc, cel_caixa, cel_esteira, cel_bucket, cel_media,
             cel_pu, cel_pu_vivo, cel_ok, cel_nok, cel_iniciada, cel_efic, cel_proj, cel_proj_pu,
+            cel_proj_pu_vivo,
         ])
 
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
@@ -141,13 +150,14 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
 
 
 def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
-    """Gera as 12 células de indicadores (HC Ativo .. Proj. PU) para uma
+    """Gera as 12 células de indicadores (HC Ativo .. Proj. PU, + Proj. PU Vivo quando o toggle está ligado) para uma
     linha "normal" (não-Total) da matriz de produção — usado tanto pela
     linha de Cidade quanto pela linha de subtotal do Cluster na tabela
     expansível."""
     eficacia_pct = f"{row['Eficácia']:.0%}"
     cor_efic = _cor_eficacia(row["Eficácia"])
     cel_pu_vivo = _cel_pu_vivo(row, peso=peso) if pu_vivo_ativo() else ""
+    cel_proj_pu_vivo = _cel_pu_vivo(row, peso=peso, chave="Proj. PU Vivo") if pu_vivo_ativo() else ""
     return "".join([
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['HC Ativo']}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Caixa Tot']}</td>",
@@ -162,6 +172,7 @@ def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
         f"<td><span style='color:{cor_efic}; font-weight:700;'>{eficacia_pct}</span></td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>",
+        cel_proj_pu_vivo,
     ])
 
 
@@ -172,6 +183,7 @@ def _celulas_linha_matriz_total(row: dict) -> str:
     pu_txt = f"{row['PU']:.2f}"
     proj_pu_txt = f"{row['Proj. PU']:.2f}"
     cel_pu_vivo = _cel_pu_vivo(row, total=True) if pu_vivo_ativo() else ""
+    cel_proj_pu_vivo = _cel_pu_vivo(row, total=True, chave="Proj. PU Vivo") if pu_vivo_ativo() else ""
     return "".join([
         f"<td>{pill_total(row['HC Ativo'])}</td>",
         f"<td>{pill_total(row['Caixa Tot'])}</td>",
@@ -186,6 +198,7 @@ def _celulas_linha_matriz_total(row: dict) -> str:
         f"<td>{pill_total(eficacia_pct)}</td>",
         f"<td>{pill_total(row['Proj.'])}</td>",
         f"<td>{pill_total(proj_pu_txt)}</td>",
+        cel_proj_pu_vivo,
     ])
 
 
@@ -224,6 +237,8 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
     if pu_vivo_ativo():
         colunas.append("PU VIVO")
     colunas += ["OK", "NOK", "INICIADA", "EFICÁCIA", "PROJ.", "PROJ. PU"]
+    if pu_vivo_ativo():
+        colunas.append("PROJ. PU VIVO")
 
     id_tabela = sanitizar_id(id_tabela or titulo)
     ativar_tabelas_expansiveis()

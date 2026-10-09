@@ -417,6 +417,33 @@ class Indicadores:
             return 0.0
         return self._pu_vivo_scope(self.df[self.df["BA-TT-Real"] == valor])
 
+    @staticmethod
+    def calcular_projecao_pu_vivo(pu_vivo_valor: float, projecao: float, ok: float) -> float:
+        """
+        PROJEÇÃO PU VIVO = PU VIVO x (PROJEÇÃO / CONCLUÍDO OK).
+
+        Mesmo raciocínio da PROJEÇÃO PU do site (que projeta o resultado do
+        dia a partir do ritmo atual), só que aplicado em cima do PU VIVO:
+        o fator de projeção (Projeção / OK) multiplica o PU VIVO atual.
+        Equivale a: (Projeção x peso médio por atividade) / técnicos únicos
+        que concluíram algo no escopo. Sem nenhuma conclusão (OK = 0) não há
+        base para projetar o PU VIVO, então retorna 0.0.
+        """
+        if not ok or not pu_vivo_valor:
+            return 0.0
+        return float(pu_vivo_valor) * (float(projecao) / float(ok))
+
+    def projecao_pu_vivo(self):
+        """PROJEÇÃO PU VIVO geral + BA/TT (segmentação por 'Lado', igual a pu_vivo())."""
+        pu_vivo = self.pu_vivo()
+        projecao = self.projecao()
+        concluido = self.concluido()
+        return {
+            "GERAL": self.calcular_projecao_pu_vivo(pu_vivo["GERAL"], projecao["GERAL"], concluido["OK"]),
+            "BA": self.calcular_projecao_pu_vivo(pu_vivo["BA"], projecao["BA"], concluido["OK_BA"]),
+            "TT": self.calcular_projecao_pu_vivo(pu_vivo["TT"], projecao["TT"], concluido["OK_TT"]),
+        }
+
     def projecao_pu(self):
         """
         PROJEÇÃO PU geral: Projeção / HC Ativo (sem segmentação).

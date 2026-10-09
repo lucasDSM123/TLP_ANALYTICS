@@ -369,6 +369,10 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
         # só que com a fórmula do Backoffice Regional Sul (Vivo). Ver
         # services/indicadores.py -> pu_vivo_lado().
         pu_vivo = ind_lado.pu_vivo_lado(lado)
+        # PROJ. PU VIVO = PU VIVO x (Proj. / OK) da própria linha.
+        projecao_pu_vivo = Indicadores.calcular_projecao_pu_vivo(
+            pu_vivo, projecao["GERAL"], concluido["OK"]
+        )
 
         # EFICÁCIA da matriz = OK / Caixa Total, sempre no mesmo contexto
         # (segmentado por 'Lado') já usado por Caixa Tot/OK/NOK acima na
@@ -399,6 +403,7 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
             "Eficácia": eficacia,
             "Proj.": projecao["GERAL"],
             "Proj. PU": projecao_pu,
+            "Proj. PU Vivo": projecao_pu_vivo,
         }
 
     linhas = []
@@ -453,6 +458,9 @@ def matriz_producao_cluster_cidade(
         hc_ativo = ind_lado.hc_lado(lado)
         pu = ind_lado.pu_lado(lado)
         pu_vivo = ind_lado.pu_vivo_lado(lado)
+        projecao_pu_vivo = Indicadores.calcular_projecao_pu_vivo(
+            pu_vivo, projecao["GERAL"], concluido["OK"]
+        )
 
         # EFICÁCIA da matriz = OK / Caixa Total, no mesmo contexto (Lado)
         # já usado por Caixa Tot/OK/NOK acima na mesma linha.
@@ -481,6 +489,7 @@ def matriz_producao_cluster_cidade(
             "Eficácia": eficacia,
             "Proj.": projecao["GERAL"],
             "Proj. PU": projecao_pu,
+            "Proj. PU Vivo": projecao_pu_vivo,
         }
 
     grupos = []
