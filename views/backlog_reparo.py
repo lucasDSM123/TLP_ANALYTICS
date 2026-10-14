@@ -1,0 +1,199 @@
+import streamlit as st
+
+import config
+from components.cards import card
+from components.charts import opcoes_grafico
+from components.header import secao_titulo
+from components.print_button import area_com_print, sanitizar_chave
+from components.tabela_backlog_reparo import (
+    barra_titulo, grafico_historico, render_tabela_atual, render_tabela_fila_d0, render_tabela_historico,
+)
+from services.backlog_reparo import (
+    carregar_atual, carregar_historico, clusters_permitidos, filtrar_clusters, filtrar_historico,
+    historico_segmentado, montar_fila_d0, nome_cluster, ordenar_clusters, separar_atual, total_dos_clusters,
+    DIAS_SEMANA, _chave_cluster, encerrados_tt_por_dia, entrante_medio_por_cluster,
+)
+from services.loader import carregar_base
+import pandas as pd
+
+VERDE = "#15803D"
+# A aba é só de reparo GPON da TLP — sem seletor de tecnologia/empreiteira.
+TECNOLOGIA = "GPON"
+EMPREITEIRA = "TLP"
+DICA_BACKFILL = "Para trazer 30 dias de uma vez, rode `python upload_backlog_reparo.py --backfill`."
+
+
+def _vazio(v) -> bool:
+    return v is None or pd.isna(v)
+
+
+def _int(v) -> str:
+    return "–" if _vazio(v) else str(int(v))
+
+
+def _dec(v, casas=2) -> str:
+    return "–" if _vazio(v) else f"{float(v):.{casas}f}".replace(".", ",")
+
+
+def _acima(v) -> bool:
+    return not _vazio(v) and float(v) > config.META_BACKLOG_DIAS
+
+
+def _fmt_dh(ts) -> str:
+    return ts.strftime("%d/%m %H:%M") if hasattr(ts, "strftime") else ""
+
+
+def _avisar_historico_curto(disponiveis: int, pedidos: int) -> None:
+    """Quando há menos dias gravados do que a janela escolhida, explica por que nada muda."""
+    if disponiveis < pedidos:
+        st.caption(f"ℹ️ Só há {disponiveis} dias de histórico gravados — o restante vai sendo acumulado a cada "
+                   f"coleta. {DICA_BACKFILL}")
+
+
+def render(df, indicadores):
+    secao_titulo(
+        "Backlog Reparo",
+        "BDs em aberto e backlog em dias por cluster · fonte: Relatório de BD — Regional Sul (Vivo)",
+    )
+
+    df_atual = carregar_atual()
+    if df_atual.empty:
+        st.warning(
+            "Ainda não há dados de Backlog Reparo no Neon. Rode `python criar_tabela_backlog_reparo.py` "
+            "e depois `python upload_backlog_reparo.py --backfill` (numa máquina com acesso à rede da Vivo)."
+        )
+        return
+
+    tec, emp = TECNOLOGIA, EMPREITEIRA
+    clusters, total = separar_atual(df_atual, tec, emp)
+    if clusters.empty:
+        st.info(f"Sem dados de {tec} / {emp} no Neon.")
+        return
+
+    # ---------------- segmentações do topo (Estado / Cluster) ----------------
+    # `df` já vem filtrado por Data/Estado/Cluster; os clusters que sobraram nele definem o que
+    # aparece nas tabelas do relatório da Vivo (que não tem a coluna Estado).
+    permitidos = clusters_permitidos(df, st.session_state.get("filtro_sel_estado"),
+                                     st.session_state.get("filtro_sel_cluster"))
+    clusters = filtrar_clusters(clusters, permitidos)
+    if clusters.empty:
+        st.info("Nenhum cluster do relatório de Backlog Reparo para as segmentações escolhidas.")
+        return
+    total = total_dos_clusters(clusters, total, permitidos)
+
+    coletado_em = clusters["coletado_em"].max()
+    st.markdown(
+        f"<div style='color:{config.TEXT_MUTED}; font-size:13px; margin-bottom:8px;'>"
+        f"Última coleta: <b style='color:{config.TEXT};'>{_fmt_dh(coletado_em)}</b></div>",
+        unsafe_allow_html=True,
+    )
+
+    # Os blocos dinâmicos ficam em containers cuja chave muda junto com o conteúdo (filtro/janela):
+    # o Streamlit recria o bloco do zero em vez de "remendar" o HTML antigo — evita o erro
+    # 'removeChild' do React ao trocar a janela da tabela.
+    sufixo = sanitizar_chave(f"{tec}_{emp}")
+
+    # ---------------- cards ----------------
+    if total:
+        meta_txt = str(config.META_BACKLOG_DIAS).replace(".", ",")
+        acima = _acima(total["total_dias"])
+        with st.container(key=f"bl_cards_{sufixo}"):
+            c1, c2, c3, c4, c5 = st.columns(5)
+            with c1:
+                card("Backlog (BDs)", _int(total["total_bd"]), "#2E63C7",
+                     f"Total geral c/ massiva: {_int(total['total_geral'])}", icon="🛠️")
+            with c2:
+                card("Backlog em dias", _dec(total["total_dias"]),
+                     config.TLP_RED if acima else VERDE, f"Meta ≤ {meta_txt} dia", icon="⏱️")
+            with c3:
+                card("Pend. agend. / reten.", _int(total["pend_agend_reten"]), config.TLP_GOLD,
+                     f"{_int(total['pend_agend'])} agendamento · {_int(total['retencao'])} retenção", icon="📅")
+            with c4:
+                card("Outliers ≥ 5 dias", _int(total["outl_5d"]), config.TLP_RED,
+                     f"{_dec(total['outl_5d_pct'], 1)}% do total geral", icon="🚨")
+            with c5:
+                card("TMR", total["tmr"] if not _vazio(total["tmr"]) else "–", config.TLP_ORANGE,
+                     f"Massiva: {_int(total['aberta_massiva'])} aberta · {_int(total['massiva_analise'])} análise",
+                     icon="🕒")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+    # ---------------- tabela Fila D0 (caixa atual x meta + produção TT + projeção de amanhã) ----------------
+    # Segue as mesmas segmentações: Data/Estado/Cluster filtram a produção (df) e Estado/Cluster
+    # também filtram os clusters do relatório da Vivo.
+    hist = historico_segmentado(filtrar_historico(carregar_historico(), tec, emp), permitidos)
+
+    # Entrante médio de BDs no dia da semana de amanhã (usa a base completa, sem a segmentação de Data,
+    # porque precisa dos encerrados de cada dia anterior).
+    hoje = pd.Timestamp(coletado_em).normalize()
+    amanha = hoje + pd.Timedelta(days=1)
+    encerrados, datas_base = encerrados_tt_por_dia(carregar_base())
+    bd_hoje = {_chave_cluster(c): b for c, b in zip(clusters["cluster"], clusters["total_bd"])}
+    entrantes = entrante_medio_por_cluster(hist, encerrados, datas_base, hoje, bd_hoje, amanha.weekday())
+    dia_amanha = DIAS_SEMANA[amanha.weekday()].upper()
+
+    linhas_fila, total_fila = montar_fila_d0(clusters, df, entrantes)
+    with area_com_print("backlog_reparo_fila_d0", nome_arquivo="backlog_reparo_fila_d0"):
+        with st.container(key=f"bl_fila_{sufixo}"):
+            st.markdown(barra_titulo("FILA D0", []), unsafe_allow_html=True)
+            render_tabela_fila_d0(linhas_fila, total_fila, emp, dia_amanha)
+    if entrantes:
+        ocorr = [n for _, n in entrantes.values()]
+        st.caption(f"ℹ️ Entrante médio de {dia_amanha}: média de {min(ocorr)}"
+                   f"{'' if min(ocorr) == max(ocorr) else f' a {max(ocorr)}'} ocorrência(s) nos últimos 30 dias. "
+                   "Entrante do dia = backlog do dia − (backlog do dia anterior − encerrados OK TT do dia anterior). "
+                   "Os encerrados vêm da base de produção, que só guarda o mês corrente — por isso, no começo do mês, "
+                   "há poucas ocorrências por dia da semana.")
+    else:
+        st.caption(f"ℹ️ Ainda não há histórico suficiente (backlog diário + encerrados do dia anterior) para "
+                   f"calcular o entrante médio de {dia_amanha}.")
+    if "Data" in df.columns:
+        qtd_datas = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True).dt.date.nunique()
+        if qtd_datas > 1:
+            st.caption(f"⚠️ A segmentação de Data está com {qtd_datas} dias: TT atribuído, NOK e Projeção TT "
+                       "somam todos esses dias. Para ver o D0, selecione só a data de hoje.")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ---------------- tabela atual ----------------
+    chips = [("Último BD encerrado", clusters["ultimo_bd_encerrado"].iloc[0] or "")]
+    with area_com_print("backlog_reparo_atual", nome_arquivo="backlog_reparo_atual"):
+        with st.container(key=f"bl_atual_{sufixo}"):
+            render_tabela_atual(clusters, total, emp, chips)
+
+    # ---------------- histórico ----------------
+    st.markdown("<br>", unsafe_allow_html=True)
+    secao_titulo("Histórico", "Backlog (BDs) e backlog em dias, dia a dia")
+
+    if hist.empty:
+        st.info(f"Ainda não há histórico gravado. {DICA_BACKFILL}")
+        return
+
+    dias_disponiveis = hist["data"].nunique()
+    janela = st.radio("Janela da tabela", [7, 14, 30], horizontal=True, key="backlog_reparo_janela",
+                      format_func=lambda d: f"Últimos {d} dias")
+    with area_com_print("backlog_reparo_historico", nome_arquivo="backlog_reparo_historico"):
+        with st.container(key=f"bl_hist_{sufixo}_{janela}"):
+            render_tabela_historico(hist, janela, emp)
+    _avisar_historico_curto(dias_disponiveis, janela)
+
+    # ---------------- gráfico ----------------
+    st.markdown("<br>", unsafe_allow_html=True)
+    secao_titulo("Evolução do backlog",
+                 "Barras = BDs e média produtiva · linha = backlog em dias (BD ÷ média produtiva)")
+
+    nomes = {f"TOTAL {emp}": "TOTAL"}
+    for c in ordenar_clusters(hist.loc[~hist["eh_total"], "cluster"]):
+        nomes[nome_cluster(c)] = c
+    col_cl, col_per, _ = st.columns([1.2, 1.4, 1.4])
+    with col_cl:
+        escolha = st.selectbox("Cluster", list(nomes), key="backlog_reparo_cluster")
+    with col_per:
+        periodo = st.radio("Período", [15, 30, 60], index=1, horizontal=True, key="backlog_reparo_periodo",
+                           format_func=lambda d: f"{d} dias")
+
+    serie = hist[hist["cluster"] == nomes[escolha]].sort_values("data").tail(periodo)
+    if serie.empty:
+        st.info("Sem histórico para este cluster.")
+        return
+    with area_com_print("backlog_reparo_grafico", nome_arquivo="backlog_reparo_evolucao"):
+        st.plotly_chart(grafico_historico(serie), width="stretch", config=opcoes_grafico("backlog_reparo_evolucao"))
+    _avisar_historico_curto(hist.loc[hist["cluster"] == nomes[escolha], "data"].nunique(), periodo)

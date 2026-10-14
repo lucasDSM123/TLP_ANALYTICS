@@ -169,8 +169,13 @@ META_PU_ALVO = 3
 META_EFICACIA_ALVO = 0.70
 META_ATRIBUICAO_ALVO = 4.0
 
+# Backlog Reparo: acima disso (em dias de backlog) o cluster fica vermelho.
+META_BACKLOG_DIAS = 1.4
+# Meta de backlog (BDs) = ritmo x este fator (mesma conta da planilha: =F4*1,399).
+FATOR_META_BACKLOG = 1.399
+
 # ------------------------------------------------------------------
 # NAVEGAÇÃO
 # ------------------------------------------------------------------
-PAGES = ["Dashboard", "Acumulado Mês", "Alongados", "Cotas", "Chegada", "Gestores", "Analítica", "Relatórios", "Configurações"]
-PAGE_ICONS = ["speedometer2", "calendar2-check", "hourglass-split", "clipboard-data", "clock-history", "people", "graph-up-arrow", "bar-chart-line", "gear"]
+PAGES = ["Dashboard", "Acumulado Mês", "Alongados", "Cotas", "Chegada", "Backlog Reparo", "Gestores", "Analítica", "Relatórios", "Configurações"]
+PAGE_ICONS = ["speedometer2", "calendar2-check", "hourglass-split", "clipboard-data", "clock-history", "tools", "people", "graph-up-arrow", "bar-chart-line", "gear"]

@@ -10,7 +10,7 @@ from services.loader import carregar_base
 from services.indicadores import Indicadores
 from utils.assets import imagem_como_data_uri
 
-from views import dashboard, acumulado_mes, alongados, cotas, chegada, gestores, analitica, relatorios, configuracoes
+from views import dashboard, acumulado_mes, alongados, cotas, chegada, backlog_reparo, gestores, analitica, relatorios, configuracoes
 
 # ================================================
 # CONFIGURAÇÃO INICIAL
@@ -106,7 +106,8 @@ st.divider()
 # SEGMENTAÇÕES (topo do site)
 # ================================================
 
-df = filtros_topo(df_base)
+# Na aba Backlog Reparo, Cidade e Coordenador não fazem sentido (o relatório da Vivo é por cluster).
+df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador") if pagina == "Backlog Reparo" else ())
 st.divider()
 
 # ================================================
@@ -125,6 +126,7 @@ PAGINAS = {
     "Alongados": alongados,
     "Cotas": cotas,
     "Chegada": chegada,
+    "Backlog Reparo": backlog_reparo,
     "Gestores": gestores,
     "Analítica": analitica,
     "Relatórios": relatorios,

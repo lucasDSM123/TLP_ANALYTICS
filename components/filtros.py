@@ -1,8 +1,10 @@
+from contextlib import nullcontext
+
 import pandas as pd
 import streamlit as st
 
 
-def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
+def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     """
     Renderiza a barra de segmentações no topo do site (Data, Estado,
     Cluster, Cidade) e retorna o DataFrame já filtrado conforme a seleção
@@ -15,9 +17,19 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
     Coordenador respeita o(s) Estado(s)/Cluster(s)/Cidade(s) já escolhidos —
     cada filtro à direita vai restringindo as opções com base nos filtros já
     marcados à esquerda.
+
+    `ocultar`: nomes de filtros a esconder nesta página (hoje só \"Cidade\" e
+    \"Coordenador\" são suportados). Um filtro oculto fica sem seleção, ou seja,
+    não restringe nada.
     """
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
-    col_data, col_estado, col_cluster, col_cidade, col_coordenador = st.columns([1, 1, 1, 1, 1.1])
+    mostrar_cidade = "Cidade" not in ocultar
+    mostrar_coord = "Coordenador" not in ocultar
+    if mostrar_cidade or mostrar_coord:
+        col_data, col_estado, col_cluster, col_cidade, col_coordenador = st.columns([1, 1, 1, 1, 1.1])
+    else:
+        col_data, col_estado, col_cluster = st.columns([1, 1, 1])
+        col_cidade = col_coordenador = None
 
     # ---------------- TOGGLE PU VIVO (global, vale para todas as páginas) ----------------
     # Fica em session_state para que qualquer card/tabela, em qualquer view,
@@ -65,8 +77,8 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
             sel_cluster = []
 
     # ---------------- CIDADE (multi, depende do(s) Estado(s)/Cluster(s)) ----------------
-    with col_cidade:
-        if "Cidade" in df.columns:
+    with (col_cidade if mostrar_cidade else nullcontext()):
+        if mostrar_cidade and "Cidade" in df.columns:
             df_para_cidade = df
             if sel_estado:
                 df_para_cidade = df_para_cidade[df_para_cidade["Estado"].isin(sel_estado)]
@@ -78,8 +90,8 @@ def filtros_topo(df: pd.DataFrame) -> pd.DataFrame:
             sel_cidade = []
 
     # ------- COORDENADOR (multi, depende do(s) Estado(s)/Cluster(s)/Cidade(s)) -------
-    with col_coordenador:
-        if "Coordenador" in df.columns:
+    with (col_coordenador if mostrar_coord else nullcontext()):
+        if mostrar_coord and "Coordenador" in df.columns:
             df_para_coordenador = df
             if sel_estado:
                 df_para_coordenador = df_para_coordenador[df_para_coordenador["Estado"].isin(sel_estado)]
