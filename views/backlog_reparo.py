@@ -12,6 +12,7 @@ from services.backlog_reparo import (
     carregar_atual, carregar_historico, clusters_permitidos, filtrar_clusters, filtrar_historico,
     historico_segmentado, montar_fila_d0, nome_cluster, ordenar_clusters, separar_atual, total_dos_clusters,
     DIAS_SEMANA, _chave_cluster, encerrados_tt_por_dia, entrante_medio_por_cluster,
+    fila_d0_do_dia,
 )
 from services.loader import carregar_base
 import pandas as pd
@@ -138,11 +139,23 @@ def render(df, indicadores):
     entrantes = entrante_medio_por_cluster(hist, encerrados, datas_base, hoje, bd_hoje, amanha.weekday())
     dia_amanha = DIAS_SEMANA[amanha.weekday()].upper()
 
-    linhas_fila, total_fila = montar_fila_d0(clusters, df, entrantes)
+    # Hoje = ao vivo (e gravado). Dia que já virou = linha congelada no fechamento; se não houver fechamento
+    # gravado, é reconstruída pelo histórico (Caixa/Fila) e pela matriz TT (Encerrados).
+    linhas_fila, total_fila, estado_fila, gravado_em = fila_d0_do_dia(
+        clusters, df, entrantes, hist, hoje, data_coleta, len(datas_sel))
     with area_com_print("backlog_reparo_fila_d0", nome_arquivo="backlog_reparo_fila_d0"):
         with st.container(key=f"bl_fila_{sufixo}"):
             st.markdown(barra_titulo("FILA D0", []), unsafe_allow_html=True)
             render_tabela_fila_d0(linhas_fila, total_fila, emp, dia_amanha)
+    if estado_fila == "congelado":
+        st.caption(f"🔒 Linha congelada no fechamento de {hoje:%d/%m/%Y} (última atualização às {gravado_em:%H:%M}). "
+                   f"Compare BDs/Fila de amanhã com o backlog real de {amanha:%d/%m/%Y} na tabela Histórico.")
+    elif estado_fila == "reconstruido":
+        st.caption(f"🧮 {hoje:%d/%m/%Y} não tinha fechamento gravado: Caixa e Fila vêm do histórico (backlog medido "
+                   "no início da manhã), Encerrados vêm do OK / HC Ativo / PU da matriz Produção TT do dia, e "
+                   "BDs/Fila de amanhã foram recalculados com esses valores.")
+    elif estado_fila == "sem_registro":
+        st.caption(f"ℹ️ Sem fechamento gravado nem histórico de backlog para {hoje:%d/%m/%Y}.")
     if entrantes:
         ocorr = [n for _, n in entrantes.values()]
         st.caption(f"ℹ️ Entrante médio de {dia_amanha}: média de {min(ocorr)}"

@@ -8,6 +8,7 @@ import unicodedata
 
 import pandas as pd
 import streamlit as st
+from sqlalchemy import text
 
 import config
 from services.database import ler_dados_do_neon
@@ -113,7 +114,7 @@ def _num(v):
 
 
 def montar_fila_d0(clusters: pd.DataFrame, df_prod: pd.DataFrame,
-                   entrantes: dict | None = None) -> tuple[list[dict], dict | None]:
+                   entrantes: dict | None = None, enc_da_matriz: bool = False) -> tuple[list[dict], dict | None]:
     """
     Monta as linhas da tabela Fila D0 (uma por cluster + total).
 
@@ -134,6 +135,9 @@ def montar_fila_d0(clusters: pd.DataFrame, df_prod: pd.DataFrame,
         bd_amanha  = caixa atual − projeção TT (encerrados do dia) + ent_med
         fila_amanha = bd_amanha ÷ ritmo (backlog em dias, no ritmo de hoje)
     Linha de total: soma das colunas; fila total = caixa total / ritmo total (como na planilha).
+
+    `enc_da_matriz=True` (usado ao reconstruir um dia que já passou): os encerrados vêm da matriz TT do
+    próprio dia em vez do relatório da Vivo — BD = OK, TEC = HC Ativo, PU = OK ÷ HC Ativo.
     """
     tt = {}
     if df_prod is not None and not df_prod.empty and "Cluster" in df_prod.columns:
@@ -153,13 +157,19 @@ def montar_fila_d0(clusters: pd.DataFrame, df_prod: pd.DataFrame,
         ent_med = entrantes.get(chave, (None, 0))[0] if entrantes else None
         bd_amanha = (max(0.0, caixa - proj + ent_med)
                      if None not in (caixa, proj, ent_med) else None)
+        if enc_da_matriz:
+            enc_bd = _num(t["OK"]) if t else None
+            enc_tec = _num(t["HC Ativo"]) if t else None
+            enc_pu = enc_bd / enc_tec if enc_bd is not None and enc_tec else None
+        else:
+            enc_bd, enc_tec, enc_pu = _num(r.get("enc_bd")), _num(r.get("enc_tec")), _num(r.get("enc_pu"))
         linhas.append({
             "ent_med": ent_med, "bd_amanha": bd_amanha,
             "fila_amanha": bd_amanha / ritmo if bd_amanha is not None and ritmo else None,
             "cluster": r["cluster"], "caixa": caixa, "fila": fila, "ritmo": ritmo, "meta": meta,
             "gap": meta - caixa if meta is not None and caixa is not None else None,
             "esteira": _num(t["Esteira"]) if t else None,
-            "enc_bd": _num(r.get("enc_bd")), "enc_tec": _num(r.get("enc_tec")), "enc_pu": _num(r.get("enc_pu")),
+            "enc_bd": enc_bd, "enc_tec": enc_tec, "enc_pu": enc_pu,
             "tt_atrib": _num(t["Caixa Tot"]) if t else None,
             "tt_nok": _num(t["NOK"]) if t else None,
             "tt_proj": _num(t["Proj."]) if t else None,
@@ -167,9 +177,17 @@ def montar_fila_d0(clusters: pd.DataFrame, df_prod: pd.DataFrame,
 
     if not linhas:
         return [], None
+    return linhas, total_fila_d0(linhas)
 
+
+CAMPOS_FILA = ("caixa", "fila", "ritmo", "meta", "gap", "esteira", "enc_bd", "enc_tec", "enc_pu",
+               "tt_atrib", "tt_nok", "tt_proj", "ent_med", "bd_amanha", "fila_amanha")
+
+
+def total_fila_d0(linhas: list[dict]) -> dict:
+    """Linha TOTAL da Fila D0 a partir das linhas dos clusters (também usada nas linhas congeladas)."""
     def soma(campo):
-        vals = [l[campo] for l in linhas if l[campo] is not None]
+        vals = [l[campo] for l in linhas if l.get(campo) is not None]
         return sum(vals) if vals else None
 
     total = {campo: soma(campo) for campo in
@@ -180,7 +198,7 @@ def montar_fila_d0(clusters: pd.DataFrame, df_prod: pd.DataFrame,
     total["fila"] = total["caixa"] / total["ritmo"] if total["caixa"] is not None and total["ritmo"] else None
     total["fila_amanha"] = (total["bd_amanha"] / total["ritmo"]
                             if total["bd_amanha"] is not None and total["ritmo"] else None)
-    return linhas, total
+    return total
 
 
 # ---------------------------------------------------------------------
@@ -314,3 +332,135 @@ def entrante_medio_por_cluster(hist: pd.DataFrame, encerrados: dict, datas_base:
         if vals:
             saida[k] = (sum(vals) / len(vals), len(vals))
     return saida
+
+
+# ---------------------------------------------------------------------
+# Congelamento da tabela Fila D0 (linha inteira, por dia e por cluster)
+# ---------------------------------------------------------------------
+# Enquanto o dia está aberto, a tabela é calculada ao vivo (backlog da Vivo, produção TT, entrante médio
+# mudam o tempo todo) e cada cálculo do DIA ATUAL é gravado no Neon, sobrescrevendo o anterior. Na virada
+# da meia-noite o último valor gravado fica para sempre: dias anteriores a hoje só LEEM o que foi gravado,
+# nunca recalculam — assim dá para comparar a projeção de ontem com o backlog que realmente amanheceu.
+#
+# Dias que já passaram e NÃO têm fechamento gravado (anteriores ao congelamento) são reconstruídos:
+#   Caixa atual / Fila  = backlog do dia na tabela de histórico (medido no início da manhã)
+#   Encerrados          = OK / HC Ativo / PU da matriz Produção TT do dia
+#   demais colunas      = mesmas fórmulas de sempre, sobre esses valores
+TABELA_FILA_D0 = "backlog_reparo_fila_d0"
+FUSO = "America/Sao_Paulo"  # o servidor (Streamlit Cloud) roda em UTC; a virada do dia é a de Brasília
+_tabela_fila_d0_ok = False
+
+
+def agora_sp() -> pd.Timestamp:
+    """Data/hora atual de Brasília (sem fuso), para decidir o que é "hoje" e o que já virou."""
+    return pd.Timestamp.now(tz=FUSO).tz_localize(None)
+
+
+def _engine():
+    from services.database import obter_engine
+    return obter_engine()
+
+
+def criar_tabela_fila_d0(engine=None) -> None:
+    """Cria a tabela (idempotente). Mesma definição de sql/backlog_reparo.sql."""
+    global _tabela_fila_d0_ok
+    engine = engine or _engine()
+    colunas = ",\n                ".join(f"{c} double precision" for c in CAMPOS_FILA)
+    with engine.begin() as conn:
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS {TABELA_FILA_D0} (
+                data_ref   date      NOT NULL,
+                cluster    text      NOT NULL,
+                {colunas},
+                gravado_em timestamp,
+                PRIMARY KEY (data_ref, cluster)
+            )
+        """))
+    _tabela_fila_d0_ok = True
+
+
+def gravar_fila_d0(data_ref, linhas: list[dict], agora: pd.Timestamp, engine=None) -> int:
+    """
+    Grava (upsert) as linhas da Fila D0 do dia `data_ref`. Só aceita o dia de hoje: dias que já
+    viraram são imutáveis. Devolve quantas linhas gravou.
+    """
+    data_ref = pd.Timestamp(data_ref).normalize()
+    if data_ref != agora.normalize():
+        return 0
+    regs = [{"data_ref": data_ref.date(), "cluster": _chave_cluster(l["cluster"]), "gravado_em": agora.to_pydatetime(),
+             **{c: _num(l.get(c)) for c in CAMPOS_FILA}} for l in linhas if _num(l.get("caixa")) is not None]
+    if not regs:
+        return 0
+    engine = engine or _engine()
+    if not _tabela_fila_d0_ok:
+        criar_tabela_fila_d0(engine)
+    cols = ("data_ref", "cluster") + CAMPOS_FILA + ("gravado_em",)
+    with engine.begin() as conn:
+        conn.execute(text(f"""
+            INSERT INTO {TABELA_FILA_D0} ({", ".join(cols)})
+            VALUES ({", ".join(":" + c for c in cols)})
+            ON CONFLICT (data_ref, cluster) DO UPDATE SET {", ".join(f"{c} = EXCLUDED.{c}" for c in cols[2:])}
+        """), regs)
+    return len(regs)
+
+
+def ler_fila_d0(data_ref, engine=None) -> tuple[dict, pd.Timestamp | None]:
+    """({cluster normalizado: {campo: valor}}, hora da última gravação) do dia."""
+    try:
+        engine = engine or _engine()
+        with engine.connect() as conn:
+            df = pd.read_sql(text(f"SELECT cluster, {', '.join(CAMPOS_FILA)}, gravado_em FROM {TABELA_FILA_D0} "
+                                  f"WHERE data_ref = :d"), conn, params={"d": pd.Timestamp(data_ref).date()})
+    except Exception:
+        return {}, None  # tabela ainda não existe / banco indisponível = "sem fechamento gravado"
+    if df.empty:
+        return {}, None
+    dados = {r["cluster"]: {c: _num(r[c]) for c in CAMPOS_FILA} for r in df.to_dict("records")}
+    return dados, pd.to_datetime(df["gravado_em"]).max()
+
+
+def _clusters_do_historico(clusters: pd.DataFrame, hist: pd.DataFrame, ref: pd.Timestamp) -> pd.DataFrame:
+    """Troca o backlog "agora" (Vivo) pelo backlog que o histórico registrou para o dia `ref`."""
+    mapa = {}
+    if hist is not None and not hist.empty:
+        h = hist[(~hist["eh_total"]) & (pd.to_datetime(hist["data"]).dt.normalize() == ref)]
+        mapa = {_chave_cluster(c): (b, d) for c, b, d in zip(h["cluster"], h["bd"], h["dias"])}
+    base = clusters[["cluster"]].copy().reset_index(drop=True)
+    base["total_bd"] = [mapa.get(_chave_cluster(c), (None, None))[0] for c in base["cluster"]]
+    base["total_dias"] = [mapa.get(_chave_cluster(c), (None, None))[1] for c in base["cluster"]]
+    return base
+
+
+def fila_d0_do_dia(clusters: pd.DataFrame, df_prod: pd.DataFrame, entrantes: dict | None, hist: pd.DataFrame,
+                   data_ref, data_coleta, qtd_datas_sel: int, agora: pd.Timestamp | None = None, engine=None):
+    """
+    Monta a tabela Fila D0 do dia `data_ref`. Devolve (linhas, total, estado, gravado_em); estado:
+      "ao_vivo"      dia de hoje: calculado agora (e gravado, se a tela estiver "limpa")
+      "congelado"    dia anterior a hoje com fechamento gravado: valores lidos do Neon
+      "reconstruido" dia anterior a hoje sem fechamento gravado: refeito pelo histórico + matriz TT
+      "sem_registro" dia anterior a hoje sem fechamento nem histórico: colunas do backlog vazias
+    O congelamento/reconstrução só vale com exatamente 1 data selecionada (com várias, a produção TT
+    soma os dias e o número não representaria um dia). A gravação só ocorre no dia de hoje, com a
+    coleta da Vivo de hoje, exatamente 1 data selecionada.
+    """
+    agora = agora if agora is not None else agora_sp()
+    hoje, ref = agora.normalize(), pd.Timestamp(data_ref).normalize()
+
+    if qtd_datas_sel == 1 and ref < hoje:
+        congelado, gravado_em = ler_fila_d0(ref, engine)
+        linhas = [{"cluster": nome, **congelado[_chave_cluster(nome)]}
+                  for nome in clusters["cluster"] if _chave_cluster(nome) in congelado]
+        if linhas:
+            return linhas, total_fila_d0(linhas), "congelado", gravado_em
+        linhas, total = montar_fila_d0(_clusters_do_historico(clusters, hist, ref), df_prod, entrantes,
+                                       enc_da_matriz=True)
+        tem_backlog = any(l["caixa"] is not None for l in linhas)
+        return linhas, total, ("reconstruido" if tem_backlog else "sem_registro"), None
+
+    linhas, total = montar_fila_d0(clusters, df_prod, entrantes)
+    if (qtd_datas_sel == 1 and ref == hoje and pd.Timestamp(data_coleta).normalize() == hoje):
+        try:
+            gravar_fila_d0(ref, linhas, agora, engine)
+        except Exception:
+            pass  # gravar é "extra": nunca pode derrubar a tela
+    return linhas, total, "ao_vivo", None

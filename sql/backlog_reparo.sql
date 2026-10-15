@@ -93,3 +93,32 @@ CREATE TABLE IF NOT EXISTS backlog_reparo_historico (
 
 CREATE INDEX IF NOT EXISTS ix_backlog_reparo_historico_filtro
     ON backlog_reparo_historico (tecnologia, empreiteira, data);
+
+-- ---------------------------------------------------------------------
+-- 3) FILA D0 CONGELADA — uma linha por (dia de referência, cluster).
+--    Durante o dia, o site regrava (upsert) a tabela Fila D0 do dia atual.
+--    Quando o dia vira, o último valor fica congelado: dias anteriores a hoje
+--    só leem esta tabela, nunca recalculam (serve para conferir a projeção
+--    "BDs/Fila amanhã" de ontem contra o backlog que realmente amanheceu).
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS backlog_reparo_fila_d0 (
+    data_ref    date NOT NULL,                -- dia ao qual a linha pertence (o "hoje" da época)
+    cluster     text NOT NULL,                -- nome normalizado (FLORIANOPOLIS...)
+    caixa       double precision,
+    fila        double precision,
+    ritmo       double precision,
+    meta        double precision,
+    gap         double precision,
+    esteira     double precision,
+    enc_bd      double precision,
+    enc_tec     double precision,
+    enc_pu      double precision,
+    tt_atrib    double precision,
+    tt_nok      double precision,
+    tt_proj     double precision,
+    ent_med     double precision,
+    bd_amanha   double precision,
+    fila_amanha double precision,
+    gravado_em  timestamp,                    -- hora (Brasília) da última gravação
+    PRIMARY KEY (data_ref, cluster)
+);
