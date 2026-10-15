@@ -250,7 +250,7 @@ def render_tabela_fila_d0(linhas: list[dict], total: dict | None, empreiteira: s
         )
 
     tabela = (
-        f"<table style='width:100%; min-width:1150px; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
+        f"<table translate='no' class='notranslate' style='width:100%; min-width:1150px; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{head}</tr></thead>"
         f"<tbody style='text-align:center;'>{corpo}</tbody></table>"
     )

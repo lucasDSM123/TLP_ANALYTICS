@@ -124,10 +124,17 @@ def render(df, indicadores):
 
     # Entrante médio de BDs no dia da semana de amanhã (usa a base completa, sem a segmentação de Data,
     # porque precisa dos encerrados de cada dia anterior).
-    hoje = pd.Timestamp(coletado_em).normalize()
+    # O dia de referência é a Data marcada no filtro do topo (se marcou vários dias, vale o mais recente);
+    # sem seleção, usa a data da última coleta. A projeção é sempre para o dia seguinte a essa referência.
+    data_coleta = pd.Timestamp(coletado_em).normalize()
+    sel_data = st.session_state.get("filtro_sel_data") or []
+    datas_sel = pd.to_datetime(pd.Series(sel_data, dtype="object"), format="%d/%m/%Y", errors="coerce").dropna()
+    hoje = datas_sel.max().normalize() if not datas_sel.empty else data_coleta
     amanha = hoje + pd.Timedelta(days=1)
     encerrados, datas_base = encerrados_tt_por_dia(carregar_base())
-    bd_hoje = {_chave_cluster(c): b for c, b in zip(clusters["cluster"], clusters["total_bd"])}
+    # O backlog "agora" da Vivo só serve para completar o dia da própria coleta.
+    bd_hoje = ({_chave_cluster(c): b for c, b in zip(clusters["cluster"], clusters["total_bd"])}
+               if hoje == data_coleta else {})
     entrantes = entrante_medio_por_cluster(hist, encerrados, datas_base, hoje, bd_hoje, amanha.weekday())
     dia_amanha = DIAS_SEMANA[amanha.weekday()].upper()
 
