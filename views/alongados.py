@@ -1,6 +1,7 @@
 import streamlit as st
 
 from components.header import secao_titulo
+from components.print_button import area_com_print, legenda_filtros
 from components.tabela_alongados import (
     render_stats_bar, render_tabelas_cluster, render_detalhe, render_ranking,
 )
@@ -31,13 +32,22 @@ def render(df, indicadores: Indicadores):
         st.warning("Nenhuma atividade encontrada para este filtro.")
         return
 
+    # Flag local: categorias marcadas (só entra na legenda se não for "todas").
+    _cats = "/".join(ROTULO_CATEGORIA.get(c, c) for c in categorias_sel) if set(categorias_sel) != set(CATEGORIAS) else ""
+
+    def _leg(titulo):
+        return legenda_filtros(titulo, locais=(_cats,))
+
     stats = stats_gerais(base)
-    render_stats_bar(stats)
+    with area_com_print("alongados_cards", nome_arquivo="alongados_resumo", **_leg("ALONGADOS - RESUMO")):
+        render_stats_bar(stats)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     contagem, percentual = tabela_cluster(base)
-    render_tabelas_cluster(contagem, percentual)
+    with area_com_print("alongados_tabelas_cluster", nome_arquivo="alongados_por_cluster",
+                        **_leg("ALONGADOS POR CLUSTER (CONTAGEM E %)")):
+        render_tabelas_cluster(contagem, percentual)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -45,4 +55,6 @@ def render(df, indicadores: Indicadores):
     with aba_detalhe:
         render_detalhe(detalhe_alongadas(base))
     with aba_ranking:
-        render_ranking(ranking_tecnicos(base))
+        with area_com_print("alongados_ranking", nome_arquivo="alongados_ranking_tecnicos",
+                            **_leg("ALONGADOS - RANKING DE TÉCNICOS")):
+            render_ranking(ranking_tecnicos(base))

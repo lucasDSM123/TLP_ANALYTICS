@@ -8,7 +8,7 @@ from components.charts import (
     grafico_pareto_generico, grafico_ranking, grafico_heatmap_causa, opcoes_grafico,
 )
 from components.tabela_score import tabela_score_performance
-from components.print_button import area_com_print
+from components.print_button import area_com_print, legenda_filtros
 from services.indicadores import Indicadores
 from services import analitica as an
 
@@ -48,7 +48,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     pct_nao_concl = (total_nao_concl / caixa["TOTAL"] * 100) if caixa["TOTAL"] else 0
     resumo_dur = an.resumo_duracao_geral(df)
 
-    with area_com_print("analitica_cards_resumo", nome_arquivo="analitica_resumo_geral"):
+    with area_com_print("analitica_cards_resumo", nome_arquivo="analitica_resumo_geral",
+                        **legenda_filtros("ANALÍTICA - RESUMO GERAL")):
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             card("OS no Recorte", f"{total_os:,}".replace(",", "."), config.TLP_ORANGE, icon="🗂️")
@@ -73,7 +74,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     with col_nc:
         st.markdown("**Não Concluída** (Causa R1)")
         pareto_nc = an.pareto_causas(df, "Não Concluída")
-        with area_com_print("analitica_pareto_nao_concluida", nome_arquivo="pareto_nao_concluida"):
+        with area_com_print("analitica_pareto_nao_concluida", nome_arquivo="pareto_nao_concluida",
+                            **legenda_filtros("PARETO NÃO CONCLUÍDA (CAUSA R1)")):
             st.plotly_chart(
                 grafico_pareto_generico(pareto_nc, ""), width='stretch',
                 config=opcoes_grafico("pareto_nao_concluida"),
@@ -85,7 +87,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     with col_ca:
         st.markdown("**Cancelada** (Motivo/Pendência)")
         pareto_ca = an.pareto_causas(df, "Cancelada")
-        with area_com_print("analitica_pareto_cancelada", nome_arquivo="pareto_cancelada"):
+        with area_com_print("analitica_pareto_cancelada", nome_arquivo="pareto_cancelada",
+                            **legenda_filtros("PARETO CANCELADA (MOTIVO/PENDÊNCIA)")):
             st.plotly_chart(
                 grafico_pareto_generico(pareto_ca, ""), width='stretch',
                 config=opcoes_grafico("pareto_cancelada"),
@@ -135,6 +138,7 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     with area_com_print(
         f"analitica_heatmap_{status_diag}_{grupo_diag}",
         nome_arquivo=f"heatmap_{status_diag}_{grupo_diag}".lower().replace(" ", "_"),
+        **legenda_filtros(f"CAUSAS {status_diag.upper()} POR {grupo_diag.upper()}"),
     ):
         st.plotly_chart(
             grafico_heatmap_causa(heatmap_dados, ""), width='stretch',
@@ -167,7 +171,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     else:
         col_g, col_t = st.columns([1, 1])
         with col_g:
-            with area_com_print(f"analitica_grafico_duracao_{dimensao}", nome_arquivo=f"duracao_media_por_{dimensao}"):
+            with area_com_print(f"analitica_grafico_duracao_{dimensao}", nome_arquivo=f"duracao_media_por_{dimensao}",
+                                    **legenda_filtros(f"DURAÇÃO MÉDIA DE EXECUÇÃO POR {dimensao.upper()}")):
                 st.plotly_chart(
                     grafico_ranking(
                         tabela_tempo[[dimensao, "Duração Média (min)"]], "Duração Média (min)",
@@ -177,7 +182,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
                     config=opcoes_grafico(f"duracao_media_por_{dimensao}"),
                 )
         with col_t:
-            with area_com_print(f"analitica_tabela_duracao_{dimensao}", nome_arquivo=f"tabela_duracao_por_{dimensao}"):
+            with area_com_print(f"analitica_tabela_duracao_{dimensao}", nome_arquivo=f"tabela_duracao_por_{dimensao}",
+                                    **legenda_filtros(f"DURAÇÃO MÉDIA DE EXECUÇÃO POR {dimensao.upper()} (TABELA)")):
                 st.dataframe(tabela_tempo, hide_index=True, width='stretch')
 
     st.divider()
@@ -199,7 +205,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
     else:
         col_g, col_t = st.columns([1, 1])
         with col_g:
-            with area_com_print(f"analitica_grafico_reinc_{dimensao_reinc}", nome_arquivo=f"reincidencia_por_{dimensao_reinc}"):
+            with area_com_print(f"analitica_grafico_reinc_{dimensao_reinc}", nome_arquivo=f"reincidencia_por_{dimensao_reinc}",
+                                    **legenda_filtros(f"REINCIDÊNCIA POR {dimensao_reinc.upper()}")):
                 st.plotly_chart(
                     grafico_ranking(
                         tabela_reinc[[dimensao_reinc, "Taxa Reincidência"]], "Taxa Reincidência",
@@ -209,7 +216,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
                     config=opcoes_grafico(f"reincidencia_por_{dimensao_reinc}"),
                 )
         with col_t:
-            with area_com_print(f"analitica_tabela_reinc_{dimensao_reinc}", nome_arquivo=f"tabela_reincidencia_{dimensao_reinc}"):
+            with area_com_print(f"analitica_tabela_reinc_{dimensao_reinc}", nome_arquivo=f"tabela_reincidencia_{dimensao_reinc}",
+                                    **legenda_filtros(f"REINCIDÊNCIA POR {dimensao_reinc.upper()} (TABELA)")):
                 st.dataframe(tabela_reinc, hide_index=True, width='stretch')
 
     st.divider()
@@ -249,7 +257,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
 
         col_g, col_t = st.columns([1, 1])
         with col_g:
-            with area_com_print(f"analitica_grafico_ofensores_{dimensao_pont}", nome_arquivo=f"ofensores_atraso_{dimensao_pont}"):
+            with area_com_print(f"analitica_grafico_ofensores_{dimensao_pont}", nome_arquivo=f"ofensores_atraso_{dimensao_pont}",
+                                    **legenda_filtros(f"PONTUALIDADE - OFENSORES DE ATRASO POR {dimensao_pont.upper()}")):
                 if not ranking_atrasos.empty:
                     st.plotly_chart(
                         grafico_ranking(
@@ -261,7 +270,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
                 else:
                     st.info("Ninguém com atraso registrado neste recorte.")
         with col_t:
-            with area_com_print(f"analitica_tabela_pontualidade_{dimensao_pont}", nome_arquivo=f"tabela_pontualidade_{dimensao_pont}"):
+            with area_com_print(f"analitica_tabela_pontualidade_{dimensao_pont}", nome_arquivo=f"tabela_pontualidade_{dimensao_pont}",
+                                    **legenda_filtros(f"PONTUALIDADE POR {dimensao_pont.upper()} (TABELA)")):
                 st.dataframe(
                     tabela_pont.sort_values("% Dentro").reset_index(drop=True),
                     hide_index=True, width='stretch',
@@ -277,8 +287,8 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
         "Score 0-100 combinando Eficácia, PU, % Não Concluída, Reincidência e Duração média de execução",
     )
     st.caption(
-        "📐 **Como o Score é calculado:** 30% Eficácia + 20% PU médio/dia (vs. meta de "
-        f"{config.META_PU_ALVO:.1f}, corrigido pra técnico-dia — ver nota abaixo) + 15% % Não Concluída + "
+        "📐 **Como o Score é calculado:** 30% PU médio/dia (vs. meta de "
+        f"{config.META_PU_ALVO:.1f}, corrigido pra técnico-dia — ver nota abaixo) + 20% Eficácia + 15% % Não Concluída + "
         "20% Pontualidade (chegada dentro da Janela) + 8% Taxa de Reincidência + 7% Duração média de execução — "
         "todos normalizados dentro do próprio recorte selecionado. Grupos com poucas OS na Caixa Total ficam de "
         "fora do ranking (amostra pequena demais pra comparar de forma justa)."
@@ -322,19 +332,22 @@ def render(df: pd.DataFrame, indicadores: Indicadores):
 
             col_top, col_bottom = st.columns(2)
             with col_top:
-                with area_com_print(f"analitica_top5_{coluna_grupo}", nome_arquivo=f"top5_{coluna_grupo.lower()}"):
+                with area_com_print(f"analitica_top5_{coluna_grupo}", nome_arquivo=f"top5_{coluna_grupo.lower()}",
+                                    **legenda_filtros(f"TOP 5 SCORE - {rotulo.upper()}")):
                     st.plotly_chart(
                         grafico_ranking(top5, "Score", f"Top 5 — {rotulo}", top_n=5),
                         width='stretch', config=opcoes_grafico(f"top5_{coluna_grupo.lower()}"),
                     )
             with col_bottom:
-                with area_com_print(f"analitica_bottom5_{coluna_grupo}", nome_arquivo=f"bottom5_{coluna_grupo.lower()}"):
+                with area_com_print(f"analitica_bottom5_{coluna_grupo}", nome_arquivo=f"bottom5_{coluna_grupo.lower()}",
+                                    **legenda_filtros(f"5 OFENSORES SCORE - {rotulo.upper()}")):
                     st.plotly_chart(
                         grafico_ranking(bottom5, "Score", f"5 Ofensores — {rotulo}", top_n=5),
                         width='stretch', config=opcoes_grafico(f"bottom5_{coluna_grupo.lower()}"),
                     )
 
-            with area_com_print(f"analitica_tabela_score_{coluna_grupo}", nome_arquivo=f"ranking_score_{coluna_grupo.lower()}"):
+            with area_com_print(f"analitica_tabela_score_{coluna_grupo}", nome_arquivo=f"ranking_score_{coluna_grupo.lower()}",
+                                    **legenda_filtros(f"RANKING DE PERFORMANCE - {rotulo.upper()}")):
                 st.markdown(
                     tabela_score_performance(tabela_score, coluna_grupo), unsafe_allow_html=True,
                 )

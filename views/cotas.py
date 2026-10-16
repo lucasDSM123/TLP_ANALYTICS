@@ -4,7 +4,7 @@ import streamlit as st
 import config
 from components.cards import card
 from components.header import secao_titulo
-from components.print_button import area_com_print
+from components.print_button import area_com_print, legenda_filtros
 from components.tabelas_cotas import tabela_detalhe_cidade, tabela_distribuicao_turno, tabela_matriz_agendada
 from services.cotas import (
     carregar_base_cotas,
@@ -88,11 +88,20 @@ def render(df, indicadores):
     rotulo_delta = "Delta (min)" if eh_minutos else "Delta (GAP)"
     sufixo_chave = "_min" if eh_minutos else ""
 
+    def _leg(titulo):
+        """Legenda: título + dia (D0, D1...) + modo (Minutos). Cotas é uma janela
+        futura com seletor de Dia próprio (o filtro de Data do topo não vale
+        aqui) -> não vira "FECHAMENTO"; Coordenador do topo também não é aplicado."""
+        rotulo = f"{titulo} - {rotulos_dias.get(dia_sel, '')}" + (" (MINUTOS)" if eh_minutos else "")
+        return legenda_filtros(rotulo.replace("  ", " "), fechamento=False,
+                               data=formatar_data_br(dia_sel), ignorar=("coordenador",))
+
     # ------------------------------------------------------------
     # Cards resumo do dia (mesmo componente card() usado nas outras abas)
     # ------------------------------------------------------------
     cards = resumo_cards(df_dia)
-    with area_com_print("cotas_cards", nome_arquivo=f"resumo_cotas_{dia_sel}{sufixo_chave}"):
+    with area_com_print("cotas_cards", nome_arquivo=f"resumo_cotas_{dia_sel}{sufixo_chave}",
+                        **_leg("COTAS - RESUMO")):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             valor = f"{cards['Cota']:,}".replace(",", ".") + (f" {unidade}" if unidade else "")
@@ -119,7 +128,8 @@ def render(df, indicadores):
 
     pivot_cota, pivot_real, pivot_gap = resumo_turno(df_dia)
 
-    with area_com_print("cotas_turno", nome_arquivo=f"distribuicao_turno_{dia_sel}{sufixo_chave}"):
+    with area_com_print("cotas_turno", nome_arquivo=f"distribuicao_turno_{dia_sel}{sufixo_chave}",
+                        **_leg("COTAS - DISTRIBUIÇÃO POR TURNO")):
         tabela_distribuicao_turno(pivot_cota, pivot_real, pivot_gap)
 
     st.divider()
@@ -140,7 +150,8 @@ def render(df, indicadores):
         if por_cluster.empty:
             st.info("Sem dados de cluster para este dia.")
         else:
-            with area_com_print("cotas_arvore", nome_arquivo=f"cotas_cluster_cidade_{dia_sel}{sufixo_chave}"):
+            with area_com_print("cotas_arvore", nome_arquivo=f"cotas_cluster_cidade_{dia_sel}{sufixo_chave}",
+                                **_leg("COTAS POR CLUSTER E CIDADE")):
                 for _, linha in por_cluster.iterrows():
                     cluster_nome = linha["Cluster"]
                     rotulo = (
@@ -199,5 +210,6 @@ def render(df, indicadores):
             matriz_total = matriz_agendada_slot(df_dia.assign(**{"__total__": "TOTAL"}), nivel="__total__")
             linha_total = matriz_total.loc["TOTAL"] if "TOTAL" in matriz_total.index else None
 
-            with area_com_print("cotas_matriz", nome_arquivo=f"matriz_agendada_{dia_sel}{sufixo_chave}"):
+            with area_com_print("cotas_matriz", nome_arquivo=f"matriz_agendada_{dia_sel}{sufixo_chave}",
+                                **_leg("% AGENDADA POR SLOT")):
                 tabela_matriz_agendada(matriz_cluster, linha_total=linha_total, nome_linha="Cluster")

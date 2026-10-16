@@ -12,7 +12,9 @@ from services.grupos import metricas_por_grupo, metricas_por_tecnico, matriz_pro
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos, matriz_analise_p_coordenador_supervisor_tecnico
-from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros
+from components.print_button import (
+    area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros, legenda_filtros, sufixo_local,
+)
 
 
 def render(df, indicadores: Indicadores):
@@ -49,7 +51,10 @@ def render(df, indicadores: Indicadores):
     caixa = indicadores.caixa_total()
     eficacia = indicadores.eficacia()
 
-    with area_com_print("gestores_cards_coordenador", nome_arquivo="resumo_coordenadores"):
+    with area_com_print(
+        "gestores_cards_coordenador", nome_arquivo="resumo_coordenadores",
+        **legenda_filtros("RESUMO COORDENADORES"),
+    ):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             card("Coordenadores", ranking_coord.shape[0], config.TLP_ORANGE, icon="🧑\u200d💼")
@@ -70,7 +75,10 @@ def render(df, indicadores: Indicadores):
         projecao_f = ind_filtrado.projecao()
 
         st.caption("Considerando a segmentação Coordenador → Supervisor → Técnico selecionada acima")
-        with area_com_print("gestores_cards_supervisor", nome_arquivo="resumo_supervisores_filtro"):
+        with area_com_print(
+            "gestores_cards_supervisor", nome_arquivo="resumo_supervisores_filtro",
+            **legenda_filtros("RESUMO SUPERVISORES", locais=(coord_sel, sup_sel, tec_sel)),
+        ):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 card("Supervisores", ranking_sup.shape[0], config.TLP_GOLD)
@@ -90,7 +98,10 @@ def render(df, indicadores: Indicadores):
 
 
     secao_titulo("Média Atribuída x PU", "Comparativo por coordenador")
-    with area_com_print("gestores_grafico_atribuicao_pu", nome_arquivo="atribuicao_pu_por_coordenador"):
+    with area_com_print(
+        "gestores_grafico_atribuicao_pu", nome_arquivo="atribuicao_pu_por_coordenador",
+        **legenda_filtros("MÉDIA ATRIBUÍDA x PU POR COORDENADOR"),
+    ):
         st.plotly_chart(
             grafico_media_atribuida_pu(ranking_coord, coluna_grupo="Coordenador"), width='stretch',
             config=opcoes_grafico("atribuicao_pu_por_coordenador"),
@@ -122,7 +133,10 @@ def render(df, indicadores: Indicadores):
             "FECHAMENTO PRODUÇÃO BA/TT | {estado}{sufixo} (POR COORDENADOR) | {data} {hora}",
             _datas_sel,
         ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
+        legenda_vars={
+            "estado": _estado_legenda, "data": _data_legenda,
+            "sufixo": _sufixo_legenda + sufixo_local(coord_sel, sup_sel, tec_sel),
+        },
     ):
         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
 
@@ -147,7 +161,10 @@ def render(df, indicadores: Indicadores):
     grupos_coord_ba = matriz_producao_cluster_cidade(
         df_filtrado, lado="BA", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
     )
-    with area_com_print("gestores_matriz_producao_ba", nome_arquivo="producao_ba_por_coordenador"):
+    with area_com_print(
+        "gestores_matriz_producao_ba", nome_arquivo="producao_ba_por_coordenador",
+        **legenda_filtros("PRODUÇÃO BA (POR GESTÃO)", "FECHAMENTO PRODUÇÃO BA (POR COORDENADOR)", locais=(coord_sel, sup_sel, tec_sel)),
+    ):
         tabela_matriz_expansivel(
             grupos_coord_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
             total=_linha_total_producao(matriz_coord_ba), id_tabela="gestores_producao_ba",
@@ -160,7 +177,10 @@ def render(df, indicadores: Indicadores):
     grupos_coord_tt = matriz_producao_cluster_cidade(
         df_filtrado, lado="TT", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
     )
-    with area_com_print("gestores_matriz_producao_tt", nome_arquivo="producao_tt_por_coordenador"):
+    with area_com_print(
+        "gestores_matriz_producao_tt", nome_arquivo="producao_tt_por_coordenador",
+        **legenda_filtros("PRODUÇÃO TT (POR GESTÃO)", "FECHAMENTO PRODUÇÃO TT (POR COORDENADOR)", locais=(coord_sel, sup_sel, tec_sel)),
+    ):
         tabela_matriz_expansivel(
             grupos_coord_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
             total=_linha_total_producao(matriz_coord_tt), id_tabela="gestores_producao_tt",
@@ -185,7 +205,10 @@ def render(df, indicadores: Indicadores):
         df_analise_p_cst = df_analise_p_cst[df_analise_p_cst["Supervisor"] != "BUCKET"]
 
     grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_analise_p_cst)
-    with area_com_print("gestores_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico"):
+    with area_com_print(
+        "gestores_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico",
+        **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" ", locais=(coord_sel, sup_sel, tec_sel)),
+    ):
         tabela_analise_p_coordenador_supervisor_tecnico(
             grupos_analise_p_cst, resumo=resumo_coord,
             id_tabela="gestores_analise_p_cst",
@@ -205,7 +228,10 @@ def render(df, indicadores: Indicadores):
         ] if c in matriz_geral.columns]
         matriz_fmt = matriz_geral[colunas_exibir].copy()
         matriz_fmt["Eficácia"] = matriz_fmt["Eficácia"] * 100
-        with area_com_print("gestores_matriz_tecnicos", nome_arquivo="indicadores_por_tecnico"):
+        with area_com_print(
+            "gestores_matriz_tecnicos", nome_arquivo="indicadores_por_tecnico",
+            **legenda_filtros("INDICADORES POR TÉCNICO", locais=(coord_sel, sup_sel, tec_sel)),
+        ):
             st.dataframe(
                 matriz_fmt,
                 width='stretch',
@@ -234,7 +260,10 @@ def render(df, indicadores: Indicadores):
             qtd = int(linha.iloc[0]["Concluídas"])
             classe = linha.iloc[0]["Classificação"]
 
-            with area_com_print("gestores_cards_tecnico_detalhe", nome_arquivo=f"detalhe_tecnico_{tec_sel}"):
+            with area_com_print(
+                "gestores_cards_tecnico_detalhe", nome_arquivo=f"detalhe_tecnico_{tec_sel}",
+                **legenda_filtros("DETALHE DO TÉCNICO", locais=(coord_sel, sup_sel, tec_sel)),
+            ):
                 c1, c2, c3, c4 = st.columns(4)
                 with c1:
                     card("Classificação P", classe, config.TLP_GOLD)
@@ -254,7 +283,10 @@ def render(df, indicadores: Indicadores):
         if matriz_tec.empty:
             st.info("Sem técnicos com atividades para este supervisor nos filtros atuais.")
         else:
-            with area_com_print("gestores_ranking_tecnicos", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}"):
+            with area_com_print(
+                "gestores_ranking_tecnicos", nome_arquivo=f"ranking_tecnicos_pu_{sup_sel}",
+                **legenda_filtros("RANKING DE TÉCNICOS - PU", locais=(coord_sel, sup_sel, tec_sel)),
+            ):
                 st.plotly_chart(
                     grafico_ranking(matriz_tec[["Técnico", "PU"]], "PU", f"Técnicos de {sup_sel} — PU"),
                     width='stretch',

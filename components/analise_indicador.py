@@ -4,7 +4,7 @@ import streamlit as st
 import config
 from services import analise_indicador as ai
 from components.charts import grafico_evolucao_temporal, grafico_ranking, opcoes_grafico
-from components.print_button import area_com_print
+from components.print_button import area_com_print, legenda_filtros
 
 
 def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
@@ -37,7 +37,8 @@ def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
                 if dados_ba.empty:
                     st.info("Sem dados de BA para esse indicador com os filtros atuais.")
                 else:
-                    with area_com_print("analise_ind_cluster_ba", nome_arquivo=f"{chave}_por_cluster_ba"):
+                    with area_com_print("analise_ind_cluster_ba", nome_arquivo=f"{chave}_por_cluster_ba",
+                                        **legenda_filtros(f"{escolha} POR CLUSTER - BA")):
                         st.plotly_chart(
                             grafico_ranking(dados_ba, meta["coluna_valor"], f"{escolha} por Cluster — BA"),
                             width="stretch",
@@ -48,7 +49,8 @@ def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
                 if dados_tt.empty:
                     st.info("Sem dados de TT para esse indicador com os filtros atuais.")
                 else:
-                    with area_com_print("analise_ind_cluster_tt", nome_arquivo=f"{chave}_por_cluster_tt"):
+                    with area_com_print("analise_ind_cluster_tt", nome_arquivo=f"{chave}_por_cluster_tt",
+                                        **legenda_filtros(f"{escolha} POR CLUSTER - TT")):
                         st.plotly_chart(
                             grafico_ranking(dados_tt, meta["coluna_valor"], f"{escolha} por Cluster — TT"),
                             width="stretch",
@@ -59,7 +61,8 @@ def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
             if dados_cluster.empty:
                 st.info("Sem dados suficientes para esse indicador com os filtros atuais.")
             else:
-                with area_com_print("analise_ind_cluster", nome_arquivo=f"{chave}_por_cluster"):
+                with area_com_print("analise_ind_cluster", nome_arquivo=f"{chave}_por_cluster",
+                                    **legenda_filtros(f"{escolha} POR CLUSTER")):
                     st.plotly_chart(
                         grafico_ranking(dados_cluster, meta["coluna_valor"], f"{escolha} por Cluster"),
                         width="stretch",
@@ -79,7 +82,8 @@ def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
                 st.info("Sem coluna de horário de término disponível nos dados filtrados.")
             else:
                 media = serie["Quantidade"].mean()
-                with area_com_print("analise_ind_horario", nome_arquivo=f"{chave}_ao_longo_do_dia"):
+                with area_com_print("analise_ind_horario", nome_arquivo=f"{chave}_ao_longo_do_dia",
+                                    **legenda_filtros(f"{escolha} AO LONGO DO DIA")):
                     st.plotly_chart(
                         grafico_evolucao_temporal(serie, media, f"{escolha} ao Longo do Dia"),
                         width="stretch",
@@ -92,7 +96,8 @@ def render_analise_indicador(df: pd.DataFrame, chave: str, escolha: str):
             st.info("Apenas uma data disponível nos filtros atuais — selecione 'Todas' no filtro de Data para comparar dia a dia.")
         else:
             media = serie_dia["Quantidade"].mean()
-            with area_com_print("analise_ind_diario", nome_arquivo=f"{chave}_comparativo_diario"):
+            with area_com_print("analise_ind_diario", nome_arquivo=f"{chave}_comparativo_diario",
+                                **legenda_filtros(f"{escolha} - COMPARATIVO DIÁRIO")):
                 st.plotly_chart(
                     grafico_evolucao_temporal(serie_dia, media, f"{escolha} — Comparativo Diário"),
                     width="stretch",

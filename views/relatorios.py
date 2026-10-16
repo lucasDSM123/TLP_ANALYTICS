@@ -8,7 +8,7 @@ from services.loader import opcoes_filtro, aplicar_filtro
 
 COLUNAS_PADRAO = [
     "Ordem de Serviço", "Técnico", "Cidade", "Estado", "Supervisor", "Coordenador",
-    "Tipo de Atividade", "Status", "Lado", "Perfil Técnico", "Contratada", "Data",
+    "Tipo de Atividade", "Status", "Lado", "Data", "CAUSA",
 ]
 
 

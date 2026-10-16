@@ -6,6 +6,17 @@ from datetime import datetime
 
 import streamlit as st
 
+try:  # Fuso de Brasília: o servidor (ex.: Streamlit Cloud) roda em UTC e "virava o dia" às 21h.
+    from zoneinfo import ZoneInfo
+    _FUSO = ZoneInfo("America/Sao_Paulo")
+except Exception:  # sem tzdata (ex.: Windows) -> relógio local da máquina
+    _FUSO = None
+
+
+def agora_local() -> datetime:
+    """Data/hora atual no fuso de Brasília (usada pela regra PRODUÇÃO x FECHAMENTO)."""
+    return datetime.now(_FUSO) if _FUSO else datetime.now()
+
 
 def eh_legenda_producao(datas_sel=None) -> bool:
     """
@@ -23,7 +34,7 @@ def eh_legenda_producao(datas_sel=None) -> bool:
     if not datas_sel:
         # Nenhuma data marcada = visão geral do dia corrente -> produção.
         return True
-    hoje = datetime.now().strftime("%d/%m/%Y")
+    hoje = agora_local().strftime("%d/%m/%Y")
     return all(d == hoje for d in datas_sel)
 
 
@@ -50,7 +61,7 @@ def sufixo_selecao(*grupos) -> str:
     return (" - " + " - ".join(blocos)) if blocos else ""
 
 
-def contexto_legenda_filtros() -> dict:
+def contexto_legenda_filtros(ignorar=()) -> dict:
     """
     Lê os filtros atualmente marcados na barra do topo do site (Estado,
     Data, Cluster, Cidade, Coordenador) direto de `st.session_state` e
@@ -74,17 +85,63 @@ def contexto_legenda_filtros() -> dict:
       entre legenda de PRODUÇÃO ou FECHAMENTO via
       `legenda_producao_ou_fechamento`).
     """
+    # `ignorar`: nomes de filtros ("cluster", "cidade", "coordenador") que a
+    # página NÃO aplica aos dados (ex.: Cotas ignora Coordenador) — ficam
+    # fora do sufixo pra legenda não citar um recorte que não existe.
+    def _sel(chave, nome):
+        return [] if nome in ignorar else (st.session_state.get(chave) or [])
+
     estados_sel = st.session_state.get("filtro_sel_estado") or []
     datas_sel = st.session_state.get("filtro_sel_data") or []
-    clusters_sel = st.session_state.get("filtro_sel_cluster") or []
-    cidades_sel = st.session_state.get("filtro_sel_cidade") or []
-    coordenadores_sel = st.session_state.get("filtro_sel_coordenador") or []
+    clusters_sel = _sel("filtro_sel_cluster", "cluster")
+    cidades_sel = _sel("filtro_sel_cidade", "cidade")
+    coordenadores_sel = _sel("filtro_sel_coordenador", "coordenador")
 
     return {
         "estado": "/".join(estados_sel) if estados_sel else "TODOS",
         "data": " / ".join(datas_sel) if datas_sel else "TODAS AS DATAS",
         "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel),
         "datas_sel": datas_sel,
+    }
+
+
+def sufixo_local(*valores) -> str:
+    """Sufixo " - A - B" com os flags das segmentações PRÓPRIAS da página (ex.:
+    Coordenador/Supervisor/Técnico em Gestores). Ignora vazios, "Todos"/"Todas"."""
+    itens = [str(v) for v in valores if v and str(v) not in ("Todos", "Todas")]
+    return (" - " + " - ".join(itens)) if itens else ""
+
+
+def legenda_filtros(titulo, titulo_fechamento=None, *, prefixo="", ligacao=" | ", complemento="",
+                    locais=(), data=None, hora_auto=None, fechamento=None, ignorar=()) -> dict:
+    """
+    Monta `legenda_template` + `legenda_vars` de `area_com_print` a partir do
+    título da área e dos filtros marcados (topo + locais), assim cada área
+    só declara o título:  with area_com_print(chave, nome, **legenda_filtros("X")):
+
+    Formato: "{prefixo}{titulo}{ligacao}{estado}{sufixo}{complemento} | {data} {hora}".
+    - Hoje/sem data marcada -> `titulo`; alguma data de ontem pra trás ->
+      `titulo_fechamento` (padrão: "FECHAMENTO " + titulo). `fechamento=True/False`
+      força o modo (páginas com seletor próprio de período).
+    - `locais`: valores das segmentações da própria página (entram após Cluster/Cidade/Coord.).
+    - `data`: texto de período próprio (ex.: mês) no lugar das datas do topo.
+    - `hora_auto`: hora padrão (ex.: da coleta) no lugar da hora de extração da base.
+    - `ignorar`: filtros do topo que a página não aplica (ver contexto_legenda_filtros).
+    """
+    ctx = contexto_legenda_filtros(ignorar)
+    if fechamento is None:
+        fechamento = not eh_legenda_producao(ctx["datas_sel"])
+    t = (titulo_fechamento or f"FECHAMENTO {titulo}") if fechamento else titulo
+    variaveis = {
+        "prefixo": prefixo, "titulo": t, "estado": ctx["estado"],
+        "sufixo": ctx["sufixo"] + sufixo_local(*locais), "complemento": complemento,
+        "data": data if data is not None else ctx["data"],
+    }
+    if hora_auto is not None:
+        variaveis["hora_auto"] = hora_auto
+    return {
+        "legenda_template": "{prefixo}{titulo}" + ligacao + "{estado}{sufixo}{complemento} | {data} {hora}",
+        "legenda_vars": variaveis,
     }
 
 
@@ -127,7 +184,10 @@ def montar_legenda(template: str, variaveis: dict, chave_horario: str) -> str:
     e não voltam a ser sobrescritas sozinhas enquanto a extração não mudar
     de novo.
     """
-    hora_extracao = st.session_state.get("data_extracao_hora", "")
+    variaveis = dict(variaveis)
+    hora_extracao = variaveis.pop("hora_auto", None)
+    if hora_extracao is None:
+        hora_extracao = st.session_state.get("data_extracao_hora", "")
     chave_auto = f"__auto_{chave_horario}"
     # Só reaplica o valor automático se o campo ainda não foi tocado (1ª
     # vez) ou se ainda está igual ao último valor automático que a gente
@@ -471,6 +531,17 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                 copia.style.padding = '6px';
                 copia.style.background = '#FFFFFF';
                 copia.style.boxSizing = 'border-box';
+                // LARGURA EXPLÍCITA: o wrapper fica fora da tela (position:
+                // absolute, sem largura), então sua largura vira a menor largura possível,
+                // e as larguras em % dos containers do Streamlit
+                // (st.container aninhado, tabelas com min-width dentro de
+                // overflow:auto) colapsam — a imagem saía como uma faixa
+                // estreita/cortada. Fixamos a largura da cópia = largura real
+                // da área na tela; se o conteúdo for mais largo (tabela com
+                // rolagem), ela é ampliada logo abaixo, antes da foto.
+                var larguraOriginal = Math.ceil(alvo.getBoundingClientRect().width) || 1200;
+                wrapper.style.width = larguraOriginal + 'px';
+                copia.style.width = larguraOriginal + 'px';
                 wrapper.appendChild(copia);
                 doc.body.appendChild(wrapper);
 
@@ -507,10 +578,19 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                 }});
 
                 function capturarCopia() {{
+                // Largura/altura finais = o maior entre a área na tela e o
+                // conteúdo real (tabelas largas que rolavam por dentro).
+                var larguraFinal = Math.max(larguraOriginal, copia.scrollWidth);
+                wrapper.style.width = larguraFinal + 'px';
+                copia.style.width = larguraFinal + 'px';
+                var alturaFinal = Math.max(copia.offsetHeight, copia.scrollHeight);
                 html2canvas(copia, {{
                     backgroundColor: '#FFFFFF',
                     scale: 2,
                     useCORS: true,
+                    width: larguraFinal,
+                    height: alturaFinal,
+                    windowWidth: larguraFinal + 40,
                 }}).then(function(canvas) {{
                     if (wrapper.parentNode) {{ wrapper.parentNode.removeChild(wrapper); }}
                     canvas.toBlob(function(blob) {{

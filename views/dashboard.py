@@ -8,7 +8,7 @@ from components.tabelas import tabela_matriz_expansivel
 from components.tabela_analise_p import tabela_analise_p_cluster_cidade
 from components.analise_indicador import render_analise_indicador
 from components.seletor_indicador import seletor_indicador_topo
-from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros
+from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros, legenda_filtros
 from services.indicadores import Indicadores
 from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade
 from services.analise_p import matriz_analise_p_cluster_cidade
@@ -93,7 +93,10 @@ def render(df, indicadores: Indicadores):
     # ====== COMPARATIVO BA VS TT ======
     secao_titulo("Comparativo BA vs TT", "Desempenho lado a lado das duas filas técnicas")
 
-    with area_com_print("dashboard_comparativo_ba_tt", nome_arquivo="comparativo_ba_tt"):
+    with area_com_print(
+        "dashboard_comparativo_ba_tt", nome_arquivo="comparativo_ba_tt",
+        **legenda_filtros("COMPARATIVO BA x TT"),
+    ):
         col_ba, col_tt = st.columns(2)
 
         with col_ba:
@@ -187,7 +190,10 @@ def render(df, indicadores: Indicadores):
     # ====== GRÁFICOS ======
     secao_titulo("Visão Analítica", "Distribuição de status e evolução diária")
 
-    with area_com_print("dashboard_grafico_status", nome_arquivo="status_geral"):
+    with area_com_print(
+        "dashboard_grafico_status", nome_arquivo="status_geral",
+        **legenda_filtros("STATUS GERAL"),
+    ):
         st.plotly_chart(grafico_status_pizza(status_counts(df)), width='stretch', config=opcoes_grafico("status_geral"))
 
     st.write("")
@@ -221,10 +227,8 @@ def render(df, indicadores: Indicadores):
 
     with area_com_print(
         "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
-        legenda_template="Produtividade Parcial {estado}{sufixo} | {data} {hora}",
-        legenda_vars={
-            "estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda,
-        },
+        # PZERO parcial (hoje) / FECHAMENTO PZERO (data de ontem pra trás).
+        **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
     ):
         tabela_analise_p_cluster_cidade(
             grupos_analise_p, resumo=resumo_cluster,
@@ -261,7 +265,10 @@ def render(df, indicadores: Indicadores):
 
     # ====== RESUMO GERAL ======
     with st.expander("📊 Detalhes Adicionais"):
-        with area_com_print("dashboard_detalhes_adicionais", nome_arquivo="detalhes_adicionais"):
+        with area_com_print(
+            "dashboard_detalhes_adicionais", nome_arquivo="detalhes_adicionais",
+            **legenda_filtros("DETALHES ADICIONAIS"),
+        ):
             col1, col2, col3 = st.columns(3)
 
             with col1:

@@ -4,7 +4,7 @@ import config
 from components.cards import card
 from components.charts import opcoes_grafico
 from components.header import secao_titulo
-from components.print_button import area_com_print, sanitizar_chave
+from components.print_button import agora_local, area_com_print, legenda_filtros, sanitizar_chave
 from components.tabela_backlog_reparo import (
     barra_titulo, grafico_historico, render_tabela_atual, render_tabela_fila_d0, render_tabela_historico,
 )
@@ -42,6 +42,14 @@ def _acima(v) -> bool:
 
 def _fmt_dh(ts) -> str:
     return ts.strftime("%d/%m %H:%M") if hasattr(ts, "strftime") else ""
+
+
+def _hora_vivo(v) -> str:
+    """Normaliza o "H:MM"/"HH:MM" do relógio da Vivo para "HH:MM" ("" se não houver)."""
+    if _vazio(v) or not str(v).strip():
+        return ""
+    h, _, m = str(v).strip().partition(":")
+    return f"{int(h):02d}:{m}" if h.isdigit() and m else str(v).strip()
 
 
 def _avisar_historico_curto(disponiveis: int, pedidos: int) -> None:
@@ -83,9 +91,15 @@ def render(df, indicadores):
     total = total_dos_clusters(clusters, total, permitidos)
 
     coletado_em = clusters["coletado_em"].max()
+    # Hora em que o relatório da Vivo foi atualizado (o relógio "15:30" do topo da tabela deles).
+    # É diferente da hora da nossa coleta: o site pode ter coletado às 16:00 e a Vivo ainda
+    # estar com os dados de 15:30.
+    hora_vivo = _hora_vivo(clusters["ultimo_bd_encerrado"].iloc[0])
     st.markdown(
         f"<div style='color:{config.TEXT_MUTED}; font-size:13px; margin-bottom:8px;'>"
-        f"Última coleta: <b style='color:{config.TEXT};'>{_fmt_dh(coletado_em)}</b></div>",
+        f"Última coleta: <b style='color:{config.TEXT};'>{_fmt_dh(coletado_em)}</b>"
+        + (f" &nbsp;·&nbsp; Atualizado na Vivo às <b style='color:{config.TEXT};'>{hora_vivo}</b>" if hora_vivo else "")
+        + "</div>",
         unsafe_allow_html=True,
     )
 
@@ -93,6 +107,14 @@ def render(df, indicadores):
     # o Streamlit recria o bloco do zero em vez de "remendar" o HTML antigo — evita o erro
     # 'removeChild' do React ao trocar a janela da tabela.
     sufixo = sanitizar_chave(f"{tec}_{emp}")
+
+    # Legenda ao copiar imagem: Estado/Cluster do topo (Cidade/Coordenador ficam ocultos
+    # nesta aba) + a hora da última coleta da Vivo, que é a "hora" real dos dados da aba.
+    # A "hora" da legenda é a da atualização da Vivo (cai na coleta se a Vivo não informou).
+    hora_legenda = hora_vivo or (f"{coletado_em:%H:%M}" if hasattr(coletado_em, "strftime") else None)
+
+    def _leg(titulo, **kw):
+        return legenda_filtros(titulo, ignorar=("cidade", "coordenador"), hora_auto=hora_legenda, **kw)
 
     # ---------------- cards ----------------
     if total:
@@ -143,7 +165,12 @@ def render(df, indicadores):
     # gravado, é reconstruída pelo histórico (Caixa/Fila) e pela matriz TT (Encerrados).
     linhas_fila, total_fila, estado_fila, gravado_em = fila_d0_do_dia(
         clusters, df, entrantes, hist, hoje, data_coleta, len(datas_sel))
-    with area_com_print("backlog_reparo_fila_d0", nome_arquivo="backlog_reparo_fila_d0"):
+    # FILA D0 é de um dia de referência: hoje -> normal; dia que já virou -> FECHAMENTO.
+    _dia_fechado = hoje.date() < agora_local().date()
+    with area_com_print(
+        "backlog_reparo_fila_d0", nome_arquivo="backlog_reparo_fila_d0",
+        **_leg(f"BACKLOG REPARO {tec} - FILA D0", data=f"{hoje:%d/%m/%Y}", fechamento=_dia_fechado),
+    ):
         with st.container(key=f"bl_fila_{sufixo}"):
             st.markdown(barra_titulo("FILA D0", []), unsafe_allow_html=True)
             render_tabela_fila_d0(linhas_fila, total_fila, emp, dia_amanha)
@@ -174,8 +201,14 @@ def render(df, indicadores):
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ---------------- tabela atual ----------------
-    chips = [("Último BD encerrado", clusters["ultimo_bd_encerrado"].iloc[0] or "")]
-    with area_com_print("backlog_reparo_atual", nome_arquivo="backlog_reparo_atual"):
+    # Chips do título (entram na imagem copiada): hora da Vivo x hora da nossa coleta.
+    chips = [("🕒 Atualizado na Vivo", hora_vivo),
+             ("Coletado no site", f"{coletado_em:%H:%M}" if hasattr(coletado_em, "strftime") else "")]
+    with area_com_print(
+        "backlog_reparo_atual", nome_arquivo="backlog_reparo_atual",
+        **_leg(f"BACKLOG REPARO {tec} - ATUAL", data=f"{data_coleta:%d/%m/%Y}",
+               fechamento=data_coleta.date() < agora_local().date()),
+    ):
         with st.container(key=f"bl_atual_{sufixo}"):
             render_tabela_atual(clusters, total, emp, chips)
 
@@ -190,7 +223,12 @@ def render(df, indicadores):
     dias_disponiveis = hist["data"].nunique()
     janela = st.radio("Janela da tabela", [7, 14, 30], horizontal=True, key="backlog_reparo_janela",
                       format_func=lambda d: f"Últimos {d} dias")
-    with area_com_print("backlog_reparo_historico", nome_arquivo="backlog_reparo_historico"):
+    _dias_tab = sorted(hist["data"].unique())[-janela:]
+    with area_com_print(
+        "backlog_reparo_historico", nome_arquivo="backlog_reparo_historico",
+        **_leg(f"BACKLOG REPARO {tec} - HISTÓRICO ({janela} DIAS)", fechamento=False,
+               data=f"{pd.Timestamp(_dias_tab[0]):%d/%m} a {pd.Timestamp(_dias_tab[-1]):%d/%m/%Y}"),
+    ):
         with st.container(key=f"bl_hist_{sufixo}_{janela}"):
             render_tabela_historico(hist, janela, emp)
     _avisar_historico_curto(dias_disponiveis, janela)
@@ -214,6 +252,10 @@ def render(df, indicadores):
     if serie.empty:
         st.info("Sem histórico para este cluster.")
         return
-    with area_com_print("backlog_reparo_grafico", nome_arquivo="backlog_reparo_evolucao"):
+    with area_com_print(
+        "backlog_reparo_grafico", nome_arquivo="backlog_reparo_evolucao",
+        **_leg(f"EVOLUÇÃO DO BACKLOG - {escolha} ({periodo} DIAS)", fechamento=False,
+               data=f"{serie['data'].min():%d/%m} a {serie['data'].max():%d/%m/%Y}"),
+    ):
         st.plotly_chart(grafico_historico(serie), width="stretch", config=opcoes_grafico("backlog_reparo_evolucao"))
     _avisar_historico_curto(hist.loc[hist["cluster"] == nomes[escolha], "data"].nunique(), periodo)

@@ -8,7 +8,9 @@ from components.charts import (
     grafico_eficacia_diaria, grafico_produtividade_diaria, cabecalho_grafico_combo, opcoes_grafico,
 )
 from components.tabelas import tabela_fechamento_diario, tabela_consolidado_grupo, tabela_comparativo_mensal
-from components.print_button import area_com_print, sanitizar_chave
+from components.print_button import (
+    agora_local, area_com_print, eh_legenda_producao, legenda_filtros, sanitizar_chave,
+)
 from services.grupos import serie_diaria_por_grupo, resumo_mes_por_grupo, resumo_mes_total, _linha_resumo_soma
 from services import historico_mensal
 from services.loader import carregar_base
@@ -178,6 +180,18 @@ def render(df, indicadores):
     else:
         mes_sel = None
 
+    def _leg(titulo, titulo_fechamento=None, **kw):
+        """Legenda da aba: período = mês escolhido (ou as datas marcadas no topo);
+        vira FECHAMENTO se a data marcada é de ontem pra trás OU se o mês
+        escolhido já terminou (mês anterior ao atual)."""
+        hoje = agora_local()
+        mes_encerrado = bool(mes_sel) and tuple(mes_sel) < (hoje.year, hoje.month)
+        fechamento = mes_encerrado or not eh_legenda_producao()
+        periodo = None
+        if mes_sel and not st.session_state.get("filtro_sel_data"):
+            periodo = f"{_MESES_PT[mes_sel[1]]}/{mes_sel[0]}"
+        return legenda_filtros(titulo, titulo_fechamento, data=periodo, fechamento=fechamento, **kw)
+
     # ====== RESUMO GERAL DO PERÍODO FILTRADO ======
     hc = indicadores.hc_real()
     concluido = indicadores.concluido()
@@ -202,7 +216,8 @@ def render(df, indicadores):
         if resumo_chegada_geral["total"]:
             pct_chegada_geral = resumo_chegada_geral["pct_dentro"]
 
-    with area_com_print("acumulado_mes_cards_resumo", nome_arquivo="resumo_geral_acumulado_mes"):
+    with area_com_print("acumulado_mes_cards_resumo", nome_arquivo="resumo_geral_acumulado_mes",
+                        **_leg("ACUMULADO MÊS - RESUMO GERAL")):
         colunas_cards = st.columns(7 if pct_chegada_geral is not None else 6)
         col1, col2, col3, col4, col5, col6 = colunas_cards[:6]
         with col1:
@@ -251,7 +266,8 @@ def render(df, indicadores):
     if mapa_chegada and not resumo_grupo.empty:
         resumo_grupo["% Chegada"] = resumo_grupo[coluna_grupo].map(mapa_chegada)
 
-    with area_com_print("acumulado_mes_consolidado", nome_arquivo=f"consolidado_por_{coluna_grupo}"):
+    with area_com_print("acumulado_mes_consolidado", nome_arquivo=f"consolidado_por_{coluna_grupo}",
+                        **_leg(f"ACUMULADO MÊS - TOTAL POR {rotulo_dim.upper()}")):
         tabela_consolidado_grupo(resumo_grupo, f"TOTAL DO MÊS POR {rotulo_dim.upper()}", coluna_grupo)
 
     st.divider()
@@ -331,7 +347,8 @@ def render(df, indicadores):
 
                 if mes_anterior:
                     with area_com_print(f"acumulado_mes_comparativo_{grupo}",
-                                         nome_arquivo=f"comparativo_mensal_{grupo}"):
+                                         nome_arquivo=f"comparativo_mensal_{grupo}",
+                                         **_leg(f"COMPARATIVO MENSAL - {grupo}")):
                         tabela_comparativo_mensal(
                             grupo, mes_anterior, _linha_total_para_comparativo(linha_total),
                             rotulo_mes_anterior=rotulo_anterior,
@@ -339,8 +356,10 @@ def render(df, indicadores):
                         )
                     st.write("")
 
+                _t_fech = f"FECHAMENTO DIÁRIO - {grupo}"
                 with area_com_print(f"acumulado_mes_fechamento_{grupo}",
-                                     nome_arquivo=f"fechamento_diario_{grupo}"):
+                                     nome_arquivo=f"fechamento_diario_{grupo}",
+                                     **_leg(_t_fech, _t_fech)):
                     tabela_fechamento_diario(
                         _com_total_mes(df_dia_grupo, linha_total, coluna_grupo),
                         f"FECHAMENTO DIÁRIO — {grupo}", cor_titulo=cor,
@@ -353,7 +372,8 @@ def render(df, indicadores):
 
                 chave_efic = sanitizar_chave(f"acumulado_mes_eficacia_{grupo}")
                 with area_com_print(f"acumulado_mes_eficacia_{grupo}",
-                                     nome_arquivo=f"eficacia_diaria_{grupo}"):
+                                     nome_arquivo=f"eficacia_diaria_{grupo}",
+                                     **_leg(f"EFICÁCIA DIÁRIA - {grupo}")):
                     st.markdown(
                         f"<style>.st-key-{chave_efic} [data-testid='stPlotlyChart']"
                         f"{{min-width:{largura_minima}px;}}</style>"
@@ -374,7 +394,8 @@ def render(df, indicadores):
 
                 chave_prod = sanitizar_chave(f"acumulado_mes_produtividade_{grupo}")
                 with area_com_print(f"acumulado_mes_produtividade_{grupo}",
-                                     nome_arquivo=f"produtividade_diaria_{grupo}"):
+                                     nome_arquivo=f"produtividade_diaria_{grupo}",
+                                     **_leg(f"PRODUTIVIDADE DIÁRIA - {grupo}")):
                     st.markdown(
                         f"<style>.st-key-{chave_prod} [data-testid='stPlotlyChart']"
                         f"{{min-width:{largura_minima}px;}}</style>"

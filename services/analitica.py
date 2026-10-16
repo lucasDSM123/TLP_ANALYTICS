@@ -332,8 +332,8 @@ def ranking_ofensores_pontualidade(df: pd.DataFrame, coluna_grupo: str, top_n: i
 # ------------------------------------------------------------------
 
 PESOS_SCORE = {
-    "eficacia": 0.30,
-    "pu": 0.20,
+    "eficacia": 0.20,
+    "pu": 0.30,
     "nao_concluida": 0.15,
     "pontualidade": 0.20,
     "reincidencia": 0.08,
@@ -360,8 +360,8 @@ def score_performance(df: pd.DataFrame, coluna_grupo: str = "Técnico",
     combinando os indicadores já usados no resto do site com os achados
     desta aba:
 
-        30% Eficácia             (OK / (OK+NOK))
-        20% PU médio/dia vs meta (ver pu_medio_diario — corrige a distorção
+        20% Eficácia             (OK / (OK+NOK))
+        30% PU médio/dia vs meta (ver pu_medio_diario — corrige a distorção
             do PU oficial, que em recorte de 1 técnico e vários dias vira
             praticamente uma soma em vez de uma taxa)
         15% % Não Concluída       (quanto menor, melhor)
