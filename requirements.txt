@@ -8,4 +8,4 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 bcrypt
-pyarrowtzdata
+pyarrow
