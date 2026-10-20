@@ -63,10 +63,29 @@ LAYOUT = {
 
 SEM_CADASTRO = "SEM CADASTRO"
 
+# Lado da atividade (mesma regra da coluna "Lado" da base principal, que sai do "Tipo de
+# Atividade"): Defeito* = TT · Desconexão* = DS · Instalação/Alteração/etc. = BA.
+# A tabela "Resumo por cluster" só considera os lados abaixo (Geral = BA + TT); desconexões
+# (DS) ficam de fora dela e aparecem na conferência. Pra incluir DS, mexa só aqui.
+LADOS = ("BA", "TT")
+COLUNA_TIPO_ATIVIDADE = "Tipo de Atividade"
+
 
 # ------------------------------------------------------------------
 # Preparo (usado pelo upload_atribuicao.py)
 # ------------------------------------------------------------------
+
+def classificar_lado(tipo_atividade) -> str:
+    """BA / TT / DS a partir do "Tipo de Atividade" (vazio se não houver tipo)."""
+    t = _norm(tipo_atividade)
+    if not t:
+        return ""
+    if t.startswith("DEFEITO"):
+        return "TT"
+    if t.startswith("DESCONEX"):
+        return "DS"
+    return "BA"
+
 
 def _norm(valor) -> str:
     return "" if valor is None or (isinstance(valor, float) and pd.isna(valor)) else str(valor).strip().upper()
@@ -110,6 +129,14 @@ def preparar_atividades(raw: pd.DataFrame, mapa: dict) -> pd.DataFrame:
     cb = out["cidade"].map(mapa["cidades"])
     out["cluster"] = cb.map(lambda t: t[0] if isinstance(t, tuple) else "")
     out["bucket"] = cb.map(lambda t: t[1] if isinstance(t, tuple) else "")
+    # Lado (BA/TT/DS). Se o relatório do OFSC não trouxer o "Tipo de Atividade", fica vazio
+    # e a tabela de BA x TT avisa que falta reenviar com a coluna.
+    if COLUNA_TIPO_ATIVIDADE in raw.columns:
+        out["tipo_atividade"] = raw[COLUNA_TIPO_ATIVIDADE].fillna("").astype(str).str.strip()
+        out["lado"] = out["tipo_atividade"].map(classificar_lado)
+    else:
+        out["tipo_atividade"] = ""
+        out["lado"] = ""
     return out[out["dia"].notna()].reset_index(drop=True)
 
 
@@ -199,6 +226,69 @@ def calcular_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
         buckets_linhas += filhos
     linhas.append(_somar("geral", "TOTAL GERAL", buckets_linhas))
     return pd.DataFrame(linhas)
+
+
+def calcular_resumo_lado(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
+    """Resumo por cluster no formato "RESUMO DE ATRIBUIÇÃO": HC ativo, atribuição total
+    (geral e média) e atribuição por lado (BA / TT: quantidade, média e % do total).
+
+        HC      = técnicos TLP distintos com atividade no cluster no dia
+        GERAL   = atividades BA + TT (mesma regra de demanda do quadro por bucket)
+        MEDIA   = GERAL / HC          BA_MEDIA = BA / HC          TT_MEDIA = TT / HC
+        BA_PCT  = BA / GERAL          TT_PCT   = TT / GERAL
+
+    Cluster = o do LAYOUT (via bucket), igual ao quadro. Colunas: tipo (cluster|geral),
+    cluster, HC, GERAL, MEDIA, BA, BA_MEDIA, BA_PCT, TT, TT_MEDIA, TT_PCT."""
+    regra = REGRAS[estado]
+    cluster_do_bucket = {b: c for c, bs in LAYOUT[estado] for b in bs}
+    a = ativ_dia[ativ_dia["estado"] == estado].copy()
+    a["_cluster"] = a["bucket"].map(cluster_do_bucket)
+    a = a[a["_cluster"].notna()]
+
+    demanda = a[a["contar"].isin(regra["contar_demanda"])]
+    lado = demanda["lado"] if "lado" in demanda.columns else pd.Series("", index=demanda.index)
+    qtd = (demanda.assign(_lado=lado).groupby(["_cluster", "_lado"]).size().unstack(fill_value=0)
+           .reindex(columns=list(LADOS), fill_value=0))
+    tecnicos = (a[a["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
+                .groupby("_cluster")["_k"].nunique())
+
+    def _linha_lado(tipo: str, nome: str, ba: int, tt: int, hc: int) -> dict:
+        geral = ba + tt
+        div = lambda x, y: (x / y) if y else 0.0  # noqa: E731
+        return {
+            "tipo": tipo, "cluster": nome, "HC": int(hc), "GERAL": int(geral), "MEDIA": div(geral, hc),
+            "BA": int(ba), "BA_MEDIA": div(ba, hc), "BA_PCT": div(ba, geral),
+            "TT": int(tt), "TT_MEDIA": div(tt, hc), "TT_PCT": div(tt, geral),
+        }
+
+    linhas = []
+    for cluster in sorted(c for c, _ in LAYOUT[estado]):  # ordem alfabética, como no resumo de referência
+        ba = int(qtd.loc[cluster, "BA"]) if cluster in qtd.index else 0
+        tt = int(qtd.loc[cluster, "TT"]) if cluster in qtd.index else 0
+        hc = int(tecnicos.get(cluster, 0))
+        if not (hc or ba or tt):  # cluster sem ninguém e sem atividade no dia não aparece
+            continue
+        linhas.append(_linha_lado("cluster", cluster, ba, tt, hc))
+    # Total = soma dos clusters (as linhas de cima sempre fecham com o total, como no quadro por bucket)
+    linhas.append(_linha_lado("geral", estado, sum(l["BA"] for l in linhas), sum(l["TT"] for l in linhas),
+                              sum(l["HC"] for l in linhas)))
+    return pd.DataFrame(linhas)
+
+
+def lado_nao_classificado(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
+    """Atividades que contam na demanda mas ficam fora de BA/TT no resumo: desconexões (DS)
+    e atividades sem lado (sem "Tipo de Atividade"). Serve pra conferência."""
+    regra = REGRAS[estado]
+    a = ativ_dia[(ativ_dia["estado"] == estado) & ativ_dia["contar"].isin(regra["contar_demanda"])]
+    for col in ("lado", "tipo_atividade"):
+        if col not in a.columns:
+            a = a.assign(**{col: ""})
+    f = a[~a["lado"].isin(LADOS)]
+    if f.empty:
+        return pd.DataFrame(columns=["lado", "tipo_atividade", "atividades"])
+    return (f.assign(lado=f["lado"].replace("", "(sem lado)"), tipo_atividade=f["tipo_atividade"].replace("", "(sem tipo)"))
+            .groupby(["lado", "tipo_atividade"]).size().reset_index(name="atividades")
+            .sort_values("atividades", ascending=False))
 
 
 def fora_do_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
