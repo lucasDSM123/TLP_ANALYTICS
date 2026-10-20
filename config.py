@@ -177,5 +177,5 @@ FATOR_META_BACKLOG = 1.399
 # ------------------------------------------------------------------
 # NAVEGAÇÃO
 # ------------------------------------------------------------------
-PAGES = ["Dashboard", "Acumulado Mês", "Alongados", "Cotas", "Chegada", "Backlog Reparo", "Gestores", "Analítica", "Relatórios", "Configurações"]
-PAGE_ICONS = ["speedometer2", "calendar2-check", "hourglass-split", "clipboard-data", "clock-history", "tools", "people", "graph-up-arrow", "bar-chart-line", "gear"]
+PAGES = ["Dashboard", "Acumulado Mês", "Alongados", "Cotas", "Atribuição", "Chegada", "Backlog Reparo", "Gestores", "Analítica", "Relatórios", "Configurações"]
+PAGE_ICONS = ["speedometer2", "calendar2-check", "hourglass-split", "clipboard-data", "person-check", "clock-history", "tools", "people", "graph-up-arrow", "bar-chart-line", "gear"]

@@ -10,7 +10,7 @@ from services.loader import carregar_base
 from services.indicadores import Indicadores
 from utils.assets import imagem_como_data_uri
 
-from views import dashboard, acumulado_mes, alongados, cotas, chegada, backlog_reparo, gestores, analitica, relatorios, configuracoes
+from views import dashboard, acumulado_mes, alongados, cotas, atribuicao, chegada, backlog_reparo, gestores, analitica, relatorios, configuracoes
 
 # ================================================
 # CONFIGURAÇÃO INICIAL
@@ -107,7 +107,11 @@ st.divider()
 # ================================================
 
 # Na aba Backlog Reparo, Cidade e Coordenador não fazem sentido (o relatório da Vivo é por cluster).
-df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador") if pagina == "Backlog Reparo" else ())
+# Na aba Atribuição os filtros do topo não se aplicam (a base vem dos arquivos do OFSC, por estado/bucket).
+if pagina == "Atribuição":
+    df = df_base
+else:
+    df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador") if pagina == "Backlog Reparo" else ())
 st.divider()
 
 # ================================================
@@ -125,6 +129,7 @@ PAGINAS = {
     "Acumulado Mês": acumulado_mes,
     "Alongados": alongados,
     "Cotas": cotas,
+    "Atribuição": atribuicao,
     "Chegada": chegada,
     "Backlog Reparo": backlog_reparo,
     "Gestores": gestores,
