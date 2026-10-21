@@ -423,6 +423,55 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
     return pd.DataFrame(linhas)
 
 
+def matriz_geral_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster") -> pd.DataFrame:
+    """
+    Matriz GERAL por cluster: os mesmos indicadores dos cards de "Indicadores
+    Principais" (HC Ativo, Caixa, OK, NOK, PU, Proj. PU, Eficácia, Proj., Média
+    Atrib., Bucket, Esteira, Iniciada + PU Vivo) distribuídos por cluster, sem
+    separar BA e TT.
+
+    Cada linha é calculada com `Indicadores(<recorte do cluster>)` usando as
+    MESMAS funções dos cards (hc_real, pu, projecao_pu, media_atribuicao...) —
+    não as da matriz BA/TT, que usam outra regra de HC por 'Lado'. A linha
+    "Total" é calculada sobre a base inteira (não é soma dos clusters, porque o
+    HC tem arredondamento por recorte) e portanto bate com os cards.
+
+    Mesmas colunas de `matriz_producao`, para reaproveitar `tabela_matriz`.
+    """
+    if df.empty or coluna_grupo not in df.columns:
+        return pd.DataFrame()
+
+    def _linha(sub: pd.DataFrame, nome: str) -> dict:
+        ind = Indicadores(sub)
+        concluido = ind.concluido()
+        return {
+            "Cluster": nome,
+            "HC Ativo": ind.hc_real()["HC"],
+            "Caixa Tot": ind.caixa_total()["TOTAL"],
+            "Esteira": ind.esteira()["TOTAL"],
+            "Bucket": ind.bucket()["TOTAL"],
+            "Média Atrib.": ind.media_atribuicao()["GERAL"],
+            "PU": ind.pu()["GERAL"],
+            "PU Vivo": ind.pu_vivo()["GERAL"],
+            "OK": concluido["OK"],
+            "NOK": concluido["NOK"],
+            "Iniciada": ind.iniciada()["TOTAL"],
+            "Eficácia": ind.eficacia()["GERAL"],
+            "Proj.": ind.projecao()["GERAL"],
+            "Proj. PU": ind.projecao_pu()["GERAL"],
+            "Proj. PU Vivo": ind.projecao_pu_vivo()["GERAL"],
+        }
+
+    linhas = [
+        _linha(df[df[coluna_grupo] == cluster], cluster)
+        for cluster in sorted(df[coluna_grupo].dropna().unique())
+    ]
+    if not linhas:
+        return pd.DataFrame()
+    linhas.append(_linha(df, "Total"))
+    return pd.DataFrame(linhas)
+
+
 def matriz_producao_cluster_cidade(
     df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster", coluna_subgrupo: str = "Cidade"
 ) -> list[dict]:

@@ -4,13 +4,13 @@ import streamlit as st
 from components.cards import card
 from components.header import secao_titulo
 from components.charts import grafico_status_pizza, grafico_comparativo_ba_tt, grafico_pareto_causa, opcoes_grafico
-from components.tabelas import tabela_matriz_expansivel
+from components.tabelas import tabela_matriz, tabela_matriz_expansivel
 from components.tabela_analise_p import tabela_analise_p_cluster_cidade
 from components.analise_indicador import render_analise_indicador
 from components.seletor_indicador import seletor_indicador_topo
 from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros, legenda_filtros
 from services.indicadores import Indicadores
-from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade
+from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade, matriz_geral_cluster
 from services.analise_p import matriz_analise_p_cluster_cidade
 import config
 
@@ -87,6 +87,17 @@ def render(df, indicadores: Indicadores):
             card("ESTEIRA", esteira["TOTAL"], "#7B8CDE", f"BA: {esteira['BA']} | TT: {esteira['TT']}")
         with col6:
             card("INICIADA", iniciada["TOTAL"], "#FF5C5C", f"BA: {iniciada['BA']} | TT: {iniciada['TT']}")
+
+    st.divider()
+
+    # ====== INDICADORES POR CLUSTER (cards principais distribuídos por cluster) ======
+    secao_titulo("Indicadores por Cluster", "Os indicadores principais distribuídos por cluster (BA + TT juntos)")
+
+    with area_com_print(
+        "dashboard_matriz_geral_cluster", nome_arquivo="indicadores_por_cluster",
+        **legenda_filtros("INDICADORES POR CLUSTER", "FECHAMENTO INDICADORES POR CLUSTER"),
+    ):
+        tabela_matriz(matriz_geral_cluster(df), "Indicadores por Cluster")
 
     st.divider()
 
