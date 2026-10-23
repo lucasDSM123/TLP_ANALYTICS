@@ -5,10 +5,10 @@ import config
 from components.cards import card
 from components.header import secao_titulo
 from components.print_button import area_com_print
-from components.tabela_atribuicao import tabela_quadro, tabela_resumo_dias, tabela_resumo_lado
+from components.tabela_atribuicao import tabela_quadro, tabela_resumo_dias
 from services.atribuicao import (
-    ATIVIDADES_POR_HC, LADOS, REGRAS, calcular_quadro, calcular_resumo_lado, carregar_atividades, fora_do_quadro,
-    hoje_local, lado_nao_classificado, recursos_sem_cadastro, rotulo_dia,
+    ATIVIDADES_POR_HC, REGRAS, calcular_quadro, carregar_atividades, fora_do_quadro,
+    hoje_local, recursos_sem_cadastro, rotulo_dia,
 )
 
 
@@ -61,7 +61,9 @@ def render(df, indicadores):
         f"por bucket · HC = técnicos TLP distintos com atividade no dia · HC NEC = demanda ÷ {ATIVIDADES_POR_HC:g} "
         f"(arredondado pra cima) · GAP = HC NEC − HC (positivo = faltam técnicos; negativo = sobra) · "
         f"ATRIB. = atividades por técnico. Nos dias futuros o HC ainda é baixo porque os técnicos "
-        f"não foram todos alocados."
+        f"não foram todos alocados. Em cada horário, a célula mostra atividades / HC do horário = atividades "
+        f"por técnico e o GAP do horário (atividades − HC, com 1 atividade por técnico por janela; positivo = "
+        f"faltam técnicos naquele horário)."
     )
 
     quadros = [(f"{rotulo_dia(d)} · {_dd_mm(d)}", calcular_quadro(ativ[ativ["dia"] == d], estado)) for d in dias]
@@ -86,30 +88,6 @@ def render(df, indicadores):
                 )
         st.markdown("<br>", unsafe_allow_html=True)
         tabela_resumo_dias(quadros)
-
-    # --------------------------------------------------------------
-    # Resumo por cluster: HC, atribuição total e por lado (BA / TT) com %
-    # --------------------------------------------------------------
-    secao_titulo("Resumo de atribuição por cluster", "HC ativo, atribuição total e por lado (BA / TT) com % do total")
-    if "lado" not in ativ.columns or not ativ["lado"].isin(LADOS).any():
-        st.warning(
-            "A base de Atribuição ainda não tem o lado (BA/TT) das atividades. Rode o `upload_atribuicao.py` de novo — "
-            "se continuar vazio, o relatório do OFSC não está trazendo a coluna \"Tipo de Atividade\"."
-        )
-    else:
-        abas_resumo = st.tabs([rotulo for rotulo, _ in quadros])
-        for aba, d, (rotulo, _) in zip(abas_resumo, dias, quadros):
-            with aba:
-                with area_com_print(
-                    f"atribuicao_resumo_lado_{estado}_{d.isoformat()}",
-                    nome_arquivo=f"atribuicao_resumo_lado_{estado}_{d.isoformat()}",
-                    **_leg(f"RESUMO DE ATRIBUIÇÃO {rotulo_dia(d)} | {estado}", d.strftime("%d/%m/%Y"), hora),
-                ):
-                    tabela_resumo_lado(calcular_resumo_lado(ativ[ativ["dia"] == d], estado))
-        st.caption(
-            "GERAL = atividades BA + TT · MÉDIA = atividades ÷ HC ativo (inclusive nas colunas BA e TT) · "
-            "% = parte de cada lado no GERAL · lado vem do Tipo de Atividade (Defeito = TT, Instalação/Alteração = BA)."
-        )
 
     # --------------------------------------------------------------
     # Detalhe por dia: bucket × horário
@@ -138,18 +116,6 @@ def render(df, indicadores):
             )
             st.dataframe(sem.rename(columns={"recurso": "Recurso", "estado": "Estado", "atividades": "Atividades"}),
                          hide_index=True, use_container_width=True)
-
-        if "lado" in ativ.columns and ativ["lado"].isin(LADOS).any():
-            for d in dias:
-                nc = lado_nao_classificado(ativ[ativ["dia"] == d], estado)
-                if nc.empty:
-                    continue
-                st.markdown(
-                    f"**{rotulo_dia(d)} · {_dd_mm(d)}** — {int(nc['atividades'].sum())} atividades de {estado} que contam "
-                    f"na demanda do quadro por bucket mas ficam fora do BA/TT do resumo (desconexões ou sem lado):"
-                )
-                st.dataframe(nc.rename(columns={"lado": "Lado", "tipo_atividade": "Tipo de Atividade", "atividades": "Atividades"}),
-                             hide_index=True, use_container_width=True)
 
         for d in dias:
             fora = fora_do_quadro(ativ[ativ["dia"] == d], estado)

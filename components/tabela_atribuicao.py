@@ -5,7 +5,7 @@ import streamlit as st
 
 import config
 from components.estilo_tabela import (
-    CABECALHO_BG, SUBTOTAL_BG, TOTAL_BG, _hex_para_rgba, pill, pill_contraste, pill_total, wrapper_tabela,
+    CABECALHO_BG, SUBTOTAL_BG, TOTAL_BG, pill, pill_contraste, pill_total, wrapper_tabela,
 )
 from services.atribuicao import HORARIOS
 
@@ -31,6 +31,32 @@ def _atrib_pill(valor: float, sobre_gradiente: bool = False) -> str:
     if sobre_gradiente:
         return pill_contraste(_dec(valor), cor)
     return f"<span style='font-weight:800; color:{cor};'>{_dec(valor)}</span>"
+
+
+def _cel_horario(r, h: str, estilo: str = "linha") -> str:
+    """Célula de um horário.
+    - "linha" (bucket): apenas o nº de atividades.
+    - "cluster" (subtotal) e "geral" (sobre o gradiente): "atividades / HC = atividades por
+      técnico" + GAP, tudo na mesma célula (mesmo formato do "BD / TEC = PU" do Backlog Reparo)."""
+    ativ, hc, gap = int(r[h]), int(r[f"HC_{h}"]), int(r[f"GAP_{h}"])
+    if estilo == "geral":
+        cor_txt, cor_hc, peso = "#FFFFFF", "#FFFFFF", 800
+    else:
+        cor_txt, cor_hc, peso = config.TEXT, config.TLP_ORANGE, (800 if estilo == "cluster" else 600)
+    if ativ == 0 and hc == 0:
+        return f"<td style='color:{config.TEXT_MUTED};'>0</td>"
+    if estilo == "linha":  # linhas de bucket: só o nº de atividades (cálculo fica nos totais)
+        return f"<td style='font-size:12.5px; font-weight:{peso}; color:{cor_txt};'>{ativ}</td>"
+    razao = f"{ativ / hc:.1f}".replace(".", ",") if hc else "—"
+    return (
+        f"<td style='white-space:nowrap; font-size:12.5px;'>"
+        f"<span style='font-weight:{peso}; color:{cor_txt};'>{ativ}</span>"
+        f"<span style='color:{cor_txt}; opacity:.7;'> / </span>"
+        f"<span style='font-weight:800; color:{cor_hc};'>{hc}</span>"
+        f"<span style='color:{cor_txt}; opacity:.7;'> = </span>"
+        f"<span style='font-weight:{peso}; color:{cor_txt};'>{razao}</span> "
+        f"{_gap_pill(gap, sobre_gradiente=(estilo == 'geral'))}</td>"
+    )
 
 
 def tabela_quadro(quadro: pd.DataFrame):
@@ -62,7 +88,7 @@ def tabela_quadro(quadro: pd.DataFrame):
                 )
             cluster_anterior = r["cluster"]
             cel.append(f"<td style='text-align:left; font-weight:700; color:{config.TEXT};'>{r['bucket']}</td>")
-            cel += [f"<td style='color:{config.TEXT};'>{r[h]}</td>" for h in HORARIOS]
+            cel += [_cel_horario(r, h) for h in HORARIOS]
             cel += [
                 f"<td style='font-weight:800; color:{config.TEXT}; border-left:2px solid {config.CARD_BORDER};'>{r['TOTAL']}</td>",
                 f"<td style='font-weight:800; color:{config.TEXT};'>{r['HC']}</td>",
@@ -73,7 +99,7 @@ def tabela_quadro(quadro: pd.DataFrame):
             linhas.append(f"<tr style='{bg}'>{''.join(cel)}</tr>")
         elif r["tipo"] == "cluster":
             cel = [f"<td colspan='2' style='text-align:left; font-weight:800; color:{config.TEXT};'>TOTAL {r['cluster']}</td>"]
-            cel += [f"<td style='font-weight:800; color:{config.TEXT};'>{r[h]}</td>" for h in HORARIOS]
+            cel += [_cel_horario(r, h, "cluster") for h in HORARIOS]
             cel += [
                 f"<td style='font-weight:800; color:{config.TEXT}; border-left:2px solid {config.CARD_BORDER};'>{r['TOTAL']}</td>",
                 f"<td style='font-weight:800; color:{config.TEXT};'>{r['HC']}</td>",
@@ -84,7 +110,7 @@ def tabela_quadro(quadro: pd.DataFrame):
             linhas.append(f"<tr style='{SUBTOTAL_BG()}'>{''.join(cel)}</tr>")
         else:  # geral
             cel = ["<td colspan='2' style='text-align:left; font-weight:800; color:#FFFFFF;'>TOTAL GERAL</td>"]
-            cel += [f"<td>{pill_total(r[h])}</td>" for h in HORARIOS]
+            cel += [_cel_horario(r, h, "geral") for h in HORARIOS]
             cel += [
                 f"<td style='border-left:2px solid rgba(255,255,255,0.35);'>{pill_total(r['TOTAL'])}</td>",
                 f"<td>{pill_total(r['HC'])}</td>",
@@ -95,7 +121,7 @@ def tabela_quadro(quadro: pd.DataFrame):
             linhas.append(f"<tr style='{TOTAL_BG()}'>{''.join(cel)}</tr>")
 
     tabela = (
-        f"<table style='width:100%; min-width:900px; border-collapse:collapse; font-size:13.5px; "
+        f"<table style='width:100%; min-width:1500px; border-collapse:collapse; font-size:13.5px; "
         f"color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab}</tr></thead><tbody>{''.join(linhas)}</tbody></table>"
     )
@@ -147,73 +173,6 @@ def tabela_resumo_dias(quadros: list[tuple[str, pd.DataFrame]]):
 
     tabela = (
         f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
-        f"<thead><tr style='{CABECALHO_BG()}'>{cab1}</tr><tr style='{CABECALHO_BG()}'>{cab2}</tr></thead>"
-        f"<tbody>{''.join(linhas)}</tbody></table>"
-    )
-    st.markdown(wrapper_tabela(tabela), unsafe_allow_html=True)
-
-
-def _pct(valor: float) -> str:
-    return f"{valor * 100:.0f}%"
-
-
-def tabela_resumo_lado(resumo: pd.DataFrame):
-    """"Resumo de atribuição" por cluster: HC ativo · atribuição total (geral, média) ·
-    atribuição por lado — BA e TT com quantidade, média e % do total."""
-    if resumo.empty:
-        st.info("Sem dados para este dia.")
-        return
-
-    cor_ba, cor_tt = config.TLP_ORANGE, config.TLP_GOLD
-    fundo_ba, fundo_tt = _hex_para_rgba(cor_ba, 0.10), _hex_para_rgba(cor_tt, 0.12)
-    esq_cab = "border-left:2px solid rgba(255,255,255,0.35);"
-    cab1 = (
-        "<th rowspan='2' style='text-align:left;'>CLUSTER</th><th rowspan='2'>HC ATIVO</th>"
-        f"<th colspan='2' style='{esq_cab}'>ATRIBUIÇÃO TOTAL</th>"
-        f"<th colspan='6' style='{esq_cab}'>ATRIBUIÇÃO POR CC</th>"
-    )
-    sub = lambda cor, extra="": f"background:{cor}; color:#FFFFFF; {extra}"  # noqa: E731
-    cab2 = (
-        f"<th style='{esq_cab}'>GERAL</th><th>MÉDIA</th>"
-        f"<th style='{sub(cor_ba, esq_cab)}'>BA</th><th style='{sub(cor_ba)}'>MÉDIA</th><th style='{sub(cor_ba)}'>%</th>"
-        f"<th style='{sub(cor_tt, esq_cab)}'>TT</th><th style='{sub(cor_tt)}'>MÉDIA</th><th style='{sub(cor_tt)}'>%</th>"
-    )
-
-    linhas = []
-    for i, r in resumo.iterrows():
-        if r["tipo"] == "geral":
-            esq = "border-left:2px solid rgba(255,255,255,0.35);"
-            cel = [
-                f"<td style='text-align:left; font-weight:800; color:#FFFFFF;'>{r['cluster']}</td>",
-                f"<td>{pill_total(r['HC'])}</td>",
-                f"<td style='{esq}'>{pill_total(r['GERAL'])}</td>",
-                f"<td>{_atrib_pill(r['MEDIA'], sobre_gradiente=True)}</td>",
-                f"<td style='{esq}'>{pill_total(r['BA'])}</td>", f"<td>{pill_total(_dec(r['BA_MEDIA']))}</td>",
-                f"<td>{pill_total(_pct(r['BA_PCT']))}</td>",
-                f"<td style='{esq}'>{pill_total(r['TT'])}</td>", f"<td>{pill_total(_dec(r['TT_MEDIA']))}</td>",
-                f"<td>{pill_total(_pct(r['TT_PCT']))}</td>",
-            ]
-            linhas.append(f"<tr style='{TOTAL_BG()}'>{''.join(cel)}</tr>")
-            continue
-        esq = f"border-left:2px solid {config.CARD_BORDER};"
-        txt = f"color:{config.TEXT};"
-        cel = [
-            f"<td style='text-align:left; font-weight:800; {txt}'>{r['cluster']}</td>",
-            f"<td style='font-weight:800; {txt}'>{r['HC']}</td>",
-            f"<td style='{esq} {txt}'>{r['GERAL']}</td>",
-            f"<td>{_atrib_pill(r['MEDIA'])}</td>",
-            f"<td style='{esq} background:{fundo_ba}; {txt}'>{r['BA']}</td>",
-            f"<td style='background:{fundo_ba}; {txt}'>{_dec(r['BA_MEDIA'])}</td>",
-            f"<td style='background:{fundo_ba}; {txt}'>{_pct(r['BA_PCT'])}</td>",
-            f"<td style='{esq} background:{fundo_tt}; {txt}'>{r['TT']}</td>",
-            f"<td style='background:{fundo_tt}; {txt}'>{_dec(r['TT_MEDIA'])}</td>",
-            f"<td style='background:{fundo_tt}; {txt}'>{_pct(r['TT_PCT'])}</td>",
-        ]
-        linhas.append(f"<tr style='background:{config.CARD if i % 2 == 0 else config.SURFACE};'>{''.join(cel)}</tr>")
-
-    tabela = (
-        f"<table style='width:100%; min-width:720px; border-collapse:collapse; font-size:13.5px; "
-        f"color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab1}</tr><tr style='{CABECALHO_BG()}'>{cab2}</tr></thead>"
         f"<tbody>{''.join(linhas)}</tbody></table>"
     )
