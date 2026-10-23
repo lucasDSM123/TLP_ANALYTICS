@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as st_components
 import pandas as pd
 
 import config
@@ -21,6 +22,28 @@ st.set_page_config(
     page_icon=config.APP_ICON,
     layout="wide",
     initial_sidebar_state="expanded",
+)
+
+# ================================================
+# ANTI-TRADUÇÃO DO NAVEGADOR
+# O Streamlit declara a página como inglês; o Chrome/Edge oferece traduzir pra português e reescreve
+# o DOM, e o React quebra com "NotFoundError: removeChild" ao trocar de aba/página (gráficos somem).
+# Declara a página como pt-BR e marca como "não traduzir".
+# ================================================
+
+st_components.html(
+    """<script>
+    const d = window.parent.document;
+    d.documentElement.setAttribute("lang", "pt-BR");
+    d.documentElement.setAttribute("translate", "no");
+    d.documentElement.classList.add("notranslate");
+    if (!d.querySelector('meta[name="google"][content="notranslate"]')) {
+        const m = d.createElement("meta");
+        m.name = "google"; m.content = "notranslate";
+        d.head.appendChild(m);
+    }
+    </script>""",
+    height=0,
 )
 
 # ================================================

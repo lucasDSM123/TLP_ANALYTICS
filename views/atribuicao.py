@@ -61,9 +61,10 @@ def render(df, indicadores):
         f"por bucket · HC = técnicos TLP distintos com atividade no dia · HC NEC = demanda ÷ {ATIVIDADES_POR_HC:g} "
         f"(arredondado pra cima) · GAP = HC NEC − HC (positivo = faltam técnicos; negativo = sobra) · "
         f"ATRIB. = atividades por técnico. Nos dias futuros o HC ainda é baixo porque os técnicos "
-        f"não foram todos alocados. Em cada horário, a célula mostra atividades / HC do horário = atividades "
-        f"por técnico e o GAP do horário (atividades − HC, com 1 atividade por técnico por janela; positivo = "
-        f"faltam técnicos naquele horário)."
+        f"não foram todos alocados. Atividades canceladas e suspensas são ignoradas. As colunas são a Janela de Serviço da atividade (janela inteira, não só o início; "
+        f"janela vazia ou fora do padrão entra em SEM JANELA / OUTRAS). Nas linhas de bucket aparece só o nº de "
+        f"atividades; nos totais, atividades / HC da janela = atividades por técnico e o GAP da janela "
+        f"(atividades − HC, com 1 atividade por técnico por janela; positivo = faltam técnicos naquela janela)."
     )
 
     quadros = [(f"{rotulo_dia(d)} · {_dd_mm(d)}", calcular_quadro(ativ[ativ["dia"] == d], estado)) for d in dias]
@@ -92,7 +93,7 @@ def render(df, indicadores):
     # --------------------------------------------------------------
     # Detalhe por dia: bucket × horário
     # --------------------------------------------------------------
-    secao_titulo("Detalhe por bucket", "Atividades por horário, HC atual, GAP e HC necessário")
+    secao_titulo("Detalhe por bucket", "Atividades por janela de serviço, HC atual, GAP e HC necessário")
     abas = st.tabs([rotulo for rotulo, _ in quadros])
     for aba, d, (rotulo, q) in zip(abas, dias, quadros):
         with aba:

@@ -7,7 +7,7 @@ import config
 from components.estilo_tabela import (
     CABECALHO_BG, SUBTOTAL_BG, TOTAL_BG, pill, pill_contraste, pill_total, wrapper_tabela,
 )
-from services.atribuicao import HORARIOS
+from services.atribuicao import HORARIOS, ROTULO_TURNO
 
 
 def _dec(valor: float) -> str:
@@ -33,8 +33,16 @@ def _atrib_pill(valor: float, sobre_gradiente: bool = False) -> str:
     return f"<span style='font-weight:800; color:{cor};'>{_dec(valor)}</span>"
 
 
+def _th_janela(h: str) -> str:
+    """Cabeçalho de uma coluna de janela: turno (1º MANHÃ, 2º TARDE...) em cima e a janela embaixo."""
+    return (
+        f"<th style='line-height:1.25;'>{ROTULO_TURNO[h]}<br>"
+        f"<span style='font-weight:500; font-size:11px; opacity:.85;'>{h}</span></th>"
+    )
+
+
 def _cel_horario(r, h: str, estilo: str = "linha") -> str:
-    """Célula de um horário.
+    """Célula de uma janela de serviço.
     - "linha" (bucket): apenas o nº de atividades.
     - "cluster" (subtotal) e "geral" (sobre o gradiente): "atividades / HC = atividades por
       técnico" + GAP, tudo na mesma célula (mesmo formato do "BD / TEC = PU" do Backlog Reparo)."""
@@ -67,7 +75,7 @@ def tabela_quadro(quadro: pd.DataFrame):
 
     cab = (
         "<th style='text-align:center;'>CLUSTER</th><th style='text-align:left;'>BUCKET</th>"
-        + "".join(f"<th>{h}</th>" for h in HORARIOS)
+        + "".join(_th_janela(h) for h in HORARIOS)
         + "<th style='border-left:2px solid rgba(255,255,255,0.35);'>TOTAL</th><th>HC</th><th>GAP</th>"
         "<th>HC NEC</th><th>ATRIB.</th>"
     )
@@ -121,7 +129,7 @@ def tabela_quadro(quadro: pd.DataFrame):
             linhas.append(f"<tr style='{TOTAL_BG()}'>{''.join(cel)}</tr>")
 
     tabela = (
-        f"<table style='width:100%; min-width:1500px; border-collapse:collapse; font-size:13.5px; "
+        f"<table translate='no' class='notranslate' style='width:100%; min-width:1700px; border-collapse:collapse; font-size:13.5px; "
         f"color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab}</tr></thead><tbody>{''.join(linhas)}</tbody></table>"
     )
@@ -172,7 +180,7 @@ def tabela_resumo_dias(quadros: list[tuple[str, pd.DataFrame]]):
         linhas.append(f"<tr style='{estilo}'>{''.join(cel)}</tr>")
 
     tabela = (
-        f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
+        f"<table translate='no' class='notranslate' style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab1}</tr><tr style='{CABECALHO_BG()}'>{cab2}</tr></thead>"
         f"<tbody>{''.join(linhas)}</tbody></table>"
     )
