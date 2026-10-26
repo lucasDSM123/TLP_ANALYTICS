@@ -7,7 +7,7 @@ import config
 from components.estilo_tabela import (
     CABECALHO_BG, SUBTOTAL_BG, TOTAL_BG, pill, pill_contraste, pill_total, wrapper_tabela,
 )
-from services.atribuicao import HORARIOS, ROTULO_TURNO
+from services.atribuicao import HORARIOS
 
 
 def _dec(valor: float) -> str:
@@ -33,37 +33,59 @@ def _atrib_pill(valor: float, sobre_gradiente: bool = False) -> str:
     return f"<span style='font-weight:800; color:{cor};'>{_dec(valor)}</span>"
 
 
-def _th_janela(h: str) -> str:
-    """Cabeçalho de uma coluna de janela: turno (1º MANHÃ, 2º TARDE...) em cima e a janela embaixo."""
-    return (
-        f"<th style='line-height:1.25;'>{ROTULO_TURNO[h]}<br>"
-        f"<span style='font-weight:500; font-size:11px; opacity:.85;'>{h}</span></th>"
-    )
+def _pct_carga(pct: float, sobre_gradiente: bool = False) -> str:
+    """Carga por técnico em %: 100% = ideal (1 atividade por técnico). Acima de 100% = atividade
+    a mais (vermelho); abaixo = técnico com folga."""
+    texto = f"{pct * 100:.0f}%"
+    cor = config.TLP_RED if pct > 1 else "#15803D"
+    if sobre_gradiente:
+        return pill_contraste(texto, cor)
+    fundo = "rgba(232,57,29,0.12)" if pct > 1 else "rgba(34,197,94,0.16)"
+    return pill(texto, cor, fundo)
 
 
 def _cel_horario(r, h: str, estilo: str = "linha") -> str:
-    """Célula de uma janela de serviço.
+    """Célula de um horário.
     - "linha" (bucket): apenas o nº de atividades.
-    - "cluster" (subtotal) e "geral" (sobre o gradiente): "atividades / HC = atividades por
-      técnico" + GAP, tudo na mesma célula (mesmo formato do "BD / TEC = PU" do Backlog Reparo)."""
-    ativ, hc, gap = int(r[h]), int(r[f"HC_{h}"]), int(r[f"GAP_{h}"])
+    - "cluster" (subtotal) e "geral": "atividades / HC GERAL = %". O HC é o total da própria linha
+      (coluna HC), igual para todos os horários — acompanha o HC geral que o site mostra.
+    """
+    ativ, hc_geral = int(r[h]), int(r["HC"])
     if estilo == "geral":
         cor_txt, cor_hc, peso = "#FFFFFF", "#FFFFFF", 800
     else:
         cor_txt, cor_hc, peso = config.TEXT, config.TLP_ORANGE, (800 if estilo == "cluster" else 600)
-    if ativ == 0 and hc == 0:
-        return f"<td style='color:{config.TEXT_MUTED};'>0</td>"
     if estilo == "linha":  # linhas de bucket: só o nº de atividades (cálculo fica nos totais)
+        if ativ == 0:
+            return f"<td style='color:{config.TEXT_MUTED};'>0</td>"
         return f"<td style='font-size:12.5px; font-weight:{peso}; color:{cor_txt};'>{ativ}</td>"
-    razao = f"{ativ / hc:.1f}".replace(".", ",") if hc else "—"
+    if ativ == 0 and hc_geral == 0:
+        return f"<td style='color:{config.TEXT_MUTED};'>0</td>"
+    pct = (ativ / hc_geral) if hc_geral else 0.0
+    resultado = _pct_carga(pct, sobre_gradiente=(estilo == "geral")) if hc_geral else "—"
     return (
         f"<td style='white-space:nowrap; font-size:12.5px;'>"
         f"<span style='font-weight:{peso}; color:{cor_txt};'>{ativ}</span>"
         f"<span style='color:{cor_txt}; opacity:.7;'> / </span>"
-        f"<span style='font-weight:800; color:{cor_hc};'>{hc}</span>"
-        f"<span style='color:{cor_txt}; opacity:.7;'> = </span>"
-        f"<span style='font-weight:{peso}; color:{cor_txt};'>{razao}</span> "
-        f"{_gap_pill(gap, sobre_gradiente=(estilo == 'geral'))}</td>"
+        f"<span style='font-weight:800; color:{cor_hc};'>{hc_geral}</span>"
+        f"<span style='color:{cor_txt}; opacity:.7;'> = </span>{resultado}</td>"
+    )
+
+
+def nota_carga_por_tecnico():
+    """Texto explicativo exibido logo abaixo da tabela."""
+    st.markdown(
+        f"<div style='margin-top:10px; padding:10px 14px; border-left:4px solid {config.TLP_ORANGE}; "
+        f"background:rgba(0,0,0,0.03); border-radius:6px; font-size:12.5px; color:{config.TEXT}; line-height:1.55;'>"
+        "<b>Como ler os percentuais dos totais:</b> cada janela mostra "
+        "<i>atividades ÷ HC geral</i> do cluster (o HC é o total de técnicos da coluna HC, o mesmo para todas "
+        "as janelas, e muda ao longo do dia conforme o HC do site).<br>"
+        "• <b>100%</b> = ideal: há 1 atividade por técnico, a quantidade certa.<br>"
+        "• <b style='color:#15803D;'>Abaixo de 100%</b> = há técnicos com folga nessa janela (poucas atividades para o HC).<br>"
+        "• <b style='color:" + config.TLP_RED + ";'>Acima de 100%</b> = <b>alerta</b>: há mais atividades "
+        "do que técnicos, ou seja, sobrecarga naquela janela."
+        "</div>",
+        unsafe_allow_html=True,
     )
 
 
@@ -75,7 +97,7 @@ def tabela_quadro(quadro: pd.DataFrame):
 
     cab = (
         "<th style='text-align:center;'>CLUSTER</th><th style='text-align:left;'>BUCKET</th>"
-        + "".join(_th_janela(h) for h in HORARIOS)
+        + "".join(f"<th>{h}</th>" for h in HORARIOS)
         + "<th style='border-left:2px solid rgba(255,255,255,0.35);'>TOTAL</th><th>HC</th><th>GAP</th>"
         "<th>HC NEC</th><th>ATRIB.</th>"
     )
@@ -129,11 +151,12 @@ def tabela_quadro(quadro: pd.DataFrame):
             linhas.append(f"<tr style='{TOTAL_BG()}'>{''.join(cel)}</tr>")
 
     tabela = (
-        f"<table translate='no' class='notranslate' style='width:100%; min-width:1700px; border-collapse:collapse; font-size:13.5px; "
+        f"<table style='width:100%; min-width:1500px; border-collapse:collapse; font-size:13.5px; "
         f"color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab}</tr></thead><tbody>{''.join(linhas)}</tbody></table>"
     )
     st.markdown(wrapper_tabela(tabela), unsafe_allow_html=True)
+    nota_carga_por_tecnico()
 
 
 def tabela_resumo_dias(quadros: list[tuple[str, pd.DataFrame]]):
@@ -180,7 +203,7 @@ def tabela_resumo_dias(quadros: list[tuple[str, pd.DataFrame]]):
         linhas.append(f"<tr style='{estilo}'>{''.join(cel)}</tr>")
 
     tabela = (
-        f"<table translate='no' class='notranslate' style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
+        f"<table style='width:100%; border-collapse:collapse; font-size:13.5px; color:{config.TEXT}; text-align:center;'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{cab1}</tr><tr style='{CABECALHO_BG()}'>{cab2}</tr></thead>"
         f"<tbody>{''.join(linhas)}</tbody></table>"
     )
