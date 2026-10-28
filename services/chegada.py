@@ -18,6 +18,19 @@ from datetime import datetime, time, timedelta
 
 import pandas as pd
 
+try:  # Fuso de Brasília: o servidor (ex.: Streamlit Cloud) roda em UTC.
+    from zoneinfo import ZoneInfo
+    _FUSO = ZoneInfo("America/Sao_Paulo")
+except Exception:  # sem tzdata (ex.: Windows) -> relógio local da máquina
+    _FUSO = None
+
+
+def agora_local() -> datetime:
+    """Data/hora atual de Brasília, sem tzinfo (pra comparar com horários 'HH:MM')."""
+    if _FUSO is None:
+        return datetime.now()
+    return datetime.now(_FUSO).replace(tzinfo=None)
+
 COL_JANELA = "Janela"
 COL_INICIO = "Início"
 COL_STATUS = "Status"
@@ -105,6 +118,20 @@ def _e_hoje(data_os, agora: datetime) -> bool:
     return dt.date() == agora.date()
 
 
+def _passou_limite_sem_iniciar(janela, data_os, agora: datetime | None) -> bool:
+    """True se a OS é de HOJE, ainda não iniciou e já passou do limite de
+    atraso (abertura da Janela + TOLERANCIA_ATRASO, nunca além do fim da
+    Janela). Ex.: Janela 10:30-12:30 -> a partir das 11:01 sem iniciar já é
+    \"Depois\", sem esperar o técnico iniciar a atividade."""
+    if agora is None or not _e_hoje(data_os, agora):
+        return False
+    janela_ini, janela_fim = parse_janela(janela)
+    if janela_ini is None or janela_fim is None or janela_fim < janela_ini:
+        return False
+    limite = min(_para_datetime(janela_ini) + TOLERANCIA_ATRASO, _para_datetime(janela_fim))
+    return _para_datetime(time(agora.hour, agora.minute)) > limite
+
+
 def classificar_linha(janela, inicio_real, data_os=None, agora: datetime | None = None) -> str:
     """Classifica uma OS em Dentro / Antes / Depois / Aguardando / Sem Registro / Indefinido.
 
@@ -170,23 +197,49 @@ def calcular_indicador_chegada(df: pd.DataFrame, agora: datetime | None = None) 
     no futuro em relação ao momento atual — essas ficam como "Aguardando".
     """
     if agora is None:
-        agora = datetime.now()
+        agora = agora_local()
 
     df = df.copy()
 
-    if COL_STATUS in df.columns:
-        df = df[~df[COL_STATUS].isin(STATUS_EXCLUIDOS)]
-
     if COL_JANELA not in df.columns or COL_INICIO not in df.columns:
+        if COL_STATUS in df.columns:
+            df = df[~df[COL_STATUS].isin(STATUS_EXCLUIDOS)]
         df["Status Chegada"] = STATUS_INDEFINIDO
         df["Dentro da Janela"] = None
         return df
 
-    coluna_data = df[COL_DATA] if COL_DATA in df.columns else [None] * len(df)
-    df["Status Chegada"] = [
-        classificar_linha(j, i, d, agora)
-        for j, i, d in zip(df[COL_JANELA], df[COL_INICIO], coluna_data)
-    ]
+    coluna_data = df[COL_DATA] if COL_DATA in df.columns else pd.Series([None] * len(df), index=df.index)
+    coluna_status = df[COL_STATUS] if COL_STATUS in df.columns else pd.Series([None] * len(df), index=df.index)
+
+    status_chegada = []
+    manter = []
+    for j, i, d, st in zip(df[COL_JANELA], df[COL_INICIO], coluna_data, coluna_status):
+        if st == STATUS_CANCELADA:
+            manter.append(False)
+            status_chegada.append(None)
+            continue
+
+        # "Não Iniciada" / "em rota" (ou sem Início): o Início da base é só
+        # previsão. Se for hoje e já passou do limite de atraso da Janela,
+        # conta como "Depois" mesmo sem o técnico ter iniciado; senão, segue
+        # fora do indicador até a tolerância vencer.
+        if st in (STATUS_NAO_INICIADA, STATUS_EM_ROTA) or _parse_hora(i) is None:
+            if _passou_limite_sem_iniciar(j, d, agora):
+                manter.append(True)
+                status_chegada.append(STATUS_DEPOIS)
+            elif st in STATUS_EXCLUIDOS:
+                manter.append(False)
+                status_chegada.append(None)
+            else:
+                manter.append(True)
+                status_chegada.append(classificar_linha(j, i, d, agora))
+            continue
+
+        manter.append(True)
+        status_chegada.append(classificar_linha(j, i, d, agora))
+
+    df["Status Chegada"] = status_chegada
+    df = df[manter]
     df["Dentro da Janela"] = df["Status Chegada"].map(
         {STATUS_DENTRO: True, STATUS_ANTES: False, STATUS_DEPOIS: False}
     )

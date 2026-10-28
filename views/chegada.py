@@ -35,7 +35,7 @@ from services.termino import (
 
 def render(df, indicadores: Indicadores):
     secao_titulo("Chegada", "Aderência do técnico à Janela de Serviço (horário real x agendado)")
-    st.caption("⏱️ Tolerância: início até 60 min antes da Janela ou até 30 min depois da abertura ainda conta como 'Dentro'. Exclui OS Canceladas, Não Iniciadas e em rota.")
+    st.caption("⏱️ Tolerância: início até 60 min antes da Janela ou até 30 min depois da abertura ainda conta como 'Dentro'. Exclui OS Canceladas. OS de hoje Não Iniciadas/em rota (ou sem Início) já contam como 'Depois' assim que passam de 30 min da abertura da Janela.")
 
     # Legenda automática (texto que acompanha a imagem ao copiar): reflete
     # TODOS os filtros marcados na barra do topo (Estado, Data, Cluster,
