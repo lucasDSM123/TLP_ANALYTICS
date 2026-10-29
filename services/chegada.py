@@ -56,6 +56,12 @@ STATUS_INDEFINIDO = "Indefinido"
 # até que esse horário realmente já tenha passado.
 STATUS_AGUARDANDO = "Aguardando"
 
+# Coluna auxiliar: True quando a OS conta como "Depois" só porque passou do
+# limite de atraso sem o técnico ter iniciado. Nesse caso o "Início" da base
+# é só uma previsão (não um início real) e não deve ser exibido como tal nem
+# entrar nas médias de tempo até o início.
+COL_INICIO_PENDENTE = "Início Pendente"
+
 # Tempo limite de tolerância para o início: o técnico tem até esse tempo
 # após a abertura da Janela para começar o atendimento. Passou disso, já
 # conta como "Depois" (chegou fora do horário) — mesmo que o horário de
@@ -213,10 +219,12 @@ def calcular_indicador_chegada(df: pd.DataFrame, agora: datetime | None = None) 
 
     status_chegada = []
     manter = []
+    pendente = []  # OS atrasada sem início real (o "Início" da base é só previsão)
     for j, i, d, st in zip(df[COL_JANELA], df[COL_INICIO], coluna_data, coluna_status):
         if st == STATUS_CANCELADA:
             manter.append(False)
             status_chegada.append(None)
+            pendente.append(False)
             continue
 
         # "Não Iniciada" / "em rota" (ou sem Início): o Início da base é só
@@ -227,18 +235,23 @@ def calcular_indicador_chegada(df: pd.DataFrame, agora: datetime | None = None) 
             if _passou_limite_sem_iniciar(j, d, agora):
                 manter.append(True)
                 status_chegada.append(STATUS_DEPOIS)
+                pendente.append(True)
             elif st in STATUS_EXCLUIDOS:
                 manter.append(False)
                 status_chegada.append(None)
+                pendente.append(False)
             else:
                 manter.append(True)
                 status_chegada.append(classificar_linha(j, i, d, agora))
+                pendente.append(False)
             continue
 
         manter.append(True)
         status_chegada.append(classificar_linha(j, i, d, agora))
+        pendente.append(False)
 
     df["Status Chegada"] = status_chegada
+    df[COL_INICIO_PENDENTE] = pendente
     df = df[manter]
     df["Dentro da Janela"] = df["Status Chegada"].map(
         {STATUS_DENTRO: True, STATUS_ANTES: False, STATUS_DEPOIS: False}
@@ -560,6 +573,8 @@ def _stats_tempo_inicio(sub: pd.DataFrame) -> dict:
         - horario_frequente: horário de início mais frequente (moda, em
           blocos de 15 min) — o "horário de pico" de início
     """
+    if COL_INICIO_PENDENTE in sub.columns:
+        sub = sub[~sub[COL_INICIO_PENDENTE].astype(bool)]
     minutos_inicio = []
     minutos_espera = []
     for janela, inicio in zip(sub[COL_JANELA], sub[COL_INICIO]):
@@ -666,6 +681,14 @@ def tabela_detalhada(df: pd.DataFrame) -> pd.DataFrame:
     ]
     colunas_existentes = [c for c in colunas_desejadas if c in df.columns]
     tabela = df[colunas_existentes].copy()
+    if COL_INICIO_PENDENTE in df.columns and COL_INICIO in tabela.columns:
+        # OS atrasada que ainda não iniciou: mostra a previsão da base entre
+        # parênteses, pra não parecer um início real dentro da tolerância.
+        pend = df.loc[tabela.index, COL_INICIO_PENDENTE].fillna(False).astype(bool)
+        tabela[COL_INICIO] = tabela[COL_INICIO].astype(object)
+        tabela.loc[pend, COL_INICIO] = tabela.loc[pend, COL_INICIO].map(
+            lambda v: "Não iniciou" if _parse_hora(v) is None else f"Não iniciou (prev. {_parse_hora(v):%H:%M})"
+        )
     tabela = tabela[~tabela["Status Chegada"].isin([STATUS_SEM_REGISTRO, STATUS_INDEFINIDO])]
     return tabela.rename(columns={COL_JANELA: "Janela de Serviço", COL_INICIO: "Início Real", COL_DATA: "Data"})
 
