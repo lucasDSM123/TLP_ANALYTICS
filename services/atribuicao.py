@@ -33,7 +33,10 @@ TABELA = "atribuicao_atividades"
 MAPEAMENTO_PADRAO = Path("data") / "Mapeamento_Atribuicao.xlsx"
 FUSO = "America/Sao_Paulo"
 
-HORARIOS = ["08H30", "09H30", "10H30", "14H", "15H", "16H", "SLA"]
+# Colunas do quadro = Janela de Serviço da atividade (a mesma coluna "Janela" da base Zeus tratada).
+# Janela vazia ou fora desse padrão cai em SLA.
+HORARIOS = ["08:30 - 10:30", "09:30 - 11:30", "10:30 - 12:30", "12:30 - 18:00",
+            "14:00 - 16:00", "15:00 - 17:00", "16:00 - 18:00", "SLA"]
 ATIVIDADES_POR_HC = config.META_ATRIBUICAO_ALVO  # 4 atividades por técnico/dia
 # Capacidade por HORÁRIO (célula de cada janela do quadro): um técnico atende 1 atividade por
 # janela. O GAP do horário = atividades - HC do horário (positivo = faltam técnicos naquele
@@ -88,7 +91,7 @@ SEM_CADASTRO = "SEM CADASTRO"
 # ------------------------------------------------------------------
 
 def _norm(valor) -> str:
-    return "" if valor is None or (isinstance(valor, float) and pd.isna(valor)) else str(valor).strip().upper()
+    return "" if valor is None or pd.isna(valor) else str(valor).strip().upper()
 
 
 def _sem_acento(valor) -> str:
@@ -107,6 +110,85 @@ def _ativas(df: pd.DataFrame) -> pd.DataFrame:
     if "status" not in df.columns:
         return df
     return df[~df["status"].map(_sem_acento).isin(STATUS_IGNORADOS)]
+
+
+def _rotulo_janela(valor) -> str:
+    """Normaliza a Janela de Serviço ("15 - 17", "8:30-10:30"...) para o rótulo da coluna do quadro.
+    O que não for uma das janelas de HORARIOS (ou vier vazio) vira "SLA"."""
+    import re
+    v = "" if pd.isna(valor) else str(valor).strip()
+    m = re.fullmatch(r"(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?", v)
+    if not m:
+        return "SLA"
+    h1, m1, h2, m2 = m.groups()
+    rotulo = f"{int(h1):02d}:{m1 or '00'} - {int(h2):02d}:{m2 or '00'}"
+    return rotulo if rotulo in HORARIOS else "SLA"
+
+
+def hc_dashboard(tecnicos: pd.DataFrame) -> int:
+    """HC ATIVO exatamente como o Dashboard (services/indicadores.py::_hc_real_calc):
+    BA = ROUNDDOWN(MSK/2 + BA), TT = ROUNDUP(MSK/2 + TT), HC = BA + TT, com MSK/BA/TT = técnicos
+    distintos com aquele Perfil Técnico. Quem está sem perfil não entra (como no Dashboard).
+    Se não houver nenhum perfil (base sem a coluna), cai para técnicos distintos."""
+    if tecnicos.empty:
+        return 0
+    if "perfil" not in tecnicos.columns or not tecnicos["perfil"].map(_norm).ne("").any():
+        return int(tecnicos["_k"].nunique())
+    perfil = tecnicos["perfil"].map(_norm)
+    msk, ba, tt = (tecnicos.loc[perfil == p, "_k"].nunique() for p in ("MSK", "BA", "TT"))
+    return int(math.floor(msk / 2 + ba) + math.ceil(msk / 2 + tt))
+
+
+def perfis_por_tecnico(zeus: pd.DataFrame) -> dict[str, str]:
+    """Técnico -> Perfil Técnico mais recente na base Zeus tratada (Contratada = TLP). Serve para os
+    dias futuros, que só existem no OFSC e não têm perfil."""
+    cols = {"Técnico", "Perfil Técnico", "Contratada", "Data"}
+    if zeus is None or zeus.empty or not cols <= set(zeus.columns):
+        return {}
+    t = zeus[(zeus["Contratada"].map(_norm) == "TLP") & zeus["Perfil Técnico"].notna()].copy()
+    t["_d"] = pd.to_datetime(t["Data"], errors="coerce", dayfirst=True)
+    t = t.sort_values("_d").drop_duplicates(subset=["Técnico"], keep="last")
+    return {_norm(r["Técnico"]): _norm(r["Perfil Técnico"]) for _, r in t.iterrows()}
+
+
+def atividades_da_zeus(zeus: pd.DataFrame, mapa: dict) -> pd.DataFrame:
+    """Base Zeus tratada (a mesma do Dashboard) no formato do quadro: dia, estado, status, recurso,
+    cidade, janela, horario, contar, cluster, bucket, perfil. Janela já vem pronta na coluna Janela."""
+    cols = {"Técnico", "Cidade", "Estado", "Data", "Janela", "Status", "Contratada"}
+    if zeus is None or zeus.empty or not cols <= set(zeus.columns):
+        return pd.DataFrame()
+    out = pd.DataFrame(index=zeus.index)
+    out["dia"] = pd.to_datetime(zeus["Data"], errors="coerce", dayfirst=True).dt.date
+    out["estado"] = zeus["Estado"].map(_sigla_estado)
+    out["status"] = zeus["Status"].fillna("").astype(str).str.strip()
+    out["recurso"] = zeus["Técnico"].fillna("").astype(str).str.strip()
+    out["cidade"] = zeus["Cidade"].map(_norm)
+    out["janela"] = zeus["Janela"].fillna("").astype(str).str.strip()
+    out["horario"] = out["janela"].map(_rotulo_janela)
+    out["contar"] = zeus["Contratada"].map(_norm)
+    cb = out["cidade"].map(mapa["cidades"])
+    out["cluster"] = cb.map(lambda t: t[0] if isinstance(t, tuple) else "")
+    out["bucket"] = cb.map(lambda t: t[1] if isinstance(t, tuple) else "")
+    out["perfil"] = zeus["Perfil Técnico"] if "Perfil Técnico" in zeus.columns else None
+    out["fonte"] = "Zeus"
+    return out[out["dia"].notna()].reset_index(drop=True)
+
+
+def combinar_fontes(ofsc: pd.DataFrame, zeus_ativ: pd.DataFrame, perfis: dict, hoje) -> pd.DataFrame:
+    """Dia de hoje (e anteriores) vem da base Zeus tratada, igual ao Dashboard; dias futuros (ou hoje, se a
+    Zeus ainda não tem linhas dele) vêm do OFSC, com o perfil do técnico buscado na Zeus."""
+    partes = []
+    dias_zeus = set()
+    if zeus_ativ is not None and not zeus_ativ.empty:
+        z = zeus_ativ[zeus_ativ["dia"] <= hoje]
+        dias_zeus = set(z["dia"].unique())
+        partes.append(z)
+    if ofsc is not None and not ofsc.empty:
+        o = ofsc[~ofsc["dia"].isin(dias_zeus)].copy()
+        o["perfil"] = o["recurso"].map(lambda r: perfis.get(_norm(r)))
+        o["fonte"] = "OFSC"
+        partes.append(o)
+    return pd.concat(partes, ignore_index=True) if partes else pd.DataFrame()
 
 
 def carregar_mapeamento(caminho: str | Path = MAPEAMENTO_PADRAO) -> dict:
@@ -143,8 +225,8 @@ def preparar_atividades(raw: pd.DataFrame, mapa: dict) -> pd.DataFrame:
     out["recurso"] = raw["Recurso"].fillna("").astype(str).str.strip()
     out["cidade"] = raw["Cidade"].map(_norm)
     out["janela"] = raw["Janela de Serviço"].fillna("").astype(str).str.strip()
-    # Janela fora da tabela (ou vazia) = SLA, igual ao IFERROR(..., "SLA") da planilha.
-    out["horario"] = out["janela"].map(mapa["janelas"]).fillna("SLA")
+    # Janela fora do padrão (ou vazia) = SLA.
+    out["horario"] = out["janela"].map(_rotulo_janela)
     out["contar"] = out["recurso"].map(lambda r: mapa["recursos"].get(_norm(r), SEM_CADASTRO))
     cb = out["cidade"].map(mapa["cidades"])
     out["cluster"] = cb.map(lambda t: t[0] if isinstance(t, tuple) else "")
@@ -167,6 +249,7 @@ def carregar_atividades() -> pd.DataFrame:
         return df
     df["dia"] = pd.to_datetime(df["dia"], errors="coerce").dt.date
     df["estado"] = df["estado"].map(_sigla_estado)  # linhas gravadas antes da normalização
+    df["horario"] = df["janela"].map(_rotulo_janela)  # linhas gravadas com o rótulo antigo (08H30...)
     return df.dropna(subset=["dia"])
 
 
@@ -243,10 +326,9 @@ def calcular_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
 
     cont = (demanda.groupby(["bucket", "horario"]).size().unstack(fill_value=0)
             .reindex(columns=HORARIOS, fill_value=0))
-    hcs = tecnicos.groupby("bucket")["_k"].nunique()
-    # HC por horário: técnicos TLP distintos com atividade naquela janela, no bucket.
-    hcs_horario = (tecnicos_ativos.groupby(["bucket", "horario"])["_k"].nunique().unstack(fill_value=0)
-                   .reindex(columns=HORARIOS, fill_value=0))
+    hcs = {b: hc_dashboard(g) for b, g in tecnicos.groupby("bucket")}
+    # HC por janela: mesma fórmula, só com quem tem atividade ativa naquela janela, no bucket.
+    hcs_horario = {(b, h): hc_dashboard(g) for (b, h), g in tecnicos_ativos.groupby(["bucket", "horario"])}
 
     linhas: list[dict] = []
     buckets_linhas: list[dict] = []
@@ -254,13 +336,13 @@ def calcular_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
         filhos = []
         for b in buckets:
             vals = [cont.loc[b, h] if b in cont.index else 0 for h in HORARIOS]
-            hc_h = [hcs_horario.loc[b, h] if b in hcs_horario.index else 0 for h in HORARIOS]
+            hc_h = [hcs_horario.get((b, h), 0) for h in HORARIOS]
             filhos.append(_linha("bucket", cluster, b, vals, int(hcs.get(b, 0)), regra["gap"], hc_h))
-        hc_cluster = tecnicos.loc[tecnicos["bucket"].isin(buckets), "_k"].nunique()
+        hc_cluster = hc_dashboard(tecnicos[tecnicos["bucket"].isin(buckets)])
         linhas += filhos + [_somar("cluster", cluster, filhos, hc_cluster)]
         buckets_linhas += filhos
     todos_buckets = [b for _, bs in LAYOUT[estado] for b in bs]
-    hc_geral = tecnicos.loc[tecnicos["bucket"].isin(todos_buckets), "_k"].nunique()
+    hc_geral = hc_dashboard(tecnicos[tecnicos["bucket"].isin(todos_buckets)])
     linhas.append(_somar("geral", "TOTAL GERAL", buckets_linhas, hc_geral))
     return pd.DataFrame(linhas)
 
@@ -285,6 +367,16 @@ def recursos_sem_cadastro(ativ_dia: pd.DataFrame) -> pd.DataFrame:
     some da contagem sem aviso."""
     f = _ativas(ativ_dia)
     f = f[f["contar"] == SEM_CADASTRO]
+    if f.empty:
+        return pd.DataFrame(columns=["recurso", "estado", "atividades"])
+    return (f.groupby(["recurso", "estado"]).size().reset_index(name="atividades")
+            .sort_values("atividades", ascending=False))
+
+def tecnicos_sem_perfil(ativ_dia: pd.DataFrame) -> pd.DataFrame:
+    """Técnicos TLP sem Perfil Técnico: o Dashboard não os conta no HC ATIVO, então a Atribuição também não."""
+    if ativ_dia.empty or "perfil" not in ativ_dia.columns:
+        return pd.DataFrame(columns=["recurso", "estado", "atividades"])
+    f = ativ_dia[(ativ_dia["contar"] == "TLP") & ativ_dia["perfil"].map(_norm).eq("")]
     if f.empty:
         return pd.DataFrame(columns=["recurso", "estado", "atividades"])
     return (f.groupby(["recurso", "estado"]).size().reset_index(name="atividades")

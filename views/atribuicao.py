@@ -7,9 +7,15 @@ from components.header import secao_titulo
 from components.print_button import area_com_print
 from components.tabela_atribuicao import tabela_quadro, tabela_resumo_dias
 from services.atribuicao import (
-    ATIVIDADES_POR_HC, REGRAS, calcular_quadro, carregar_atividades, fora_do_quadro,
-    hoje_local, recursos_sem_cadastro, rotulo_dia,
+    ATIVIDADES_POR_HC, REGRAS, atividades_da_zeus, calcular_quadro, carregar_atividades,
+    carregar_mapeamento, combinar_fontes, fora_do_quadro, hoje_local, perfis_por_tecnico,
+    recursos_sem_cadastro, rotulo_dia, tecnicos_sem_perfil,
 )
+
+
+@st.cache_data(show_spinner=False, ttl=300)
+def _mapeamento():
+    return carregar_mapeamento()
 
 
 def _dd_mm(dia) -> str:
@@ -32,7 +38,12 @@ def render(df, indicadores):
         f"(1 técnico = {ATIVIDADES_POR_HC:g} atividades/dia)",
     )
 
-    ativ = carregar_atividades()
+    # Hoje vem da base Zeus tratada (a mesma do Dashboard); os dias futuros vêm do OFSC.
+    # `df` aqui é a base inteira, sem os filtros do topo.
+    hoje = hoje_local()
+    ofsc = carregar_atividades()
+    zeus_ativ = atividades_da_zeus(df, _mapeamento())
+    ativ = combinar_fontes(ofsc, zeus_ativ, perfis_por_tecnico(df), hoje)
     if ativ.empty:
         st.warning(
             "Ainda não há dados de Atribuição no banco. Rode o `atribuição.py` (baixa os arquivos do OFSC) "
@@ -40,7 +51,6 @@ def render(df, indicadores):
         )
         return
 
-    hoje = hoje_local()
     dias = sorted(d for d in ativ["dia"].unique() if d >= hoje)[:3]
     if not dias:
         st.warning(
@@ -50,19 +60,21 @@ def render(df, indicadores):
         return
 
     ativ = ativ[ativ["dia"].isin(dias)]
-    gerado = str(ativ["gerado_em"].max()) if "gerado_em" in ativ.columns else ""
+    gerado = str(ofsc["gerado_em"].max()) if not ofsc.empty and "gerado_em" in ofsc.columns else ""
+    fontes = ativ.groupby("dia")["fonte"].first().to_dict() if "fonte" in ativ.columns else {}
+    dias_zeus = [rotulo_dia(d) for d in dias if fontes.get(d) == "Zeus"]
     hora = gerado[-5:] if len(gerado) >= 5 else ""
     periodo = f"{_dd_mm(dias[0])} a {dias[-1].strftime('%d/%m/%Y')}" if len(dias) > 1 else dias[0].strftime("%d/%m/%Y")
 
     estado = st.radio("Estado", list(REGRAS), horizontal=True, key="atribuicao_estado")
     regra = REGRAS[estado]
     st.caption(
-        f"Base gerada em {gerado or '—'} · Demanda = atividades de {', '.join(sorted(regra['contar_demanda']))} "
-        f"por bucket · HC = técnicos TLP distintos com atividade no dia · HC NEC = demanda ÷ {ATIVIDADES_POR_HC:g} "
+        f"Base OFSC gerada em {gerado or '—'}" + (f" · {', '.join(dias_zeus)} pela base Zeus tratada (igual ao Dashboard)" if dias_zeus else "") + f" · Demanda = atividades de {', '.join(sorted(regra['contar_demanda']))} "
+        f"por bucket · HC = HC ATIVO do Dashboard (técnicos TLP com Perfil Técnico: BA = ⌊MSK/2 + BA⌋, TT = ⌈MSK/2 + TT⌉) · HC NEC = demanda ÷ {ATIVIDADES_POR_HC:g} "
         f"(arredondado pra cima) · GAP = HC NEC − HC (positivo = faltam técnicos; negativo = sobra) · "
         f"ATRIB. = atividades por técnico. Nos dias futuros o HC ainda é baixo porque os técnicos "
         f"não foram todos alocados. Atividades canceladas e suspensas são ignoradas. As colunas são a Janela de Serviço da atividade (janela inteira, não só o início; "
-        f"janela vazia ou fora do padrão entra em SEM JANELA / OUTRAS). Nas linhas de bucket aparece só o nº de "
+        f"janela vazia ou fora do padrão entra em SLA). Nas linhas de bucket aparece só o nº de "
         f"atividades; nos totais, atividades / HC da janela = atividades por técnico e o GAP da janela "
         f"(atividades − HC, com 1 atividade por técnico por janela; positivo = faltam técnicos naquela janela)."
     )
@@ -116,6 +128,15 @@ def render(df, indicadores):
                 "Inclua no `data/Mapeamento_Atribuicao.xlsx` (aba Recursos) e rode o upload de novo."
             )
             st.dataframe(sem.rename(columns={"recurso": "Recurso", "estado": "Estado", "atividades": "Atividades"}),
+                         hide_index=True, use_container_width=True)
+
+        sem_perfil = tecnicos_sem_perfil(ativ[ativ["estado"] == estado])
+        if not sem_perfil.empty:
+            st.info(
+                f"{len(sem_perfil)} técnico(s) TLP sem Perfil Técnico na base Zeus — o Dashboard não os conta no HC ATIVO, "
+                "então a Atribuição também não (inclui recursos de bucket marcados como TLP):"
+            )
+            st.dataframe(sem_perfil.rename(columns={"recurso": "Recurso", "estado": "Estado", "atividades": "Atividades"}),
                          hide_index=True, use_container_width=True)
 
         for d in dias:
