@@ -6,7 +6,9 @@ Reproduz a planilha "Planejamento_Presença_D0" (abas RS e SC):
 
     • Demanda  = nº de atividades por BUCKET e HORÁRIO (08H30, 09H30, 10H30, 14H,
                  15H, 16H e SLA = atividade sem janela definida), contando só os
-                 recursos definidos em REGRAS[estado]["contar_demanda"].
+                 recursos definidos em REGRAS[estado]["contar_demanda"] (TLP e
+                 BUCKET TLP — mesma base tratada do Dashboard) e ignorando as
+                 atividades Canceladas e Suspensas (STATUS_IGNORADOS).
     • HC       = técnicos TLP DISTINTOS com atividade no bucket naquele dia.
     • HC NEC   = ROUNDUP(demanda / 4)        (4 atividades por técnico/dia —
                  config.META_ATRIBUICAO_ALVO)
@@ -39,16 +41,29 @@ ATIVIDADES_POR_HC = config.META_ATRIBUICAO_ALVO  # 4 atividades por técnico/dia
 ATIVIDADES_POR_HC_HORARIO = 1
 CONTAR_HC = {"TLP"}  # só técnico TLP entra no HC (bucket/Vivo/RS Telecom não)
 
-# Quem entra na DEMANDA em cada estado (igual às abas RS e SC da planilha: no SC a
-# planilha soma também VIVO e RS TELECOM; no RS só TLP) e como o GAP é arredondado.
+# Quem entra na DEMANDA em cada estado. Igual ao Dashboard, que lê a base Zeus já tratada
+# (só o que é nosso: Contratada = TLP e BUCKET TLP), tanto no SC quanto no RS. A planilha
+# antiga somava também VIVO e RS TELECOM no SC; pra voltar a esse comportamento, inclua
+# "VIVO" e "RS TELECOM" no conjunto do SC.
 # GAP: "baixo" = ROUNDDOWN (trunca em direção a zero) — é o que a planilha usa no RS
 # inteiro e em Joinville/Chapecó/Lages. Só Blumenau e Florianópolis (SC) usam ROUNDUP
 # na planilha, o que parece sobra de edição; aqui ficou tudo igual. Pra voltar ao
 # comportamento da planilha, troque para "cima".
 REGRAS = {
     "RS": {"contar_demanda": {"TLP", "BUCKET TLP"}, "gap": "baixo"},
-    "SC": {"contar_demanda": {"TLP", "BUCKET TLP", "VIVO", "RS TELECOM"}, "gap": "baixo"},
+    "SC": {"contar_demanda": {"TLP", "BUCKET TLP"}, "gap": "baixo"},
 }
+
+# Status que não contam (o Dashboard também desconta: CAIXA TOTAL = total - Suspensa - Cancelada).
+STATUS_IGNORADOS = {"CANCELADA", "CANCELADO", "SUSPENSA", "SUSPENSO"}
+
+# O OFSC às vezes traz o estado por extenso; normaliza para a sigla usada em REGRAS.
+ESTADOS_SIGLA = {
+    "SANTA CATARINA": "SC",
+    "RIO GRANDE DO SUL": "RS",
+    "PARANA": "PR",
+}
+COLUNAS_STATUS = ("Status", "Status da Atividade")
 
 # Ordem/agrupamento das linhas (cluster -> buckets), igual às abas da planilha.
 LAYOUT = {
@@ -74,6 +89,24 @@ SEM_CADASTRO = "SEM CADASTRO"
 
 def _norm(valor) -> str:
     return "" if valor is None or (isinstance(valor, float) and pd.isna(valor)) else str(valor).strip().upper()
+
+
+def _sem_acento(valor) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", _norm(valor)) if unicodedata.category(c) != "Mn")
+
+
+def _sigla_estado(valor) -> str:
+    """SANTA CATARINA / Santa Catarina -> SC; RIO GRANDE DO SUL -> RS; PARANÁ -> PR; o resto fica igual."""
+    v = _sem_acento(valor)
+    return ESTADOS_SIGLA.get(v, v)
+
+
+def _ativas(df: pd.DataFrame) -> pd.DataFrame:
+    """Tira as atividades Canceladas/Suspensas (se a coluna status existir — dados antigos não têm)."""
+    if "status" not in df.columns:
+        return df
+    return df[~df["status"].map(_sem_acento).isin(STATUS_IGNORADOS)]
 
 
 def carregar_mapeamento(caminho: str | Path = MAPEAMENTO_PADRAO) -> dict:
@@ -104,7 +137,9 @@ def preparar_atividades(raw: pd.DataFrame, mapa: dict) -> pd.DataFrame:
 
     out = pd.DataFrame(index=raw.index)
     out["dia"] = pd.to_datetime(raw["Data Agendada para Execução"], errors="coerce", dayfirst=True).dt.date
-    out["estado"] = raw["Estado"].map(_norm)
+    out["estado"] = raw["Estado"].map(_sigla_estado)
+    col_status = next((c for c in COLUNAS_STATUS if c in raw.columns), None)
+    out["status"] = raw[col_status].fillna("").astype(str).str.strip() if col_status else ""
     out["recurso"] = raw["Recurso"].fillna("").astype(str).str.strip()
     out["cidade"] = raw["Cidade"].map(_norm)
     out["janela"] = raw["Janela de Serviço"].fillna("").astype(str).str.strip()
@@ -131,6 +166,7 @@ def carregar_atividades() -> pd.DataFrame:
     if df.empty:
         return df
     df["dia"] = pd.to_datetime(df["dia"], errors="coerce").dt.date
+    df["estado"] = df["estado"].map(_sigla_estado)  # linhas gravadas antes da normalização
     return df.dropna(subset=["dia"])
 
 
@@ -198,14 +234,18 @@ def calcular_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
     TOTAL, HC, GAP, HC_NEC, ATRIB."""
     regra = REGRAS[estado]
     a = ativ_dia[ativ_dia["estado"] == estado]
-    demanda = a[a["contar"].isin(regra["contar_demanda"])]
+    ativas = _ativas(a)
+    demanda = ativas[ativas["contar"].isin(regra["contar_demanda"])]
+    # HC total: igual ao Dashboard, que conta o técnico mesmo que só tenha atividade cancelada/suspensa.
     tecnicos = a[a["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
+    # HC por janela: só quem tem atividade ativa naquela janela.
+    tecnicos_ativos = ativas[ativas["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
 
     cont = (demanda.groupby(["bucket", "horario"]).size().unstack(fill_value=0)
             .reindex(columns=HORARIOS, fill_value=0))
     hcs = tecnicos.groupby("bucket")["_k"].nunique()
     # HC por horário: técnicos TLP distintos com atividade naquela janela, no bucket.
-    hcs_horario = (tecnicos.groupby(["bucket", "horario"])["_k"].nunique().unstack(fill_value=0)
+    hcs_horario = (tecnicos_ativos.groupby(["bucket", "horario"])["_k"].nunique().unstack(fill_value=0)
                    .reindex(columns=HORARIOS, fill_value=0))
 
     linhas: list[dict] = []
@@ -229,7 +269,8 @@ def fora_do_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
     """Atividades que contam na demanda mas caem num bucket que NÃO aparece no quadro
     (a planilha também as ignora em silêncio) — ex.: cidade sem bucket cadastrado."""
     regra = REGRAS[estado]
-    a = ativ_dia[(ativ_dia["estado"] == estado) & ativ_dia["contar"].isin(regra["contar_demanda"])]
+    a = _ativas(ativ_dia)
+    a = a[(a["estado"] == estado) & a["contar"].isin(regra["contar_demanda"])]
     no_quadro = {b for _, bs in LAYOUT[estado] for b in bs}
     f = a[~a["bucket"].isin(no_quadro)]
     if f.empty:
@@ -242,7 +283,8 @@ def fora_do_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
 def recursos_sem_cadastro(ativ_dia: pd.DataFrame) -> pd.DataFrame:
     """Técnicos que não estão na tabela de Recursos — a planilha dá #N/A e a atividade
     some da contagem sem aviso."""
-    f = ativ_dia[ativ_dia["contar"] == SEM_CADASTRO]
+    f = _ativas(ativ_dia)
+    f = f[f["contar"] == SEM_CADASTRO]
     if f.empty:
         return pd.DataFrame(columns=["recurso", "estado", "atividades"])
     return (f.groupby(["recurso", "estado"]).size().reset_index(name="atividades")
