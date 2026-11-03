@@ -171,6 +171,17 @@ def janela_inicio_compacta(janela: str) -> str:
     return formatar_hora_compacta(inicio)
 
 
+def janela_legenda(janela: str) -> str:
+    """Janela de Serviço por extenso, no formato das legendas (ex.:
+    '08:30 - 10:30' -> '8:30 - 10:30'). Quando nenhuma janela específica
+    está selecionada ('Todos'), devolve '' (a legenda simplesmente não cita
+    janela)."""
+    texto = str(janela).strip()
+    if not texto or texto == "Todos":
+        return ""
+    return re.sub(r"\b0(\d):", r"\1:", texto)
+
+
 def montar_legenda(template: str, variaveis: dict, chave_horario: str) -> str:
     """
     Monta o texto da legenda a partir de um `template` fixo (ex.:
@@ -525,6 +536,21 @@ def botao_copiar_imagem(chave_container: str, rotulo: str = "📋 Copiar imagem"
                 // print, então é seguro remover só na cópia.
                 var iframesClone = copia.querySelectorAll('iframe');
                 iframesClone.forEach(function(f) {{ f.remove(); }});
+                // st.dataframe desenha a tabela num <canvas>, e cloneNode
+                // copia só a tag (em branco), não os pixels já desenhados —
+                // sem isso a tabela saía vazia na imagem. Aqui repassamos o
+                // desenho de cada canvas original para o canvas da cópia.
+                var canvasOriginais = alvo.querySelectorAll('canvas');
+                var canvasCopias = copia.querySelectorAll('canvas');
+                canvasOriginais.forEach(function(orig, i) {{
+                    var dest = canvasCopias[i];
+                    if (!dest) return;
+                    try {{
+                        dest.width = orig.width;
+                        dest.height = orig.height;
+                        dest.getContext('2d').drawImage(orig, 0, 0);
+                    }} catch (e) {{}}
+                }});
                 // Margem de segurança na PRÓPRIA cópia (não no wrapper —
                 // como o html2canvas fotografa "copia" diretamente, um
                 // padding no wrapper não tem efeito nenhum na captura).

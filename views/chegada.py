@@ -10,7 +10,7 @@ from components.charts import (
     grafico_ranking,
     opcoes_grafico,
 )
-from components.print_button import area_com_print, janela_inicio_compacta, legenda_filtros
+from components.print_button import area_com_print, janela_inicio_compacta, janela_legenda, legenda_filtros
 from components.tabelas import tabela_chegada_expansivel_3niveis
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.indicadores import Indicadores
@@ -31,6 +31,18 @@ from services.termino import (
     resumo_tempo_termino,
     tempo_termino_por_janela,
 )
+
+
+# Título da legenda do Detalhamento conforme o status de chegada flegado.
+# ("Fora" = Antes + Depois; "Depois" é o caso típico de atividade fora do time.)
+TITULO_LEGENDA_STATUS = {
+    "Todos": "ATIVIDADES",
+    "Dentro": "ATIVIDADES DENTRO DO TIME",
+    "Fora": "ATIVIDADES FORA DO TIME",
+    "Antes": "ATIVIDADES ANTES DO TIME",
+    "Depois": "ATIVIDADES FORA DO TIME",
+    "Aguardando": "ATIVIDADES AGUARDANDO",
+}
 
 
 def render(df, indicadores: Indicadores):
@@ -127,7 +139,7 @@ def render(df, indicadores: Indicadores):
     # ====== RESUMO POR GRUPO (Por Cluster / Por Gestores) ======
     secao_titulo("Resumo por Grupo", "Aderência à janela — escolha a segmentação abaixo")
 
-    aba_cluster, aba_gestores = st.tabs(["Por Cluster", "Por Gestores"])
+    aba_cluster, aba_gestores, aba_tipo = st.tabs(["Por Cluster", "Por Gestores", "Por Tipo"])
 
     with aba_cluster:
         with area_com_print(
@@ -163,6 +175,28 @@ def render(df, indicadores: Indicadores):
                 rotulo_grupo=rotulo_tecnico, rotulo_clique="Coordenador",
                 id_tabela="chegada_matriz_gestores",
             )
+
+    with aba_tipo:
+        # Tipo de serviço (coluna "Tipo" da base: DEF, INST, DS, ME, SERV...)
+        # -> Cluster -> Cidade. OS sem Tipo preenchido entram como "Sem tipo"
+        # pra os totais continuarem batendo com o resto da aba.
+        if "Tipo" not in df_chegada.columns:
+            st.info("A base não tem a coluna 'Tipo', então não dá pra detalhar por tipo de serviço.")
+        else:
+            df_por_tipo = df_chegada.copy()
+            df_por_tipo["Tipo"] = (
+                df_por_tipo["Tipo"].astype("string").str.strip().replace("", pd.NA).fillna("Sem tipo")
+            )
+            with area_com_print(
+                "chegada_matriz_tipo", nome_arquivo="chegada_por_tipo_cluster_cidade",
+                **_leg("Indicador de Chegada BA/TT", complemento=" (POR TIPO)"),
+            ):
+                dados_tipo = resumo_hierarquico_3niveis(df_por_tipo, "Tipo", "Cluster", "Cidade")
+                tabela_chegada_expansivel_3niveis(
+                    dados_tipo, titulo="Por Tipo", meta_pct=80.0,
+                    rotulo_grupo="TIPO / CLUSTER / CIDADE", rotulo_clique="Tipo",
+                    id_tabela="chegada_matriz_tipo",
+                )
 
     st.divider()
 
@@ -324,7 +358,23 @@ def render(df, indicadores: Indicadores):
 
     detalhe = aplicar_filtro(detalhe, "Técnico", tecnico_sel)
 
-    st.dataframe(detalhe, width="stretch", hide_index=True, height=460)
+    # Legenda do "Copiar imagem + texto": segue o que está flegado — status de
+    # chegada, Janela de Serviço, filtros do topo (Estado/Cluster/Cidade/Coord./
+    # Data) e o técnico escolhido aqui. Ex.:
+    # "ATIVIDADES FORA DO TIME 8:30 - 10:30 | RS | 03/11/2026 09:10".
+    titulo_status = TITULO_LEGENDA_STATUS.get(status_sel, "ATIVIDADES")
+    janela_txt = janela_legenda(janela_sel)
+    titulo_detalhe = f"{titulo_status} {janela_txt}".strip()
+
+    # Altura ajustada ao nº de linhas (até 460px): com poucas linhas a imagem
+    # copiada não leva espaço em branco embaixo (linha = 35px + cabeçalho).
+    altura_detalhe = min(460, 35 * (len(detalhe) + 1) + 3)
+
+    with area_com_print(
+        "chegada_detalhamento", nome_arquivo="chegada_detalhamento",
+        **legenda_filtros(titulo_detalhe, ligacao=" | ", locais=(tecnico_sel,)),
+    ):
+        st.dataframe(detalhe, width="stretch", hide_index=True, height=altura_detalhe)
 
     # Exportação em Excel respeitando os filtros aplicados (segmentação
     # global do topo do site + Janela de Serviço + status de chegada e
