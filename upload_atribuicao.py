@@ -76,6 +76,11 @@ def _resumo(df: pd.DataFrame) -> None:
         print("\n⚠️ Nenhuma atividade com lado BA/TT: o relatório do OFSC não trouxe a coluna \"Tipo de Atividade\".")
     else:
         print("\n📊 Atividades por lado: " + "  ".join(f"{k}={v}" for k, v in df["lado"].value_counts().items()))
+    if "status" not in df.columns or not df["status"].astype(str).str.strip().any():
+        print("\n⚠️ O relatório do OFSC não trouxe a coluna de Status (esperado: \"Status\" ou "
+              "\"Status da Atividade\"): Canceladas/Suspensas NÃO serão descontadas da demanda.")
+    else:
+        print("\n📊 Atividades por status: " + "  ".join(f"{k}={v}" for k, v in df["status"].value_counts().items()))
     sem = recursos_sem_cadastro(df)
     if not sem.empty:
         print(f"\n⚠️ {len(sem)} técnico(s) SEM cadastro em Recursos (a atividade não entra na conta):")
