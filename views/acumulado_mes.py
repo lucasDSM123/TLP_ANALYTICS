@@ -153,7 +153,8 @@ def _base_mes_anterior(ano: int, mes: int) -> pd.DataFrame:
     if base is None or base.empty:
         return pd.DataFrame()
     for coluna, chave in (("Estado", "filtro_sel_estado"), ("Cluster", "filtro_sel_cluster"),
-                          ("Cidade", "filtro_sel_cidade"), ("Coordenador", "filtro_sel_coordenador")):
+                          ("Cidade", "filtro_sel_cidade"), ("Coordenador", "filtro_sel_coordenador"),
+                          ("Tipo", "filtro_sel_tipo")):
         selecao = st.session_state.get(chave) or []
         if selecao and coluna in base.columns:
             base = base[base[coluna].isin(selecao)]

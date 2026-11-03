@@ -7,7 +7,7 @@ import streamlit as st
 def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     """
     Renderiza a barra de segmentações no topo do site (Data, Estado,
-    Cluster, Cidade) e retorna o DataFrame já filtrado conforme a seleção
+    Cluster, Cidade, Coordenador, Tipo) e retorna o DataFrame já filtrado conforme a seleção
     do usuário. Os filtros ficam disponíveis em todas as páginas, pois são
     aplicados antes do roteamento.
 
@@ -25,11 +25,18 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
     mostrar_cidade = "Cidade" not in ocultar
     mostrar_coord = "Coordenador" not in ocultar
+    mostrar_tipo = "Tipo" not in ocultar and "Tipo" in df.columns
     if mostrar_cidade or mostrar_coord:
-        col_data, col_estado, col_cluster, col_cidade, col_coordenador = st.columns([1, 1, 1, 1, 1.1])
+        larguras = [1, 1, 1, 1, 1.1] + ([1] if mostrar_tipo else [])
+        colunas_topo = st.columns(larguras)
+        col_data, col_estado, col_cluster, col_cidade, col_coordenador = colunas_topo[:5]
+        col_tipo = colunas_topo[5] if mostrar_tipo else None
     else:
-        col_data, col_estado, col_cluster = st.columns([1, 1, 1])
+        larguras = [1, 1, 1] + ([1] if mostrar_tipo else [])
+        colunas_topo = st.columns(larguras)
+        col_data, col_estado, col_cluster = colunas_topo[:3]
         col_cidade = col_coordenador = None
+        col_tipo = colunas_topo[3] if mostrar_tipo else None
 
     # ---------------- TOGGLE PU VIVO (global, vale para todas as páginas) ----------------
     # Fica em session_state para que qualquer card/tabela, em qualquer view,
@@ -104,6 +111,16 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
         else:
             sel_coordenador = []
 
+    # ---- TIPO DE SERVIÇO (multi; coluna "Tipo" da base: DEF, INST, DS, ME, SERV...) ----
+    # Não depende dos outros filtros: dá pra ver, por ex., só Instalação (INST)
+    # em qualquer página. OS sem Tipo preenchido só aparecem com o filtro vazio.
+    with (col_tipo if mostrar_tipo else nullcontext()):
+        if mostrar_tipo:
+            opcoes_tipo = sorted(df["Tipo"].dropna().astype(str).str.strip().replace("", pd.NA).dropna().unique().tolist())
+            sel_tipo = st.multiselect("Tipo", opcoes_tipo, placeholder="Todos")
+        else:
+            sel_tipo = []
+
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Guarda a seleção "crua" (antes de aplicar) em session_state para que
@@ -115,6 +132,7 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     st.session_state["filtro_sel_cluster"] = sel_cluster
     st.session_state["filtro_sel_cidade"] = sel_cidade
     st.session_state["filtro_sel_coordenador"] = sel_coordenador
+    st.session_state["filtro_sel_tipo"] = sel_tipo
 
     # ---------------- APLICAÇÃO DOS FILTROS ----------------
     df_filtrado = df.copy()
@@ -134,5 +152,8 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
 
     if sel_coordenador and "Coordenador" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Coordenador"].isin(sel_coordenador)]
+
+    if sel_tipo and "Tipo" in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado["Tipo"].astype(str).str.strip().isin(sel_tipo)]
 
     return df_filtrado

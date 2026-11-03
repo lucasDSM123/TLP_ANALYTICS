@@ -76,7 +76,7 @@ def contexto_legenda_filtros(ignorar=()) -> dict:
     - "data": Data(s) marcada(s) unidas por " / ", ou "TODAS AS DATAS".
     - "sufixo": bloco pronto pra colar no fim do Estado na legenda (ex.:
       " - CLUSTER_X - CIDADE_Y - WILLIAN SCHNAIDER"), com o(s) nome(s) de
-      Cluster/Cidade/Coordenador marcados nesta ordem — cada filtro com
+      Cluster/Cidade/Coordenador/Tipo marcados nesta ordem — cada filtro com
       mais de um valor marcado vira "NOME1/NOME2" dentro do seu bloco.
       Vira "" (string vazia) quando nenhum desses três filtros estiver
       marcado, então templates com "{estado}{sufixo}" continuam corretos
@@ -96,11 +96,12 @@ def contexto_legenda_filtros(ignorar=()) -> dict:
     clusters_sel = _sel("filtro_sel_cluster", "cluster")
     cidades_sel = _sel("filtro_sel_cidade", "cidade")
     coordenadores_sel = _sel("filtro_sel_coordenador", "coordenador")
+    tipos_sel = _sel("filtro_sel_tipo", "tipo")
 
     return {
         "estado": "/".join(estados_sel) if estados_sel else "TODOS",
         "data": " / ".join(datas_sel) if datas_sel else "TODAS AS DATAS",
-        "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel),
+        "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel, tipos_sel),
         "datas_sel": datas_sel,
     }
 

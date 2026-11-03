@@ -139,7 +139,7 @@ def render(df, indicadores: Indicadores):
     # ====== RESUMO POR GRUPO (Por Cluster / Por Gestores) ======
     secao_titulo("Resumo por Grupo", "Aderência à janela — escolha a segmentação abaixo")
 
-    aba_cluster, aba_gestores, aba_tipo = st.tabs(["Por Cluster", "Por Gestores", "Por Tipo"])
+    aba_cluster, aba_gestores = st.tabs(["Por Cluster", "Por Gestores"])
 
     with aba_cluster:
         with area_com_print(
@@ -175,28 +175,6 @@ def render(df, indicadores: Indicadores):
                 rotulo_grupo=rotulo_tecnico, rotulo_clique="Coordenador",
                 id_tabela="chegada_matriz_gestores",
             )
-
-    with aba_tipo:
-        # Tipo de serviço (coluna "Tipo" da base: DEF, INST, DS, ME, SERV...)
-        # -> Cluster -> Cidade. OS sem Tipo preenchido entram como "Sem tipo"
-        # pra os totais continuarem batendo com o resto da aba.
-        if "Tipo" not in df_chegada.columns:
-            st.info("A base não tem a coluna 'Tipo', então não dá pra detalhar por tipo de serviço.")
-        else:
-            df_por_tipo = df_chegada.copy()
-            df_por_tipo["Tipo"] = (
-                df_por_tipo["Tipo"].astype("string").str.strip().replace("", pd.NA).fillna("Sem tipo")
-            )
-            with area_com_print(
-                "chegada_matriz_tipo", nome_arquivo="chegada_por_tipo_cluster_cidade",
-                **_leg("Indicador de Chegada BA/TT", complemento=" (POR TIPO)"),
-            ):
-                dados_tipo = resumo_hierarquico_3niveis(df_por_tipo, "Tipo", "Cluster", "Cidade")
-                tabela_chegada_expansivel_3niveis(
-                    dados_tipo, titulo="Por Tipo", meta_pct=80.0,
-                    rotulo_grupo="TIPO / CLUSTER / CIDADE", rotulo_clique="Tipo",
-                    id_tabela="chegada_matriz_tipo",
-                )
 
     st.divider()
 
