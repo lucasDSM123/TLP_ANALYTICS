@@ -134,7 +134,7 @@ st.divider()
 if pagina == "Atribuição":
     df = df_base
 else:
-    df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador") if pagina == "Backlog Reparo" else ())
+    df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador", "Tipo") if pagina == "Backlog Reparo" else ())
 st.divider()
 
 # ================================================
