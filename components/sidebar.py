@@ -32,33 +32,42 @@ ICONES_PAGINAS = {
 
 def _css_menu() -> str:
     """CSS que transforma o st.radio da sidebar em um menu de navegação:
-    esconde a bolinha, deixa cada opção como um 'botão' e destaca a página
-    ativa com o degradê da marca (cores seguem o tema atual)."""
+    esconde a bolinha, deixa cada opção como um 'botão' que ocupa a largura
+    toda e destaca a página ativa com o degradê da marca (cores seguem o tema).
+
+    Seletores baseados na estrutura atual do st.radio do Streamlit:
+      [data-testid="stRadioGroup"]            -> grupo (flex em coluna)
+        > label                               -> cada opção (ganha data-selected)
+          [data-testid="stRadioOption"]
+            > div (linha)  > div:first-child  -> a bolinha; o texto vem depois
+    """
+    grupo = '[data-testid="stSidebar"] [data-testid="stRadioGroup"]'
     return f"""
     <style>
-    section[data-testid="stSidebar"] [data-testid="stRadio"] > label {{ display: none; }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {{
-        gap: 0; padding: 0;
+    [data-testid="stSidebar"] [data-testid="stRadio"] > label {{ display: none !important; }}
+    {grupo} {{
+        align-items: stretch !important; gap: 0 !important; padding: 0 !important;
     }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label {{
-        margin: 3px 8px; padding: 8px 12px; border-radius: 8px; width: auto;
-        cursor: pointer; background: transparent;
+    {grupo} > label {{
+        align-self: stretch !important;
+        margin: 3px 8px !important; padding: 8px 12px !important;
+        border-radius: 8px !important; cursor: pointer; background: transparent;
     }}
-    /* esconde a bolinha do radio */
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {{
-        display: none;
+    /* esconde a bolinha do radio (o texto continua) */
+    {grupo} > label [data-testid="stRadioOption"] > div > div:first-child {{
+        display: none !important;
     }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label p {{
-        font-size: 14px; color: {config.SIDEBAR_TEXT_MUTED}; margin: 0;
+    {grupo} > label [data-testid="stRadioOption"] p {{
+        font-size: 14px !important; color: {config.SIDEBAR_TEXT_MUTED} !important; margin: 0 !important;
     }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label:hover {{
-        background: rgba(255,255,255,0.08);
+    {grupo} > label:hover {{ background: rgba(255,255,255,0.08) !important; }}
+    {grupo} > label[data-selected],
+    {grupo} > label:has(input:checked) {{
+        background: {config.BRAND_GRADIENT} !important;
     }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {{
-        background: {config.BRAND_GRADIENT};
-    }}
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p {{
-        color: white; font-weight: 600;
+    {grupo} > label[data-selected] [data-testid="stRadioOption"] p,
+    {grupo} > label:has(input:checked) [data-testid="stRadioOption"] p {{
+        color: #FFFFFF !important; font-weight: 600 !important;
     }}
     </style>
     """
