@@ -3,7 +3,6 @@ pandas
 plotly
 openpyxl
 python-calamine
-streamlit-option-menu
 sqlalchemy
 psycopg2-binary
 python-dotenv
