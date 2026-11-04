@@ -10,11 +10,12 @@ from components.login import logout
 # as cores do CSS abaixo mudam junto).
 CHAVE_PAGINA_ATUAL = "tlp_pagina_atual"
 
-# O menu é um st.radio NATIVO do Streamlit estilizado por CSS (antes era o
-# componente de terceiros `streamlit-option-menu`, que deixou de carregar no
-# servidor com as versões novas do Streamlit). Nativo = sem arquivo externo
-# pra baixar, então não quebra com atualização de versão. Ícones em emoji,
-# na mesma ordem de config.PAGES.
+# O menu é feito com botões NATIVOS do Streamlit (st.button) estilizados por
+# CSS. Antes era o componente de terceiros `streamlit-option-menu` (parou de
+# carregar no servidor) e depois um st.radio, mas o HTML interno do radio muda
+# entre versões do Streamlit (localhost e Cloud ficavam diferentes). Botão tem
+# HTML estável em qualquer versão e não depende de arquivo externo. Ícones em
+# emoji, na mesma ordem de config.PAGES.
 ICONES_PAGINAS = {
     "Dashboard": "📊",
     "Acumulado Mês": "🗓️",
@@ -31,46 +32,49 @@ ICONES_PAGINAS = {
 
 
 def _css_menu() -> str:
-    """CSS que transforma o st.radio da sidebar em um menu de navegação:
-    esconde a bolinha, deixa cada opção como um 'botão' que ocupa a largura
-    toda e destaca a página ativa com o degradê da marca (cores seguem o tema).
-
-    Seletores baseados na estrutura atual do st.radio do Streamlit:
-      [data-testid="stRadioGroup"]            -> grupo (flex em coluna)
-        > label                               -> cada opção (ganha data-selected)
-          [data-testid="stRadioOption"]
-            > div (linha)  > div:first-child  -> a bolinha; o texto vem depois
-    """
-    grupo = '[data-testid="stSidebar"] [data-testid="stRadioGroup"]'
+    """CSS do menu: os botões de página viram itens de navegação (largura
+    toda, texto à esquerda, fundo transparente) e o da página ativa recebe o
+    degradê da marca. Escopo `.st-key-tlp_menu` (container com key) pra não
+    mexer nos botões 'Sair' e 'Mudar para...'."""
+    m = ".st-key-tlp_menu"
     return f"""
     <style>
-    [data-testid="stSidebar"] [data-testid="stRadio"] > label {{ display: none !important; }}
-    {grupo} {{
-        align-items: stretch !important; gap: 0 !important; padding: 0 !important;
+    {m} {{ gap: 4px !important; }}
+    {m} .stButton > button {{
+        width: 100% !important; justify-content: flex-start !important;
+        text-align: left !important; padding: 8px 12px !important;
+        background: transparent !important; border: none !important;
+        box-shadow: none !important; filter: none !important;
+        border-radius: 8px !important; min-height: 0 !important;
     }}
-    {grupo} > label {{
-        align-self: stretch !important;
-        margin: 3px 8px !important; padding: 8px 12px !important;
-        border-radius: 8px !important; cursor: pointer; background: transparent;
+    /* o conteúdo do botão (ícone + texto) vem centralizado por padrão:
+       força tudo a começar na esquerda e o texto a ocupar a largura toda */
+    {m} .stButton > button > div {{ width: 100% !important; }}
+    {m} .stButton > button div,
+    {m} .stButton > button span {{
+        justify-content: flex-start !important; text-align: left !important;
     }}
-    /* esconde a bolinha do radio (o texto continua) */
-    {grupo} > label [data-testid="stRadioOption"] > div > div:first-child {{
-        display: none !important;
+    {m} .stButton > button p {{
+        text-align: left !important; margin: 0 !important; font-size: 14px !important;
+        font-weight: 400 !important; color: {config.SIDEBAR_TEXT_MUTED} !important;
     }}
-    {grupo} > label [data-testid="stRadioOption"] p {{
-        font-size: 14px !important; color: {config.SIDEBAR_TEXT_MUTED} !important; margin: 0 !important;
-    }}
-    {grupo} > label:hover {{ background: rgba(255,255,255,0.08) !important; }}
-    {grupo} > label[data-selected],
-    {grupo} > label:has(input:checked) {{
+    {m} .stButton > button:hover {{ background: rgba(255,255,255,0.08) !important; }}
+    /* página ativa (botão type="primary") */
+    {m} .stButton > button[kind="primary"],
+    {m} .stButton > button[data-testid="stBaseButton-primary"] {{
         background: {config.BRAND_GRADIENT} !important;
     }}
-    {grupo} > label[data-selected] [data-testid="stRadioOption"] p,
-    {grupo} > label:has(input:checked) [data-testid="stRadioOption"] p {{
+    {m} .stButton > button[kind="primary"] p,
+    {m} .stButton > button[data-testid="stBaseButton-primary"] p {{
         color: #FFFFFF !important; font-weight: 600 !important;
     }}
     </style>
     """
+
+
+def _ir_para(pagina: str) -> None:
+    """on_click dos botões do menu: guarda a página escolhida."""
+    st.session_state[CHAVE_PAGINA_ATUAL] = pagina
 
 
 def sidebar() -> str:
@@ -89,24 +93,24 @@ def sidebar() -> str:
             unsafe_allow_html=True,
         )
 
-        # Recupera a última página selecionada (se existir) pra calcular o
-        # índice inicial do menu. Sem isso, qualquer remount do menu (ex.:
-        # troca de tema) voltaria sempre pro índice 0 (Dashboard).
-        pagina_salva = st.session_state.get(CHAVE_PAGINA_ATUAL, config.PAGES[0])
-        indice_atual = config.PAGES.index(pagina_salva) if pagina_salva in config.PAGES else 0
+        # Página ativa: a última escolhida (guardada no session_state, então
+        # sobrevive a troca de tema etc.); na primeira vez, o Dashboard.
+        pagina = st.session_state.get(CHAVE_PAGINA_ATUAL, config.PAGES[0])
+        if pagina not in config.PAGES:
+            pagina = config.PAGES[0]
+        st.session_state[CHAVE_PAGINA_ATUAL] = pagina
 
         st.markdown(_css_menu(), unsafe_allow_html=True)
-        pagina = st.radio(
-            "Navegação",
-            options=config.PAGES,
-            index=indice_atual,
-            key="tlp_menu_principal",  # identidade fixa entre reruns
-            format_func=lambda p: f"{ICONES_PAGINAS.get(p, '•')}  {p}",
-            label_visibility="collapsed",
-        )
-
-        # Persiste a escolha atual pra próxima renderização (ver acima).
-        st.session_state[CHAVE_PAGINA_ATUAL] = pagina
+        with st.container(key="tlp_menu"):
+            for p in config.PAGES:
+                st.button(
+                    f"{ICONES_PAGINAS.get(p, '•')}  {p}",
+                    key=f"menu_{p}",
+                    type="primary" if p == pagina else "secondary",
+                    use_container_width=True,
+                    on_click=_ir_para,
+                    args=(p,),
+                )
 
         st.markdown("<hr>", unsafe_allow_html=True)
 
