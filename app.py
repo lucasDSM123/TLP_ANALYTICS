@@ -137,7 +137,7 @@ else:
     df = filtros_topo(
         df_base,
         ocultar=("Cidade", "Coordenador", "Tipo") if pagina == "Backlog Reparo" else (),
-        mostrar_gestao=(pagina == "Dashboard"),
+        mostrar_gestao=(pagina == "Produção Online"),
     )
 st.divider()
 
@@ -152,7 +152,7 @@ indicadores = Indicadores(df)
 # ================================================
 
 PAGINAS = {
-    "Dashboard": dashboard,
+    "Produção Online": dashboard,
     "Acumulado Mês": acumulado_mes,
     "Alongados": alongados,
     "Cotas": cotas,

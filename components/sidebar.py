@@ -17,7 +17,7 @@ CHAVE_PAGINA_ATUAL = "tlp_pagina_atual"
 # HTML estável em qualquer versão e não depende de arquivo externo. Ícones em
 # emoji, na mesma ordem de config.PAGES.
 ICONES_PAGINAS = {
-    "Dashboard": "📊",
+    "Produção Online": "📊",
     "Acumulado Mês": "🗓️",
     "Alongados": "⏳",
     "Cotas": "📋",
