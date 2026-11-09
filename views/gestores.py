@@ -6,9 +6,8 @@ from components.header import secao_titulo
 from components.charts import grafico_media_atribuida_pu, grafico_ranking, opcoes_grafico
 from components.tabela_analise_p import tabela_analise_p_coordenador_supervisor_tecnico
 from components.tabela_coordenador import render_tabela_coordenadores
-from components.tabelas import tabela_matriz_expansivel
 from services.indicadores import Indicadores
-from services.grupos import metricas_por_grupo, metricas_por_tecnico, matriz_producao, matriz_producao_cluster_cidade
+from services.grupos import metricas_por_grupo, metricas_por_tecnico
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from services.loader import opcoes_filtro, aplicar_filtro
 from services.analise_p import classificacao_tecnicos, matriz_analise_p_coordenador_supervisor_tecnico
@@ -115,7 +114,7 @@ def render(df, indicadores: Indicadores):
     # inteira, então selecionar um Coordenador não tinha efeito nelas.
     secao_titulo(
         "Produção por Coordenador",
-        "Visão consolidada (BA + TT) e, logo abaixo, o detalhamento expansível por fila",
+        "Visão consolidada (BA + TT). O detalhamento por fila (BA / TT) está no Dashboard",
     )
 
     # --- Matriz consolidada (BA + TT juntos, sempre expandida, com
@@ -141,51 +140,6 @@ def render(df, indicadores: Indicadores):
         render_tabela_coordenadores(tabela_coordenadores(df_filtrado), total_geral(df_filtrado))
 
     st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- Detalhamento por fila (BA / TT), expansível por Coordenador -> Supervisor ---
-    def _linha_total_producao(df_matriz):
-        """Extrai a linha 'Total' da matriz flat (matriz_producao) como
-        dict pronto pra tabela expansível (troca a chave 'Cluster' —
-        nome fixo da coluna de rótulo em matriz_producao, mesmo quando
-        agrupado por Coordenador — por 'Nome')."""
-        if df_matriz.empty:
-            return None
-        linha = df_matriz[df_matriz["Cluster"] == "Total"]
-        if linha.empty:
-            return None
-        total = linha.iloc[0].to_dict()
-        total["Nome"] = total.pop("Cluster")
-        return total
-
-    matriz_coord_ba = matriz_producao(df_filtrado, lado="BA", coluna_grupo="Coordenador")
-    grupos_coord_ba = matriz_producao_cluster_cidade(
-        df_filtrado, lado="BA", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
-    )
-    with area_com_print(
-        "gestores_matriz_producao_ba", nome_arquivo="producao_ba_por_coordenador",
-        **legenda_filtros("PRODUÇÃO BA (POR GESTÃO)", "FECHAMENTO PRODUÇÃO BA (POR COORDENADOR)", locais=(coord_sel, sup_sel, tec_sel)),
-    ):
-        tabela_matriz_expansivel(
-            grupos_coord_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
-            total=_linha_total_producao(matriz_coord_ba), id_tabela="gestores_producao_ba",
-            rotulo_grupo="COORDENADOR / SUPERVISOR", rotulo_clique="Coordenador",
-        )
-
-    st.write("")
-
-    matriz_coord_tt = matriz_producao(df_filtrado, lado="TT", coluna_grupo="Coordenador")
-    grupos_coord_tt = matriz_producao_cluster_cidade(
-        df_filtrado, lado="TT", coluna_grupo="Coordenador", coluna_subgrupo="Supervisor"
-    )
-    with area_com_print(
-        "gestores_matriz_producao_tt", nome_arquivo="producao_tt_por_coordenador",
-        **legenda_filtros("PRODUÇÃO TT (POR GESTÃO)", "FECHAMENTO PRODUÇÃO TT (POR COORDENADOR)", locais=(coord_sel, sup_sel, tec_sel)),
-    ):
-        tabela_matriz_expansivel(
-            grupos_coord_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
-            total=_linha_total_producao(matriz_coord_tt), id_tabela="gestores_producao_tt",
-            rotulo_grupo="COORDENADOR / SUPERVISOR", rotulo_clique="Coordenador",
-        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 

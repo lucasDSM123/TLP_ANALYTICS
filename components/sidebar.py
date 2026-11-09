@@ -24,7 +24,6 @@ ICONES_PAGINAS = {
     "Atribuição": "👤",
     "Chegada": "🕒",
     "Backlog Reparo": "🛠️",
-    "Gestores": "👥",
     "Analítica": "📈",
     "Relatórios": "📑",
     "Configurações": "⚙️",

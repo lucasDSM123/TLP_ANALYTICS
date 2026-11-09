@@ -5,13 +5,13 @@ from components.cards import card
 from components.header import secao_titulo
 from components.charts import grafico_status_pizza, grafico_comparativo_ba_tt, grafico_pareto_causa, opcoes_grafico
 from components.tabelas import tabela_matriz, tabela_matriz_expansivel
-from components.tabela_analise_p import tabela_analise_p_cluster_cidade
-from components.analise_indicador import render_analise_indicador
-from components.seletor_indicador import seletor_indicador_topo
+from components.tabela_analise_p import tabela_analise_p_cluster_cidade, tabela_analise_p_coordenador_supervisor_tecnico
+from components.tabela_coordenador import render_tabela_coordenadores
+from services.coordenador_tabela import tabela_coordenadores, total_geral
 from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros, legenda_filtros
 from services.indicadores import Indicadores
-from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade, matriz_geral_cluster
-from services.analise_p import matriz_analise_p_cluster_cidade
+from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade, matriz_geral_cluster, metricas_por_tecnico
+from services.analise_p import matriz_analise_p_cluster_cidade, matriz_analise_p_coordenador_supervisor_tecnico
 import config
 
 
@@ -101,6 +101,24 @@ def render(df, indicadores: Indicadores):
 
     st.divider()
 
+    # ====== PRODUÇÃO POR COORDENADOR (BA + TT consolidado, já destrinchado por supervisor) ======
+    secao_titulo(
+        "Produção por Coordenador",
+        "Visão consolidada (BA + TT) por coordenador e supervisor",
+    )
+    with area_com_print(
+        "dashboard_matriz_coordenadores", nome_arquivo="producao_por_coordenador",
+        legenda_template=legenda_producao_ou_fechamento(
+            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA/TT | {estado}{sufixo} (POR GESTÃO) | {data} {hora}",
+            "FECHAMENTO PRODUÇÃO BA/TT | {estado}{sufixo} (POR COORDENADOR) | {data} {hora}",
+            _datas_sel,
+        ),
+        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
+    ):
+        render_tabela_coordenadores(tabela_coordenadores(df), total_geral(df))
+
+    st.divider()
+
     # ====== COMPARATIVO BA VS TT ======
     secao_titulo("Comparativo BA vs TT", "Desempenho lado a lado das duas filas técnicas")
 
@@ -134,13 +152,27 @@ def render(df, indicadores: Indicadores):
 
     st.divider()
 
-    # ====== MATRIZES DE PRODUÇÃO POR CLUSTER / CIDADE (BA / TT) ======
-    secao_titulo("Produção por Cluster", "Detalhamento por cluster e cidade — filas BA e TT")
+    # ====== MATRIZES DE PRODUÇÃO (BA / TT) — Cluster / Coordenador ======
+    secao_titulo("Produção", "Detalhamento das filas BA e TT — escolha a visão abaixo")
+
+    # Cada visão usa a mesma matriz de produção, só muda o agrupamento:
+    # (coluna do 1º nível, coluna do 2º nível, rótulo da coluna, rótulo do clique)
+    VISOES_PRODUCAO = {
+        "Cluster": ("Cluster", "Cidade", "CLUSTER / CIDADE", "Cluster"),
+        "Coordenador": ("Coordenador", "Supervisor", "COORDENADOR / SUPERVISOR", "Coordenador"),
+    }
+    visao_prod = st.segmented_control(
+        "Visão da produção", options=list(VISOES_PRODUCAO), default="Cluster",
+        key="dashboard_visao_producao",
+    ) or "Cluster"
+    col_g, col_sg, rotulo_grupo, rotulo_clique = VISOES_PRODUCAO[visao_prod]
+    chave_visao = visao_prod.lower()
+    sufixo_visao = "" if visao_prod == "Cluster" else f" (POR {visao_prod.upper()})"
 
     def _linha_total(df_matriz):
         """Extrai a linha 'Total' da matriz flat (matriz_producao) como
-        dict pronto pra tabela expansível (troca a chave 'Cluster' por
-        'Nome')."""
+        dict pronto pra tabela expansível (troca a chave 'Cluster' —
+        nome fixo da coluna de rótulo em matriz_producao — por 'Nome')."""
         if df_matriz.empty:
             return None
         linha = df_matriz[df_matriz["Cluster"] == "Total"]
@@ -150,51 +182,38 @@ def render(df, indicadores: Indicadores):
         total["Nome"] = total.pop("Cluster")
         return total
 
-    matriz_ba = matriz_producao(df, lado="BA")
-    grupos_ba = matriz_producao_cluster_cidade(df, lado="BA")
-    with area_com_print(
-        "dashboard_matriz_ba", nome_arquivo="producao_ba",
-        legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO + ESTEIRA + EFICÁCIA - BA | {estado}{sufixo} | {data} {hora}",
-            "FECHAMENTO PRODUÇÃO BA | {estado}{sufixo} | {data} {hora}",
-            _datas_sel,
-        ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
-    ):
-        tabela_matriz_expansivel(
-            grupos_ba, "PRODUÇÃO BA", cor_titulo="#00C9A7",
-            total=_linha_total(matriz_ba), id_tabela="producao_ba",
+    for lado, cor in (("BA", "#00C9A7"), ("TT", config.TLP_ORANGE)):
+        matriz_lado = matriz_producao(df, lado=lado, coluna_grupo=col_g)
+        grupos_lado = matriz_producao_cluster_cidade(
+            df, lado=lado, coluna_grupo=col_g, coluna_subgrupo=col_sg
         )
-        st.markdown(
-            f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
-            f"Pareto de Pendências — BA</p>",
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(grafico_pareto_causa(df, "BA"), width='stretch', config=opcoes_grafico("pareto_pendencias_ba"))
+        with area_com_print(
+            f"dashboard_matriz_{lado.lower()}_{chave_visao}",
+            nome_arquivo=f"producao_{lado.lower()}_{chave_visao}",
+            legenda_template=legenda_producao_ou_fechamento(
+                f"PRODUÇÃO + ESTEIRA + EFICÁCIA - {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
+                f"FECHAMENTO PRODUÇÃO {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
+                _datas_sel,
+            ),
+            legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
+        ):
+            tabela_matriz_expansivel(
+                grupos_lado, f"PRODUÇÃO {lado}", cor_titulo=cor,
+                total=_linha_total(matriz_lado), id_tabela=f"producao_{lado.lower()}_{chave_visao}",
+                rotulo_grupo=rotulo_grupo, rotulo_clique=rotulo_clique,
+            )
+            st.markdown(
+                f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
+                f"Pareto de Pendências — {lado}</p>",
+                unsafe_allow_html=True,
+            )
+            st.plotly_chart(
+                grafico_pareto_causa(df, lado), width='stretch',
+                config=opcoes_grafico(f"pareto_pendencias_{lado.lower()}"),
+            )
 
-    st.write("")
-
-    matriz_tt = matriz_producao(df, lado="TT")
-    grupos_tt = matriz_producao_cluster_cidade(df, lado="TT")
-    with area_com_print(
-        "dashboard_matriz_tt", nome_arquivo="producao_tt",
-        legenda_template=legenda_producao_ou_fechamento(
-            "PRODUÇÃO + ESTEIRA + EFICÁCIA - TT | {estado}{sufixo} | {data} {hora}",
-            "FECHAMENTO PRODUÇÃO TT | {estado}{sufixo} | {data} {hora}",
-            _datas_sel,
-        ),
-        legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
-    ):
-        tabela_matriz_expansivel(
-            grupos_tt, "PRODUÇÃO TT", cor_titulo=config.TLP_ORANGE,
-            total=_linha_total(matriz_tt), id_tabela="producao_tt",
-        )
-        st.markdown(
-            f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
-            f"Pareto de Pendências — TT</p>",
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(grafico_pareto_causa(df, "TT"), width='stretch', config=opcoes_grafico("pareto_pendencias_tt"))
+        if lado == "BA":
+            st.write("")
 
     st.divider()
 
@@ -208,8 +227,16 @@ def render(df, indicadores: Indicadores):
         st.plotly_chart(grafico_status_pizza(status_counts(df)), width='stretch', config=opcoes_grafico("status_geral"))
 
     st.write("")
-    secao_titulo("Análise P por Cluster", "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6), com quebra por cidade")
-    contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
+    secao_titulo(
+        "Análise P",
+        "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6) — escolha a visão abaixo",
+    )
+
+    visao_p = st.segmented_control(
+        "Visão da Análise P",
+        options=["Cluster / Cidade", "Coordenador / Supervisor / Técnico"],
+        default="Cluster / Cidade", key="dashboard_visao_analise_p",
+    ) or "Cluster / Cidade"
 
     # Mesmo escopo da Análise P dos cards/resumo (services.indicadores):
     # Contratada = "TLP" e excluindo Supervisor = "BUCKET" — técnicos do
@@ -221,12 +248,10 @@ def render(df, indicadores: Indicadores):
     if "Supervisor" in df_analise_p.columns:
         df_analise_p = df_analise_p[df_analise_p["Supervisor"] != "BUCKET"]
 
-    grupos_analise_p = matriz_analise_p_cluster_cidade(df_analise_p)
-
     def _linha_total_p(df_resumo, chave_grupo="Cluster"):
-        """Extrai a linha 'Total Geral' de contagem_cluster/percentual_cluster
-        como dict pronto pra tabela expansível (troca a chave do
-        agrupamento por 'Nome')."""
+        """Extrai a linha 'Total Geral' de contagem/percentual como dict
+        pronto pra tabela expansível (troca a chave do agrupamento por
+        'Nome')."""
         if df_resumo.empty:
             return None
         linha = df_resumo[df_resumo[chave_grupo] == "Total Geral"]
@@ -236,63 +261,59 @@ def render(df, indicadores: Indicadores):
         total["Nome"] = total.pop(chave_grupo)
         return total
 
-    with area_com_print(
-        "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
-        # PZERO parcial (hoje) / FECHAMENTO PZERO (data de ontem pra trás).
-        **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
-    ):
-        tabela_analise_p_cluster_cidade(
-            grupos_analise_p, resumo=resumo_cluster,
-            total_contagem=_linha_total_p(contagem_cluster),
-            total_percentual=_linha_total_p(percentual_cluster),
-            id_tabela="dashboard_analise_p",
-        )
+    if visao_p == "Cluster / Cidade":
+        contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
+        grupos_analise_p = matriz_analise_p_cluster_cidade(df_analise_p)
 
-    st.divider()
-
-    # ====== INDICADOR EM FOCO ======
-    # Fica logo acima de "Detalhamento", afetando apenas a quebra por
-    # cluster/hora/dia mostrada nessa seção — não interfere nos cards e
-    # gráficos acima (Indicadores Principais, Comparativo, Produção,
-    # Visão Analítica), que continuam refletindo os filtros do topo do
-    # site normalmente.
-    secao_titulo("Indicador em Foco", "Clique em um indicador para filtrar o detalhamento abaixo")
-    _, chave_ativa, escolha_ativa, _ = seletor_indicador_topo(df)
-
-    st.divider()
-
-    # ====== DETALHAMENTO DO INDICADOR SELECIONADO ACIMA ======
-    if chave_ativa:
-        secao_titulo(
-            f"Detalhamento — {escolha_ativa}",
-            "Quebra por cluster, evolução ao longo do dia e comparativo dia a dia do indicador selecionado acima",
-        )
-        render_analise_indicador(df, chave_ativa, escolha_ativa)
-    else:
-        secao_titulo("Detalhamento por Indicador", "Selecione um indicador em foco acima para ver a quebra por cluster, hora e dia")
-        st.info("Nenhum indicador em foco no momento. Clique em um indicador em \"Indicador em Foco\", acima, para detalhar aqui.")
-
-    st.divider()
-
-    # ====== RESUMO GERAL ======
-    with st.expander("📊 Detalhes Adicionais"):
         with area_com_print(
-            "dashboard_detalhes_adicionais", nome_arquivo="detalhes_adicionais",
-            **legenda_filtros("DETALHES ADICIONAIS"),
+            "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
+            # PZERO parcial (hoje) / FECHAMENTO PZERO (data de ontem pra trás).
+            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
         ):
-            col1, col2, col3 = st.columns(3)
+            tabela_analise_p_cluster_cidade(
+                grupos_analise_p, resumo=resumo_cluster,
+                total_contagem=_linha_total_p(contagem_cluster),
+                total_percentual=_linha_total_p(percentual_cluster),
+                id_tabela="dashboard_analise_p",
+            )
+    else:
+        _, _, resumo_coord = indicadores.analise_p_cluster(coluna_grupo="Coordenador")
+        grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_analise_p)
 
-            with col1:
-                card("Suspensa", caixa["SUSPENSA"], "#9EA4B5")
-                card("Cancelada", caixa["CANCELADA"], config.TLP_RED)
+        with area_com_print(
+            "dashboard_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico",
+            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
+        ):
+            tabela_analise_p_coordenador_supervisor_tecnico(
+                grupos_analise_p_cst, resumo=resumo_coord,
+                id_tabela="dashboard_analise_p_cst",
+            )
 
-            with col2:
-                card("Média Atribuição Geral", f"{media['GERAL']:.2f}", "#7B8CDE")
-                card("Concluído Geral", concluido["GERAL"], config.TLP_GOLD)
+    st.divider()
 
-            with col3:
-                card("Projeção BA", projecao["BA"], "#00C9A7")
-                card("Projeção TT", projecao["TT"], "#FF5C5C")
-                card("Projeção PU", f"{projecao_pu['GERAL']:.2f}", "#7B8CDE",
-                     pu_site=projecao_pu["GERAL"], pu_vivo_valor=projecao_pu_vivo["GERAL"],
-                     rotulo_vivo="Proj. PU Vivo")
+    # ====== INDICADORES PRINCIPAIS POR TÉCNICO ======
+    secao_titulo("Indicadores Principais por Técnico", "Todos os técnicos do filtro atual e seus indicadores completos")
+    matriz_tecnicos = metricas_por_tecnico(df)
+    if matriz_tecnicos.empty:
+        st.info("Sem técnicos com atividades para os filtros atuais.")
+    else:
+        matriz_tecnicos = matriz_tecnicos.sort_values("PU", ascending=False).copy()
+        colunas_exibir = [c for c in [
+            "Técnico", "Supervisor", "Classificação P", "Caixa Total", "Concluído OK", "Concluído NOK",
+            "Eficácia", "PU", "Esteira", "Iniciada", "Projeção", "Cluster",
+        ] if c in matriz_tecnicos.columns]
+        matriz_fmt = matriz_tecnicos[colunas_exibir].copy()
+        matriz_fmt["Eficácia"] = matriz_fmt["Eficácia"] * 100
+        with area_com_print(
+            "dashboard_matriz_tecnicos", nome_arquivo="indicadores_por_tecnico",
+            **legenda_filtros("INDICADORES POR TÉCNICO"),
+        ):
+            st.dataframe(
+                matriz_fmt,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Eficácia": st.column_config.NumberColumn("Eficácia", format="%.1f%%"),
+                    "PU": st.column_config.NumberColumn("PU", format="%.2f"),
+                },
+            )

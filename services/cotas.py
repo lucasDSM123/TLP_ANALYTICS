@@ -193,18 +193,38 @@ def resumo_cards(df_dia: pd.DataFrame) -> dict:
     return {"Cota": cota, "Real": real, "GAP": gap, "%Agendada": _pct_agendada(cota, real)}
 
 
+def _ordenar_horarios(horarios) -> list:
+    """
+    Ordena os time slots (ex.: '08:30-10:30') cronologicamente: primeiro pelo
+    horário de início e, em caso de empate, pelo de término. Slots fora do
+    padrão HH:MM-HH:MM vão para o final, mantendo a ordem original entre si.
+    """
+    unicos = list(dict.fromkeys(horarios))
+
+    def _chave(item):
+        pos, h = item
+        m = re.match(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$", str(h))
+        if not m:
+            return (1, 0, 0, pos)
+        ini = int(m.group(1)) * 60 + int(m.group(2))
+        fim = int(m.group(3)) * 60 + int(m.group(4))
+        return (0, ini, fim, pos)
+
+    return [h for _, h in sorted(enumerate(unicos), key=_chave)]
+
+
 def resumo_turno(df_dia: pd.DataFrame) -> tuple:
     """
     Réplica da tabela "Distribuição por Turno": uma linha por Atividade,
     colunas = Horário, com a Cota, o Real (Ativ.) e o GAP lado a lado —
     a Cota fica visível pra explicar de onde vem o Gap. Retorna
-    (pivot_cota, pivot_real, pivot_gap) já na ordem dos horários como
-    aparecem na base (não em ordem alfabética).
+    (pivot_cota, pivot_real, pivot_gap) já em ordem cronológica de horário
+    (início do slot).
     """
     if df_dia.empty:
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-    horarios_ordem = list(dict.fromkeys(df_dia["Horário"].tolist()))
+    horarios_ordem = _ordenar_horarios(df_dia["Horário"].tolist())
 
     agrupado = df_dia.groupby(["Atividade", "Horário"], as_index=False).agg(
         Cota=("Cota", "sum"), Real=("Real", "sum"), GAP=("GAP", "sum")
@@ -225,13 +245,13 @@ def resumo_turno(df_dia: pd.DataFrame) -> tuple:
 def resumo_horario_cidade(df_dia: pd.DataFrame) -> pd.DataFrame:
     """
     Detalhe por Time Slot dentro de cada Cidade (nível mais fino da árvore
-    Cluster > Cidade > Horário): Cota, Real e Delta por horário, na ordem
-    em que os horários aparecem na base.
+    Cluster > Cidade > Horário): Cota, Real e Delta por horário, em ordem
+    cronológica de horário.
     """
     if df_dia.empty:
         return pd.DataFrame()
 
-    horarios_ordem = list(dict.fromkeys(df_dia["Horário"].tolist()))
+    horarios_ordem = _ordenar_horarios(df_dia["Horário"].tolist())
 
     agrupado = df_dia.groupby(["Cluster", "Cidade", "Horário"], as_index=False).agg(
         Cota=("Cota", "sum"), Real=("Real", "sum"), GAP=("GAP", "sum")
@@ -282,7 +302,7 @@ def matriz_agendada_slot(df_dia: pd.DataFrame, nivel: str = "Cluster") -> pd.Dat
     if df_dia.empty or nivel not in df_dia.columns:
         return pd.DataFrame()
 
-    horarios_ordem = list(dict.fromkeys(df_dia["Horário"].tolist()))
+    horarios_ordem = _ordenar_horarios(df_dia["Horário"].tolist())
 
     agrupado = df_dia.groupby([nivel, "Horário"], as_index=False).agg(Real=("Real", "sum"), Cota=("Cota", "sum"))
     agrupado["%Agendada"] = agrupado.apply(lambda r: _pct_agendada(r["Cota"], r["Real"]), axis=1)

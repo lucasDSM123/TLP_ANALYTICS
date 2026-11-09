@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 
-def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
+def filtros_topo(df: pd.DataFrame, ocultar: tuple = (), mostrar_gestao: bool = False) -> pd.DataFrame:
     """
     Renderiza a barra de segmentações no topo do site (Data, Estado,
     Cluster, Cidade, Coordenador, Tipo) e retorna o DataFrame já filtrado conforme a seleção
@@ -21,6 +21,11 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     `ocultar`: nomes de filtros a esconder nesta página (hoje só \"Cidade\" e
     \"Coordenador\" são suportados). Um filtro oculto fica sem seleção, ou seja,
     não restringe nada.
+
+    `mostrar_gestao`: quando True, mostra uma 2ª linha com as segmentações
+    Supervisor e Técnico (hoje só na aba Dashboard). Supervisor respeita
+    Estado/Cluster/Cidade/Coordenador já marcados e Técnico respeita também
+    o(s) Supervisor(es) marcado(s).
     """
     st.markdown("<div class='tlp-filtros'>", unsafe_allow_html=True)
     mostrar_cidade = "Cidade" not in ocultar
@@ -121,6 +126,34 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
         else:
             sel_tipo = []
 
+    # ------- SUPERVISOR e TÉCNICO (multi, só no Dashboard; cascata a partir dos filtros acima) -------
+    sel_supervisor, sel_tecnico = [], []
+    if mostrar_gestao and ("Supervisor" in df.columns or "Técnico" in df.columns):
+        col_sup, col_tec, _, _, _ = st.columns([1, 1, 1, 1, 1.1])
+        df_para_gestao = df
+        if sel_estado and "Estado" in df_para_gestao.columns:
+            df_para_gestao = df_para_gestao[df_para_gestao["Estado"].isin(sel_estado)]
+        if sel_cluster and "Cluster" in df_para_gestao.columns:
+            df_para_gestao = df_para_gestao[df_para_gestao["Cluster"].isin(sel_cluster)]
+        if sel_cidade and "Cidade" in df_para_gestao.columns:
+            df_para_gestao = df_para_gestao[df_para_gestao["Cidade"].isin(sel_cidade)]
+        if sel_coordenador and "Coordenador" in df_para_gestao.columns:
+            df_para_gestao = df_para_gestao[df_para_gestao["Coordenador"].isin(sel_coordenador)]
+
+        with col_sup:
+            if "Supervisor" in df_para_gestao.columns:
+                opcoes_sup = sorted(df_para_gestao["Supervisor"].dropna().unique().tolist())
+                sel_supervisor = st.multiselect("Supervisor", opcoes_sup, placeholder="Todos", key="filtro_supervisor")
+        if sel_supervisor:
+            df_para_gestao = df_para_gestao[df_para_gestao["Supervisor"].isin(sel_supervisor)]
+        with col_tec:
+            if "Técnico" in df_para_gestao.columns:
+                opcoes_tec = sorted(df_para_gestao["Técnico"].dropna().unique().tolist())
+                # descarta seleção antiga que saiu das opções (ex.: trocou o Supervisor)
+                if "filtro_tecnico" in st.session_state:
+                    st.session_state["filtro_tecnico"] = [t for t in st.session_state["filtro_tecnico"] if t in opcoes_tec]
+                sel_tecnico = st.multiselect("Técnico", opcoes_tec, placeholder="Todos", key="filtro_tecnico")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Guarda a seleção "crua" (antes de aplicar) em session_state para que
@@ -133,6 +166,8 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
     st.session_state["filtro_sel_cidade"] = sel_cidade
     st.session_state["filtro_sel_coordenador"] = sel_coordenador
     st.session_state["filtro_sel_tipo"] = sel_tipo
+    st.session_state["filtro_sel_supervisor"] = sel_supervisor
+    st.session_state["filtro_sel_tecnico"] = sel_tecnico
 
     # ---------------- APLICAÇÃO DOS FILTROS ----------------
     df_filtrado = df.copy()
@@ -152,6 +187,12 @@ def filtros_topo(df: pd.DataFrame, ocultar: tuple = ()) -> pd.DataFrame:
 
     if sel_coordenador and "Coordenador" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Coordenador"].isin(sel_coordenador)]
+
+    if sel_supervisor and "Supervisor" in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado["Supervisor"].isin(sel_supervisor)]
+
+    if sel_tecnico and "Técnico" in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado["Técnico"].isin(sel_tecnico)]
 
     if sel_tipo and "Tipo" in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado["Tipo"].astype(str).str.strip().isin(sel_tipo)]

@@ -11,7 +11,7 @@ from services.loader import carregar_base
 from services.indicadores import Indicadores
 from utils.assets import imagem_como_data_uri
 
-from views import dashboard, acumulado_mes, alongados, cotas, atribuicao, chegada, backlog_reparo, gestores, analitica, relatorios, configuracoes
+from views import dashboard, acumulado_mes, alongados, cotas, atribuicao, chegada, backlog_reparo, analitica, relatorios, configuracoes
 
 # ================================================
 # CONFIGURAÇÃO INICIAL
@@ -134,7 +134,11 @@ st.divider()
 if pagina == "Atribuição":
     df = df_base
 else:
-    df = filtros_topo(df_base, ocultar=("Cidade", "Coordenador", "Tipo") if pagina == "Backlog Reparo" else ())
+    df = filtros_topo(
+        df_base,
+        ocultar=("Cidade", "Coordenador", "Tipo") if pagina == "Backlog Reparo" else (),
+        mostrar_gestao=(pagina == "Dashboard"),
+    )
 st.divider()
 
 # ================================================
@@ -155,7 +159,6 @@ PAGINAS = {
     "Atribuição": atribuicao,
     "Chegada": chegada,
     "Backlog Reparo": backlog_reparo,
-    "Gestores": gestores,
     "Analítica": analitica,
     "Relatórios": relatorios,
     "Configurações": configuracoes,

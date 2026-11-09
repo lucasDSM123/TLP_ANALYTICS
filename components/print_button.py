@@ -97,11 +97,13 @@ def contexto_legenda_filtros(ignorar=()) -> dict:
     cidades_sel = _sel("filtro_sel_cidade", "cidade")
     coordenadores_sel = _sel("filtro_sel_coordenador", "coordenador")
     tipos_sel = _sel("filtro_sel_tipo", "tipo")
+    supervisores_sel = _sel("filtro_sel_supervisor", "supervisor")
+    tecnicos_sel = _sel("filtro_sel_tecnico", "tecnico")
 
     return {
         "estado": "/".join(estados_sel) if estados_sel else "TODOS",
         "data": " / ".join(datas_sel) if datas_sel else "TODAS AS DATAS",
-        "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel, tipos_sel),
+        "sufixo": sufixo_selecao(clusters_sel, cidades_sel, coordenadores_sel, supervisores_sel, tecnicos_sel, tipos_sel),
         "datas_sel": datas_sel,
     }
 
