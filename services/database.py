@@ -1,7 +1,7 @@
 import io
 import re
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 import pandas as pd
 import config
 
@@ -93,8 +93,20 @@ def _normalizar_colunas_inteiras(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str = "numero_atividade",
-                            sincronizar_exclusoes: bool = True):
+                            sincronizar_exclusoes: bool = True,
+                            datas_escopo_exclusao: list | None = None,
+                            coluna_data: str = "Data"):
     """
+    MODO INCREMENTAL (novo): se `datas_escopo_exclusao` for informado (lista de
+    textos da coluna `coluna_data`, ex.: ["16/11/26", "17/11/26"]), o `df` deve
+    conter SÓ as linhas desse recorte e a remoção de "órfãs" (passo 6) passa a
+    valer apenas para as linhas do Neon cuja data está nessa lista. Dias fora
+    do recorte não são tocados. Com `datas_escopo_exclusao=None` (padrão) o
+    comportamento é o de sempre: `df` é o extrato completo e qualquer chave
+    ausente dele é apagada — por isso os outros uploads (cotas, atribuição,
+    backlog) continuam idênticos.
+
+    
     Envia ou atualiza registros no Neon utilizando uma TEMP TABLE nativa + MERGE/UPSERT.
     Trata colunas com espaços, caracteres especiais e acentos sem erros de parâmetros do SQLAlchemy.
 
@@ -255,19 +267,81 @@ def enviar_dados_para_neon(df: pd.DataFrame, nome_tabela: str, coluna_chave: str
         # 6. Remove da tabela oficial qualquer linha cuja chave não existe
         # mais no extrato local atual (linha "órfã" — cancelada/removida na
         # fonte). Isso é o que mantém o Neon (site) igual ao Power BI.
+        # No modo incremental, só olha as datas do recorte (`datas_escopo_exclusao`).
         if sincronizar_exclusoes:
-            sql_delete_orfas = f"""
-                DELETE FROM "{nome_tabela}"
-                WHERE "{coluna_chave}" NOT IN (
-                    SELECT "{coluna_chave}" FROM "{tabela_temp}"
-                );
-            """
-            resultado_delete = conn.execute(text(sql_delete_orfas))
-            removidas = resultado_delete.rowcount if resultado_delete.rowcount is not None else 0
+            if datas_escopo_exclusao is None:
+                sql_delete_orfas = text(f"""
+                    DELETE FROM "{nome_tabela}"
+                    WHERE "{coluna_chave}" NOT IN (
+                        SELECT "{coluna_chave}" FROM "{tabela_temp}"
+                    );
+                """)
+                resultado_delete = conn.execute(sql_delete_orfas)
+            elif datas_escopo_exclusao:
+                sql_delete_orfas = text(f"""
+                    DELETE FROM "{nome_tabela}"
+                    WHERE {_quotar_coluna(coluna_data)} IN :datas
+                      AND "{coluna_chave}" NOT IN (
+                        SELECT "{coluna_chave}" FROM "{tabela_temp}"
+                    );
+                """).bindparams(bindparam("datas", expanding=True))
+                resultado_delete = conn.execute(
+                    sql_delete_orfas, {"datas": list(datas_escopo_exclusao)}
+                )
+            else:
+                resultado_delete = None
+            removidas = (resultado_delete.rowcount or 0) if resultado_delete is not None else 0
             if removidas > 0:
                 print(f"🗑️ Removidas {removidas} linhas órfãs do Neon (não existem mais no extrato local).")
 
         # Não é preciso DROP manual: a TEMP TABLE some sozinha ao fim da transação (ON COMMIT DROP)
+
+
+def listar_datas_remotas(nome_tabela: str, coluna_data: str = "Data") -> list:
+    """Datas distintas (texto) que já existem na tabela do Neon. Consulta leve."""
+    nome_tabela = _validar_identificador(nome_tabela)
+    engine = obter_engine()
+    with engine.connect() as conn:
+        linhas = conn.execute(text(
+            f'SELECT DISTINCT {_quotar_coluna(coluna_data)} FROM "{nome_tabela}"'
+        )).fetchall()
+    return [l[0] for l in linhas if l[0] is not None]
+
+
+def colunas_remotas(nome_tabela: str) -> set:
+    """Nomes das colunas da tabela no Neon (vazio se a tabela não existir)."""
+    nome_tabela = _validar_identificador(nome_tabela)
+    engine = obter_engine()
+    with engine.connect() as conn:
+        return {r[0] for r in conn.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = :t"
+        ), {"t": nome_tabela})}
+
+
+def contagem_remota_por_data_status(nome_tabela: str, coluna_data: str = "Data",
+                                    coluna_status: str = "Status") -> pd.DataFrame:
+    """Linhas por (data, status) no Neon — usado para conferir se os dias antigos
+    continuam iguais ao arquivo (colunas: data, status, n)."""
+    nome_tabela = _validar_identificador(nome_tabela)
+    d, s = _quotar_coluna(coluna_data), _quotar_coluna(coluna_status)
+    engine = obter_engine()
+    with engine.connect() as conn:
+        return pd.read_sql(text(
+            f'SELECT {d} AS data, {s} AS status, COUNT(*) AS n FROM "{nome_tabela}" GROUP BY {d}, {s}'
+        ), conn)
+
+
+def remover_por_datas(nome_tabela: str, datas: list, coluna_data: str = "Data") -> int:
+    """Apaga do Neon todas as linhas cujas datas (texto) estão em `datas`."""
+    if not datas:
+        return 0
+    nome_tabela = _validar_identificador(nome_tabela)
+    stmt = text(
+        f'DELETE FROM "{nome_tabela}" WHERE {_quotar_coluna(coluna_data)} IN :datas'
+    ).bindparams(bindparam("datas", expanding=True))
+    engine = obter_engine()
+    with engine.begin() as conn:
+        return conn.execute(stmt, {"datas": list(datas)}).rowcount or 0
 
 
 def obter_chaves_e_hashes_remotos(nome_tabela: str, coluna_chave: str = "numero_atividade"):

@@ -9,7 +9,9 @@ Reproduz a planilha "Planejamento_Presença_D0" (abas RS e SC):
                  recursos definidos em REGRAS[estado]["contar_demanda"] (TLP e
                  BUCKET TLP — mesma base tratada do Dashboard) e ignorando as
                  atividades Canceladas e Suspensas (STATUS_IGNORADOS).
-    • HC       = técnicos TLP DISTINTOS com atividade no bucket naquele dia.
+    • HC       = técnicos TLP DISTINTOS com atividade no bucket naquele dia,
+                 IGNORANDO as atividades Canceladas (técnico que só tem atividade
+                 cancelada no bucket não entra no HC dele — igual ao Dashboard).
     • HC NEC   = ROUNDUP(demanda / 4)        (4 atividades por técnico/dia —
                  config.META_ATRIBUICAO_ALVO)
     • GAP      = ROUNDDOWN(demanda / 4 - HC)  (negativo = sobra de técnicos).
@@ -85,6 +87,9 @@ LAYOUT = {
 
 SEM_CADASTRO = "SEM CADASTRO"
 
+# Status que NÃO entram no HC (só Cancelada; Suspensa continua contando, como no Dashboard).
+STATUS_FORA_DO_HC = {"CANCELADA", "CANCELADO"}
+
 
 # ------------------------------------------------------------------
 # Preparo (usado pelo upload_atribuicao.py)
@@ -110,6 +115,13 @@ def _ativas(df: pd.DataFrame) -> pd.DataFrame:
     if "status" not in df.columns:
         return df
     return df[~df["status"].map(_sem_acento).isin(STATUS_IGNORADOS)]
+
+
+def _sem_canceladas(df: pd.DataFrame) -> pd.DataFrame:
+    """Tira só as atividades Canceladas (usado no HC; a demanda continua usando _ativas)."""
+    if "status" not in df.columns:
+        return df
+    return df[~df["status"].map(_sem_acento).isin(STATUS_FORA_DO_HC)]
 
 
 def _rotulo_janela(valor) -> str:
@@ -319,8 +331,9 @@ def calcular_quadro(ativ_dia: pd.DataFrame, estado: str) -> pd.DataFrame:
     a = ativ_dia[ativ_dia["estado"] == estado]
     ativas = _ativas(a)
     demanda = ativas[ativas["contar"].isin(regra["contar_demanda"])]
-    # HC total: igual ao Dashboard, que conta o técnico mesmo que só tenha atividade cancelada/suspensa.
-    tecnicos = a[a["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
+    # HC total: igual ao Dashboard — ignora atividades Canceladas (técnico só com cancelada não conta).
+    tecnicos = _sem_canceladas(a)
+    tecnicos = tecnicos[tecnicos["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
     # HC por janela: só quem tem atividade ativa naquela janela.
     tecnicos_ativos = ativas[ativas["contar"].isin(CONTAR_HC)].assign(_k=lambda d: d["recurso"].map(_norm))
 

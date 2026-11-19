@@ -31,16 +31,29 @@ class Indicadores:
         """Converte numpy float para Python float"""
         return float(val) if val is not None else 0.0
 
+    @staticmethod
+    def _sem_canceladas(df_scope: pd.DataFrame) -> pd.DataFrame:
+        """Remove as atividades com Status "Cancelada" antes de contar técnicos no HC.
+
+        Um técnico que só tem atividade cancelada no recorte (ex.: 2 atividades canceladas
+        em Canoas de manhã e depois deslocado para Porto Alegre) NÃO entra no HC daquele
+        recorte. Se ele tiver ao menos 1 atividade não cancelada no recorte, continua contando.
+        """
+        if "Status" not in df_scope.columns:
+            return df_scope
+        return df_scope[df_scope["Status"] != "Cancelada"]
+
     # ------------------------------------------------------------------
     # HC / HC ATIVO
     # ------------------------------------------------------------------
 
     def hc(self):
-        """Calcula HC por perfil técnico (MSK, BA, TT)"""
+        """Calcula HC por perfil técnico (MSK, BA, TT), ignorando atividades Canceladas"""
+        df = self._sem_canceladas(self.df)
         return {
-            "MSK": self._to_int(self.df.loc[self.df["Perfil Técnico"] == "MSK", "Técnico"].nunique()),
-            "BA": self._to_int(self.df.loc[self.df["Perfil Técnico"] == "BA", "Técnico"].nunique()),
-            "TT": self._to_int(self.df.loc[self.df["Perfil Técnico"] == "TT", "Técnico"].nunique())
+            "MSK": self._to_int(df.loc[df["Perfil Técnico"] == "MSK", "Técnico"].nunique()),
+            "BA": self._to_int(df.loc[df["Perfil Técnico"] == "BA", "Técnico"].nunique()),
+            "TT": self._to_int(df.loc[df["Perfil Técnico"] == "TT", "Técnico"].nunique())
         }
 
     def _hc_real_calc(self, df_scope):
@@ -55,7 +68,8 @@ class Indicadores:
         if df_scope.empty:
             return {"BA": 0, "TT": 0, "HC": 0}
 
-        tlp = df_scope[df_scope["Contratada"] == "TLP"]
+        # Técnicos só contam no HC se tiverem atividade NÃO cancelada no escopo.
+        tlp = self._sem_canceladas(df_scope[df_scope["Contratada"] == "TLP"])
         msk_tlp = tlp.loc[tlp["Perfil Técnico"] == "MSK", "Técnico"].nunique()
         ba_tlp = tlp.loc[tlp["Perfil Técnico"] == "BA", "Técnico"].nunique()
         tt_tlp = tlp.loc[tlp["Perfil Técnico"] == "TT", "Técnico"].nunique()
@@ -86,6 +100,8 @@ class Indicadores:
         if df_subset.empty:
             return 0
 
+        # Ignora atividades Canceladas: técnico só com cancelada não entra no HC.
+        df_subset = self._sem_canceladas(df_subset)
         msk_tlp = df_subset.loc[(df_subset["Contratada"] == "TLP") & (df_subset["Perfil Técnico"] == "MSK"), "Técnico"].nunique()
         ba_tlp = df_subset.loc[(df_subset["Contratada"] == "TLP") & (df_subset["Perfil Técnico"] == "BA"), "Técnico"].nunique()
         tt_tlp = df_subset.loc[(df_subset["Contratada"] == "TLP") & (df_subset["Perfil Técnico"] == "TT"), "Técnico"].nunique()
@@ -118,7 +134,8 @@ class Indicadores:
         df_scope = self.df[self.df["Lado"] == lado]
         if df_scope.empty:
             return 0
-        tlp = df_scope[df_scope["Contratada"] == "TLP"]
+        # Ignora atividades Canceladas: técnico só com cancelada não entra no HC.
+        tlp = self._sem_canceladas(df_scope[df_scope["Contratada"] == "TLP"])
         msk_tlp = tlp.loc[tlp["Perfil Técnico"] == "MSK", "Técnico"].nunique()
         lado_tlp = tlp.loc[tlp["Perfil Técnico"] == lado, "Técnico"].nunique()
 
