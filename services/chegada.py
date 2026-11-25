@@ -18,6 +18,8 @@ from datetime import datetime, time, timedelta
 
 import pandas as pd
 
+from services.cache_utils import cache_calculo
+
 try:  # Fuso de Brasília: o servidor (ex.: Streamlit Cloud) roda em UTC.
     from zoneinfo import ZoneInfo
     _FUSO = ZoneInfo("America/Sao_Paulo")
@@ -187,6 +189,45 @@ def classificar_linha(janela, inicio_real, data_os=None, agora: datetime | None 
     return STATUS_DENTRO
 
 
+@cache_calculo
+def _classificar_chegada(entrada: pd.DataFrame, agora: datetime):
+    """Classifica cada OS (corpo original de calcular_indicador_chegada, sem mudanças de regra).
+    Devolve (status_chegada, manter, pendente) como listas alinhadas por posição."""
+    status_chegada = []
+    manter = []
+    pendente = []  # OS atrasada sem início real (o "Início" da base é só previsão)
+    for j, i, d, st in zip(entrada["j"], entrada["i"], entrada["d"], entrada["s"]):
+        if st == STATUS_CANCELADA:
+            manter.append(False)
+            status_chegada.append(None)
+            pendente.append(False)
+            continue
+
+        # "Não Iniciada" / "em rota" (ou sem Início): o Início da base é só
+        # previsão. Se for hoje e já passou do limite de atraso da Janela,
+        # conta como "Depois" mesmo sem o técnico ter iniciado; senão, segue
+        # fora do indicador até a tolerância vencer.
+        if st in (STATUS_NAO_INICIADA, STATUS_EM_ROTA) or _parse_hora(i) is None:
+            if _passou_limite_sem_iniciar(j, d, agora):
+                manter.append(True)
+                status_chegada.append(STATUS_DEPOIS)
+                pendente.append(True)
+            elif st in STATUS_EXCLUIDOS:
+                manter.append(False)
+                status_chegada.append(None)
+                pendente.append(False)
+            else:
+                manter.append(True)
+                status_chegada.append(classificar_linha(j, i, d, agora))
+                pendente.append(False)
+            continue
+
+        manter.append(True)
+        status_chegada.append(classificar_linha(j, i, d, agora))
+        pendente.append(False)
+    return status_chegada, manter, pendente
+
+
 def calcular_indicador_chegada(df: pd.DataFrame, agora: datetime | None = None) -> pd.DataFrame:
     """
     Recebe o dataframe base (com as colunas Janela e Início) e devolve uma
@@ -217,38 +258,16 @@ def calcular_indicador_chegada(df: pd.DataFrame, agora: datetime | None = None) 
     coluna_data = df[COL_DATA] if COL_DATA in df.columns else pd.Series([None] * len(df), index=df.index)
     coluna_status = df[COL_STATUS] if COL_STATUS in df.columns else pd.Series([None] * len(df), index=df.index)
 
-    status_chegada = []
-    manter = []
-    pendente = []  # OS atrasada sem início real (o "Início" da base é só previsão)
-    for j, i, d, st in zip(df[COL_JANELA], df[COL_INICIO], coluna_data, coluna_status):
-        if st == STATUS_CANCELADA:
-            manter.append(False)
-            status_chegada.append(None)
-            pendente.append(False)
-            continue
-
-        # "Não Iniciada" / "em rota" (ou sem Início): o Início da base é só
-        # previsão. Se for hoje e já passou do limite de atraso da Janela,
-        # conta como "Depois" mesmo sem o técnico ter iniciado; senão, segue
-        # fora do indicador até a tolerância vencer.
-        if st in (STATUS_NAO_INICIADA, STATUS_EM_ROTA) or _parse_hora(i) is None:
-            if _passou_limite_sem_iniciar(j, d, agora):
-                manter.append(True)
-                status_chegada.append(STATUS_DEPOIS)
-                pendente.append(True)
-            elif st in STATUS_EXCLUIDOS:
-                manter.append(False)
-                status_chegada.append(None)
-                pendente.append(False)
-            else:
-                manter.append(True)
-                status_chegada.append(classificar_linha(j, i, d, agora))
-                pendente.append(False)
-            continue
-
-        manter.append(True)
-        status_chegada.append(classificar_linha(j, i, d, agora))
-        pendente.append(False)
+    # A classificação linha a linha é a parte pesada (Python puro). O resultado só
+    # depende destas 4 colunas e do horário (hora/minuto/dia de `agora`), então
+    # fica em cache por (conteúdo das colunas, minuto atual).
+    entrada = pd.DataFrame({
+        "j": df[COL_JANELA].reset_index(drop=True),
+        "i": df[COL_INICIO].reset_index(drop=True),
+        "d": coluna_data.reset_index(drop=True),
+        "s": coluna_status.reset_index(drop=True),
+    })
+    status_chegada, manter, pendente = _classificar_chegada(entrada, agora.replace(second=0, microsecond=0))
 
     df["Status Chegada"] = status_chegada
     df[COL_INICIO_PENDENTE] = pendente
@@ -369,14 +388,20 @@ def serie_diaria_percentual_dentro(df: pd.DataFrame, coluna: str) -> pd.DataFram
             or COL_DATA not in df.columns or coluna not in df.columns):
         return pd.DataFrame(columns=colunas_vazias)
 
-    # Import local (não no topo do módulo) para evitar acoplamento
-    # circular entre services.chegada e services.grupos.
-    from services.grupos import _parse_datas
-
     avaliavel = _base_avaliavel(calcular_indicador_chegada(df))
     if avaliavel.empty:
         return pd.DataFrame(columns=colunas_vazias)
 
+    return _serie_diaria_pct(avaliavel[list(dict.fromkeys((coluna, COL_DATA, "Status Chegada")))], coluna)
+
+
+@cache_calculo
+def _serie_diaria_pct(avaliavel: pd.DataFrame, coluna: str) -> pd.DataFrame:
+    """Corpo de `serie_diaria_percentual_dentro` depois da classificação (em cache)."""
+    # Import local (não no topo) para evitar acoplamento circular com services.grupos.
+    from services.grupos import _parse_datas
+
+    colunas_vazias = [coluna, "Data", "% Chegada"]
     serie = _parse_datas(avaliavel, COL_DATA)
     if serie.empty:
         return pd.DataFrame(columns=colunas_vazias)
@@ -397,6 +422,7 @@ def serie_diaria_percentual_dentro(df: pd.DataFrame, coluna: str) -> pd.DataFram
     return pd.DataFrame(linhas)
 
 
+@cache_calculo
 def resumo_hierarquico(df: pd.DataFrame, coluna_pai: str = "Cluster", coluna_filho: str = "Cidade") -> list:
     """
     Agrupa o indicador em dois níveis (ex.: Cluster -> Cidade) pronto para
@@ -433,6 +459,21 @@ def resumo_hierarquico(df: pd.DataFrame, coluna_pai: str = "Cluster", coluna_fil
 
 
 def resumo_hierarquico_3niveis(
+    df: pd.DataFrame, coluna_pai: str, coluna_meio: str, coluna_filho: str
+) -> list:
+    """Ver `_resumo_hierarquico_3niveis`. Este wrapper só entrega ao cálculo (em cache) as
+    colunas necessárias — hash e filtros ficam bem mais leves que com o df inteiro."""
+    colunas_necessarias = (coluna_pai, coluna_meio, coluna_filho)
+    if any(c not in df.columns for c in colunas_necessarias):
+        return []
+    return _resumo_hierarquico_3niveis(
+        df[list(dict.fromkeys((*colunas_necessarias, "Status Chegada")))],
+        coluna_pai, coluna_meio, coluna_filho,
+    )
+
+
+@cache_calculo
+def _resumo_hierarquico_3niveis(
     df: pd.DataFrame, coluna_pai: str, coluna_meio: str, coluna_filho: str
 ) -> list:
     """

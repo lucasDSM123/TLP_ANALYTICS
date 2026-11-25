@@ -1,7 +1,58 @@
+import functools
 import math
+
+import numpy as np
 import pandas as pd
 
 from services.analise_p import classificacao_tecnicos, FAIXAS_P, matriz_analise_p_cluster
+
+
+# Colunas que os métodos "escalares" de Indicadores realmente usam. Filtrar linhas
+# de um DataFrame largo (48 colunas, 41 de texto) copia TODAS as colunas a cada
+# filtro — trabalhar numa visão enxuta deixa cada filtro várias vezes mais rápido.
+COLUNAS_CALCULO = (
+    "Status", "Contratada", "Lado", "BA-TT-Real", "Perfil Técnico", "Técnico",
+    "Tipo de Atividade", "CAUSA", "Esteira", "Peso",
+)
+
+
+def enxugar(df: pd.DataFrame, *extras: str) -> pd.DataFrame:
+    """Visão do df só com as colunas de cálculo (+ `extras`, se existirem no df)."""
+    cols = [c for c in dict.fromkeys((*COLUNAS_CALCULO, *extras)) if c in df.columns]
+    out = df[cols]
+    # Colunas de texto no formato Arrow (padrão do pandas 3) são lentas em filtros
+    # repetidos sobre fatias pequenas; como `object` (NumPy) o mesmo filtro é bem mais
+    # rápido e o resultado é igual. Em versões antigas do pandas isso não faz nada.
+    conv = {c: object for c in cols if out[c].dtype != object and pd.api.types.is_string_dtype(out[c].dtype)}
+    return out.astype(conv) if conv else out
+
+
+def _e_escalar(v) -> bool:
+    return v is None or isinstance(v, (int, float, str, bool, np.number, np.bool_))
+
+
+def _memoizar(func):
+    """Guarda o resultado de um método de Indicadores POR INSTÂNCIA (cada instância
+    representa um df fixo e nunca é alterado). Só memoiza escalares e dicts de
+    escalares — dict volta como cópia rasa, então quem recebe pode alterar à vontade.
+    DataFrames/tuplas (analise_p etc.) continuam sendo recalculados normalmente."""
+    nome = func.__name__
+
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        chave = (nome, args, tuple(sorted(kwargs.items())))
+        memo = self._memo
+        if chave in memo:
+            v = memo[chave]
+            return dict(v) if isinstance(v, dict) else v
+        v = func(self, *args, **kwargs)
+        if _e_escalar(v):
+            memo[chave] = v
+        elif isinstance(v, dict) and all(_e_escalar(x) for x in v.values()):
+            memo[chave] = dict(v)
+        return v
+
+    return wrapper
 
 
 class Indicadores:
@@ -21,7 +72,18 @@ class Indicadores:
     """
 
     def __init__(self, df: pd.DataFrame):
-        self.df = df.copy()
+        # Sem .copy(): nenhum método altera self.df (só lê/filtra).
+        self.df = df
+        self._d = enxugar(df)  # visão enxuta usada pelos métodos escalares
+        self._memo = {}
+        self._fatias = {}
+
+    def _fatia(self, coluna: str, valor) -> pd.DataFrame:
+        """df[df[coluna] == valor], calculado uma única vez por instância."""
+        chave = (coluna, valor)
+        if chave not in self._fatias:
+            self._fatias[chave] = self._d[self._d[coluna] == valor]
+        return self._fatias[chave]
 
     def _to_int(self, val):
         """Converte numpy int para Python int"""
@@ -49,7 +111,7 @@ class Indicadores:
 
     def hc(self):
         """Calcula HC por perfil técnico (MSK, BA, TT), ignorando atividades Canceladas"""
-        df = self._sem_canceladas(self.df)
+        df = self._sem_canceladas(self._d)
         return {
             "MSK": self._to_int(df.loc[df["Perfil Técnico"] == "MSK", "Técnico"].nunique()),
             "BA": self._to_int(df.loc[df["Perfil Técnico"] == "BA", "Técnico"].nunique()),
@@ -86,7 +148,7 @@ class Indicadores:
 
     def hc_real(self):
         """HC ATIVO geral (cartão principal, sem segmentação adicional)."""
-        return self._hc_real_calc(self.df)
+        return self._hc_real_calc(self._d)
 
     def _hc_ativo_scope(self, df_subset):
         """
@@ -116,7 +178,7 @@ class Indicadores:
         ("BA" ou "TT"), usado pelas medidas PU / MÉDIA ATRIBUIÇÃO /
         PROJEÇÃO PU segmentadas (cards do topo).
         """
-        df_scope = self.df[self.df["BA-TT-Real"] == valor]
+        df_scope = self._fatia("BA-TT-Real", valor)
         return self._hc_ativo_scope(df_scope)
 
     def hc_lado(self, lado):
@@ -131,7 +193,7 @@ class Indicadores:
         (hc_real_batt, que segmenta por 'BA-TT-Real' e soma BA_REAL+TT_REAL).
         Confirmado batendo célula a célula com o Power BI.
         """
-        df_scope = self.df[self.df["Lado"] == lado]
+        df_scope = self._fatia("Lado", lado)
         if df_scope.empty:
             return 0
         # Ignora atividades Canceladas: técnico só com cancelada não entra no HC.
@@ -150,7 +212,7 @@ class Indicadores:
         PU calculado dentro do contexto de filtro 'Lado' = lado, usando
         hc_lado(lado) como denominador. Usado pela MATRIZ POR CLUSTER.
         """
-        df_scope = self.df[self.df["Lado"] == lado]
+        df_scope = self._fatia("Lado", lado)
         if df_scope.empty:
             return 0.0
         ok_scope = (df_scope["Status"] == "Concluída").sum()
@@ -163,7 +225,7 @@ class Indicadores:
 
     def bucket(self):
         """Calcula BUCKET: Contratada = BUCKET TLP e Status != Cancelada"""
-        df_bucket = self.df.loc[(self.df["Contratada"] == "BUCKET TLP") & (self.df["Status"] != "Cancelada")]
+        df_bucket = self._d.loc[(self._d["Contratada"] == "BUCKET TLP") & (self._d["Status"] != "Cancelada")]
         total = df_bucket["Contratada"].count()
         bucket_ba = df_bucket.loc[df_bucket["Lado"] == "BA", "Contratada"].count()
         bucket_tt = df_bucket.loc[df_bucket["Lado"] == "TT", "Contratada"].count()
@@ -175,15 +237,15 @@ class Indicadores:
 
     def caixa_total(self):
         """Calcula CAIXA TOTAL: Total - Suspensa - Cancelada"""
-        total_atividades = self.df["Tipo de Atividade"].count()
-        suspensa = self.df.loc[self.df["Status"] == "Suspensa", "Status"].count()
-        cancelada = self.df.loc[self.df["Status"] == "Cancelada", "Status"].count()
+        total_atividades = self._d["Tipo de Atividade"].count()
+        suspensa = self._d.loc[self._d["Status"] == "Suspensa", "Status"].count()
+        cancelada = self._d.loc[self._d["Status"] == "Cancelada", "Status"].count()
         total = total_atividades - suspensa - cancelada
 
-        df_ba = self.df[self.df["Lado"] == "BA"]
+        df_ba = self._fatia("Lado", "BA")
         caixa_ba = self._calcular_caixa_subset(df_ba)
 
-        df_tt = self.df[self.df["Lado"] == "TT"]
+        df_tt = self._fatia("Lado", "TT")
         caixa_tt = self._calcular_caixa_subset(df_tt)
 
         return {"TOTAL": self._to_int(total), "BA": self._to_int(caixa_ba), "TT": self._to_int(caixa_tt), "SUSPENSA": self._to_int(suspensa), "CANCELADA": self._to_int(cancelada)}
@@ -198,15 +260,15 @@ class Indicadores:
 
     def esteira(self):
         """Calcula ESTEIRA: (Esteira - Bucket) + Sobra de Esteira"""
-        esteira_count = self.df.loc[self.df["Esteira"] == "ESTEIRA", "Esteira"].count()
+        esteira_count = self._d.loc[self._d["Esteira"] == "ESTEIRA", "Esteira"].count()
         bucket_total = self.bucket()["TOTAL"]
-        sobra = self.df.loc[self.df["CAUSA"] == "SOBRA DE ESTEIRA", "CAUSA"].count()
+        sobra = self._d.loc[self._d["CAUSA"] == "SOBRA DE ESTEIRA", "CAUSA"].count()
         total = (esteira_count - bucket_total) + sobra
 
-        df_ba = self.df[self.df["Lado"] == "BA"]
+        df_ba = self._fatia("Lado", "BA")
         esteira_ba = self._calcular_esteira_subset(df_ba)
 
-        df_tt = self.df[self.df["Lado"] == "TT"]
+        df_tt = self._fatia("Lado", "TT")
         esteira_tt = self._calcular_esteira_subset(df_tt)
 
         return {"TOTAL": self._to_int(total), "BA": self._to_int(esteira_ba), "TT": self._to_int(esteira_tt)}
@@ -225,13 +287,13 @@ class Indicadores:
 
     def concluido(self):
         """Calcula CONCLUÍDO: OK, NOK e GERAL (segmentado por 'Lado')"""
-        ok = (self.df["Status"] == "Concluída").sum()
-        nok = (self.df["Status"] == "Não Concluída").sum()
+        ok = (self._d["Status"] == "Concluída").sum()
+        nok = (self._d["Status"] == "Não Concluída").sum()
 
-        df_ba = self.df[self.df["Lado"] == "BA"]
+        df_ba = self._fatia("Lado", "BA")
         ok_ba = (df_ba["Status"] == "Concluída").sum()
 
-        df_tt = self.df[self.df["Lado"] == "TT"]
+        df_tt = self._fatia("Lado", "TT")
         ok_tt = (df_tt["Status"] == "Concluída").sum()
 
         return {"OK": self._to_int(ok), "NOK": self._to_int(nok), "GERAL": self._to_int(ok + nok), "OK_BA": self._to_int(ok_ba), "OK_TT": self._to_int(ok_tt)}
@@ -243,10 +305,10 @@ class Indicadores:
 
     def iniciada(self):
         """Calcula INICIADA (segmentado por 'Lado')"""
-        total = self.df.loc[self.df["Status"] == "Iniciada", "Status"].count()
-        df_ba = self.df[self.df["Lado"] == "BA"]
+        total = self._d.loc[self._d["Status"] == "Iniciada", "Status"].count()
+        df_ba = self._fatia("Lado", "BA")
         iniciada_ba = df_ba.loc[df_ba["Status"] == "Iniciada", "Status"].count()
-        df_tt = self.df[self.df["Lado"] == "TT"]
+        df_tt = self._fatia("Lado", "TT")
         iniciada_tt = df_tt.loc[df_tt["Status"] == "Iniciada", "Status"].count()
         return {"TOTAL": self._to_int(total), "BA": self._to_int(iniciada_ba), "TT": self._to_int(iniciada_tt)}
 
@@ -275,7 +337,7 @@ class Indicadores:
 
     def eficacia_batt(self, valor):
         """EFICÁCIA dentro do contexto BA-TT-Real = valor."""
-        df_scope = self.df[self.df["BA-TT-Real"] == valor]
+        df_scope = self._fatia("BA-TT-Real", valor)
         if df_scope.empty:
             return 1.0
         ok, nok = self._concluido_subset(df_scope)
@@ -285,7 +347,7 @@ class Indicadores:
         """
         EFICÁCIA usada nas MATRIZES de produção (por Cluster, Coordenador/
         Gestor, Cidade etc.): Concluído OK / (Concluído OK + Concluído NOK),
-        dentro do mesmo recorte (self.df) já usado para calcular OK/NOK
+        dentro do mesmo recorte (self._d) já usado para calcular OK/NOK
         naquela mesma linha da matriz — igual à fórmula usada nos cards de
         KPI (`eficacia()`), pra manter os dois números sempre batendo.
         """
@@ -297,11 +359,11 @@ class Indicadores:
         esteira = self.esteira()
         concluido = self.concluido()
 
-        df_ba = self.df[self.df["Lado"] == "BA"]
+        df_ba = self._fatia("Lado", "BA")
         ok_ba, nok_ba = self._concluido_subset(df_ba)
         eficacia_ba_lado = self._eficacia_subset(ok_ba, nok_ba)
 
-        df_tt = self.df[self.df["Lado"] == "TT"]
+        df_tt = self._fatia("Lado", "TT")
         ok_tt, nok_tt = self._concluido_subset(df_tt)
         eficacia_tt_lado = self._eficacia_subset(ok_tt, nok_tt)
 
@@ -337,7 +399,7 @@ class Indicadores:
         return {"GERAL": self._to_float(media_geral), "BA": self._to_float(media_ba), "TT": self._to_float(media_tt)}
 
     def media_atribuicao_batt(self, valor):
-        df_scope = self.df[self.df["BA-TT-Real"] == valor]
+        df_scope = self._fatia("BA-TT-Real", valor)
         if df_scope.empty:
             return 0.0
         caixa_scope = self._calcular_caixa_subset(df_scope)
@@ -366,7 +428,7 @@ class Indicadores:
 
     def pu_batt(self, valor):
         """PU dentro do contexto BA-TT-Real = valor (replica calcular_pu do medidas.py)."""
-        df_scope = self.df[self.df["BA-TT-Real"] == valor]
+        df_scope = self._fatia("BA-TT-Real", valor)
         if df_scope.empty:
             return 0.0
         ok_scope = (df_scope["Status"] == "Concluída").sum()
@@ -398,7 +460,7 @@ class Indicadores:
     # ------------------------------------------------------------------
 
     def _tem_peso(self) -> bool:
-        return "Peso" in self.df.columns and "Técnico" in self.df.columns
+        return "Peso" in self._d.columns and "Técnico" in self._d.columns
 
     def _pu_vivo_scope(self, df_scope: pd.DataFrame) -> float:
         """Aplica a fórmula PU VIVO a um recorte (df_scope) já filtrado."""
@@ -417,22 +479,22 @@ class Indicadores:
     def pu_vivo(self):
         """PU VIVO geral + segmentado por 'Lado' (BA/TT), no mesmo formato de pu()."""
         return {
-            "GERAL": self._pu_vivo_scope(self.df),
+            "GERAL": self._pu_vivo_scope(self._d),
             "BA": self.pu_vivo_lado("BA"),
             "TT": self.pu_vivo_lado("TT"),
         }
 
     def pu_vivo_lado(self, lado):
         """PU VIVO dentro do filtro 'Lado' = lado — usado na MATRIZ POR CLUSTER."""
-        if "Lado" not in self.df.columns:
+        if "Lado" not in self._d.columns:
             return 0.0
-        return self._pu_vivo_scope(self.df[self.df["Lado"] == lado])
+        return self._pu_vivo_scope(self._fatia("Lado", lado))
 
     def pu_vivo_batt(self, valor):
         """PU VIVO dentro do filtro 'BA-TT-Real' = valor — espelha pu_batt()."""
-        if "BA-TT-Real" not in self.df.columns:
+        if "BA-TT-Real" not in self._d.columns:
             return 0.0
-        return self._pu_vivo_scope(self.df[self.df["BA-TT-Real"] == valor])
+        return self._pu_vivo_scope(self._fatia("BA-TT-Real", valor))
 
     @staticmethod
     def calcular_projecao_pu_vivo(pu_vivo_valor: float, projecao: float, ok: float) -> float:
@@ -481,7 +543,7 @@ class Indicadores:
         PROJECAO PU = DIVIDE([PROJECAO],[HC ATIVO]) -- ambos recalculados
         dentro do filtro BA-TT-Real = valor.
         """
-        df_scope = self.df[self.df["BA-TT-Real"] == valor]
+        df_scope = self._fatia("BA-TT-Real", valor)
         if df_scope.empty:
             return 0.0
 
@@ -544,3 +606,12 @@ class Indicadores:
             }
 
         return contagem, percentual, resumo
+
+
+for _nome in (
+    "hc", "hc_real", "hc_real_batt", "hc_lado", "pu_lado", "bucket", "caixa_total", "esteira",
+    "concluido", "iniciada", "eficacia", "eficacia_batt", "eficacia_caixa", "projecao",
+    "media_atribuicao", "media_atribuicao_batt", "pu", "pu_batt", "pu_vivo", "pu_vivo_lado",
+    "pu_vivo_batt", "projecao_pu_vivo", "projecao_pu", "projecao_pu_batt",
+):
+    setattr(Indicadores, _nome, _memoizar(getattr(Indicadores, _nome)))

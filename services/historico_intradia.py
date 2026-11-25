@@ -222,7 +222,8 @@ def registrar_snapshot(df: pd.DataFrame) -> bool:
         #    técnico -> Cluster/Cidade (pra filtro).
         linhas_tecnico = []
         linhas_local = []
-        df_tlp = df_hoje[df_hoje["Contratada"] == "TLP"]
+        # Técnico só com atividade Cancelada não entra no HC (mesma regra do Dashboard).
+        df_tlp = df_hoje[(df_hoje["Contratada"] == "TLP") & (df_hoje["Status"] != "Cancelada")]
         for (estado, tecnico), df_t in df_tlp.groupby(["Estado", "Técnico"], dropna=False):
             if not estado or pd.isna(estado) or not tecnico or pd.isna(tecnico):
                 continue

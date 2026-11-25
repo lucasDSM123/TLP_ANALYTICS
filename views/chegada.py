@@ -1,8 +1,10 @@
+import functools
 import io
 
 import pandas as pd
 import streamlit as st
 
+import config
 from components.cards import card
 from components.header import secao_titulo
 from components.charts import (
@@ -45,6 +47,108 @@ TITULO_LEGENDA_STATUS = {
 }
 
 
+def _legenda_chegada(janela_sel, titulo, **kw):
+    """Legenda padrão da aba: "{janela} | {titulo} - {estado}{filtros} | {data} {hora}"
+    (vira "FECHAMENTO {titulo}" quando a data marcada é de ontem pra trás)."""
+    return legenda_filtros(
+        titulo, prefixo=f"{janela_inicio_compacta(janela_sel)} | ", ligacao=" - ", **kw,
+    )
+
+
+def _excel_bytes(detalhe: pd.DataFrame) -> bytes:
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        detalhe.to_excel(writer, index=False, sheet_name="Detalhamento Chegada")
+    return buffer.getvalue()
+
+
+@st.fragment
+def _bloco_gestores(df_chegada: pd.DataFrame, janela_sel):
+    """Aba "Por Gestores": o checkbox de nome/matrícula reexecuta só este bloco (FRAGMENT)."""
+    config.aplicar_tema_da_sessao()
+    _leg = functools.partial(_legenda_chegada, janela_sel)
+
+    mostrar_nome_tecnico = st.checkbox(
+        "Mostrar nome do técnico", value=False, key="chg_mostrar_nome_tecnico",
+        help="Por padrão o técnico aparece pela matrícula. Marque para exibir o nome completo.",
+    )
+    dados_gestores = resumo_hierarquico_3niveis(df_chegada, "Coordenador", "Supervisor", "Técnico")
+    if not mostrar_nome_tecnico:
+        mapa_matricula = mapa_tecnico_matricula(df_chegada)
+        dados_gestores = aplicar_matricula_nos_netos(dados_gestores, mapa_matricula)
+        rotulo_tecnico = "COORDENADOR / SUPERVISOR / MATRÍCULA"
+    else:
+        rotulo_tecnico = "COORDENADOR / SUPERVISOR / TÉCNICO"
+
+    with area_com_print(
+        "chegada_matriz_gestores", nome_arquivo="chegada_por_coordenador_supervisor_tecnico",
+        **_leg("Indicador de Chegada BA/TT", complemento=" (POR GESTÃO)"),
+    ):
+        tabela_chegada_expansivel_3niveis(
+            dados_gestores, titulo="Por Gestores", meta_pct=80.0,
+            rotulo_grupo=rotulo_tecnico, rotulo_clique="Coordenador",
+            id_tabela="chegada_matriz_gestores",
+        )
+
+
+@st.fragment
+def _bloco_detalhamento(df_chegada: pd.DataFrame, janela_sel):
+    """Detalhamento por OS/técnico: os filtros de status/técnico reexecutam só este bloco (FRAGMENT)."""
+    config.aplicar_tema_da_sessao()
+
+    secao_titulo("Detalhamento", "Janela x Início real por OS/técnico")
+
+    col_filtro_status, col_filtro_tecnico = st.columns([1, 1])
+
+    with col_filtro_status:
+        status_opcoes = ["Todos", "Dentro", "Fora", "Antes", "Depois", "Aguardando"]
+        status_sel = st.selectbox("Filtrar por status de chegada", status_opcoes, key="chg_status")
+
+    detalhe = tabela_detalhada(df_chegada)
+
+    with col_filtro_tecnico:
+        tecnicos_opcoes = opcoes_filtro(detalhe, "Técnico")
+        tecnico_sel = st.selectbox("Filtrar por técnico", tecnicos_opcoes, key="chg_tecnico")
+
+    if status_sel == "Fora":
+        detalhe = detalhe[detalhe["Status Chegada"].isin(["Antes", "Depois"])]
+    elif status_sel != "Todos":
+        detalhe = detalhe[detalhe["Status Chegada"] == status_sel]
+
+    detalhe = aplicar_filtro(detalhe, "Técnico", tecnico_sel)
+
+    # Legenda do "Copiar imagem + texto": segue o que está flegado — status de
+    # chegada, Janela de Serviço, filtros do topo (Estado/Cluster/Cidade/Coord./
+    # Data) e o técnico escolhido aqui. Ex.:
+    # "ATIVIDADES FORA DO TIME 8:30 - 10:30 | RS | 03/11/2026 09:10".
+    titulo_status = TITULO_LEGENDA_STATUS.get(status_sel, "ATIVIDADES")
+    janela_txt = janela_legenda(janela_sel)
+    titulo_detalhe = f"{titulo_status} {janela_txt}".strip()
+
+    # Altura ajustada ao nº de linhas (até 460px): com poucas linhas a imagem
+    # copiada não leva espaço em branco embaixo (linha = 35px + cabeçalho).
+    altura_detalhe = min(460, 35 * (len(detalhe) + 1) + 3)
+
+    with area_com_print(
+        "chegada_detalhamento", nome_arquivo="chegada_detalhamento",
+        **legenda_filtros(titulo_detalhe, ligacao=" | ", locais=(tecnico_sel,)),
+    ):
+        st.dataframe(detalhe, width="stretch", hide_index=True, height=altura_detalhe)
+
+    # Exportação em Excel respeitando os filtros aplicados (segmentação
+    # global do topo do site + Janela de Serviço + status de chegada e
+    # técnico selecionados nesta aba). O arquivo só é GERADO quando o usuário
+    # clica em baixar (antes era montado a cada rerun, mesmo sem ninguém baixar).
+    nome_arquivo_status = status_sel.lower() if status_sel != "Todos" else "todos"
+    st.download_button(
+        "⬇️ Baixar Excel filtrado",
+        data=lambda _d=detalhe: _excel_bytes(_d),
+        file_name=f"tlp_chegada_detalhamento_{nome_arquivo_status}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="chg_download_excel",
+    )
+
+
 def render(df, indicadores: Indicadores):
     secao_titulo("Chegada", "Aderência do técnico à Janela de Serviço (horário real x agendado)")
     st.caption("⏱️ Tolerância: início até 60 min antes da Janela ou até 30 min depois da abertura ainda conta como 'Dentro'. Exclui OS Canceladas. OS de hoje Não Iniciadas/em rota (ou sem Início) já contam como 'Depois' assim que passam de 30 min da abertura da Janela.")
@@ -70,12 +174,7 @@ def render(df, indicadores: Indicadores):
 
     df_filtrado = aplicar_filtro(df, "Janela", janela_sel)
 
-    def _leg(titulo, **kw):
-        """Legenda padrão da aba: "{janela} | {titulo} - {estado}{filtros} | {data} {hora}"
-        (vira "FECHAMENTO {titulo}" quando a data marcada é de ontem pra trás)."""
-        return legenda_filtros(
-            titulo, prefixo=f"{janela_inicio_compacta(janela_sel)} | ", ligacao=" - ", **kw,
-        )
+    _leg = functools.partial(_legenda_chegada, janela_sel)
 
     df_chegada = calcular_indicador_chegada(df_filtrado)
     resumo = resumo_geral(df_chegada)
@@ -154,27 +253,7 @@ def render(df, indicadores: Indicadores):
             )
 
     with aba_gestores:
-        mostrar_nome_tecnico = st.checkbox(
-            "Mostrar nome do técnico", value=False, key="chg_mostrar_nome_tecnico",
-            help="Por padrão o técnico aparece pela matrícula. Marque para exibir o nome completo.",
-        )
-        dados_gestores = resumo_hierarquico_3niveis(df_chegada, "Coordenador", "Supervisor", "Técnico")
-        if not mostrar_nome_tecnico:
-            mapa_matricula = mapa_tecnico_matricula(df_chegada)
-            dados_gestores = aplicar_matricula_nos_netos(dados_gestores, mapa_matricula)
-            rotulo_tecnico = "COORDENADOR / SUPERVISOR / MATRÍCULA"
-        else:
-            rotulo_tecnico = "COORDENADOR / SUPERVISOR / TÉCNICO"
-
-        with area_com_print(
-            "chegada_matriz_gestores", nome_arquivo="chegada_por_coordenador_supervisor_tecnico",
-            **_leg("Indicador de Chegada BA/TT", complemento=" (POR GESTÃO)"),
-        ):
-            tabela_chegada_expansivel_3niveis(
-                dados_gestores, titulo="Por Gestores", meta_pct=80.0,
-                rotulo_grupo=rotulo_tecnico, rotulo_clique="Coordenador",
-                id_tabela="chegada_matriz_gestores",
-            )
+        _bloco_gestores(df_chegada, janela_sel)
 
     st.divider()
 
@@ -315,57 +394,4 @@ def render(df, indicadores: Indicadores):
     st.divider()
 
     # ====== TABELA DETALHADA (nível técnico/OS) ======
-    secao_titulo("Detalhamento", "Janela x Início real por OS/técnico")
-
-    col_filtro_status, col_filtro_tecnico = st.columns([1, 1])
-
-    with col_filtro_status:
-        status_opcoes = ["Todos", "Dentro", "Fora", "Antes", "Depois", "Aguardando"]
-        status_sel = st.selectbox("Filtrar por status de chegada", status_opcoes, key="chg_status")
-
-    detalhe = tabela_detalhada(df_chegada)
-
-    with col_filtro_tecnico:
-        tecnicos_opcoes = opcoes_filtro(detalhe, "Técnico")
-        tecnico_sel = st.selectbox("Filtrar por técnico", tecnicos_opcoes, key="chg_tecnico")
-
-    if status_sel == "Fora":
-        detalhe = detalhe[detalhe["Status Chegada"].isin(["Antes", "Depois"])]
-    elif status_sel != "Todos":
-        detalhe = detalhe[detalhe["Status Chegada"] == status_sel]
-
-    detalhe = aplicar_filtro(detalhe, "Técnico", tecnico_sel)
-
-    # Legenda do "Copiar imagem + texto": segue o que está flegado — status de
-    # chegada, Janela de Serviço, filtros do topo (Estado/Cluster/Cidade/Coord./
-    # Data) e o técnico escolhido aqui. Ex.:
-    # "ATIVIDADES FORA DO TIME 8:30 - 10:30 | RS | 03/11/2026 09:10".
-    titulo_status = TITULO_LEGENDA_STATUS.get(status_sel, "ATIVIDADES")
-    janela_txt = janela_legenda(janela_sel)
-    titulo_detalhe = f"{titulo_status} {janela_txt}".strip()
-
-    # Altura ajustada ao nº de linhas (até 460px): com poucas linhas a imagem
-    # copiada não leva espaço em branco embaixo (linha = 35px + cabeçalho).
-    altura_detalhe = min(460, 35 * (len(detalhe) + 1) + 3)
-
-    with area_com_print(
-        "chegada_detalhamento", nome_arquivo="chegada_detalhamento",
-        **legenda_filtros(titulo_detalhe, ligacao=" | ", locais=(tecnico_sel,)),
-    ):
-        st.dataframe(detalhe, width="stretch", hide_index=True, height=altura_detalhe)
-
-    # Exportação em Excel respeitando os filtros aplicados (segmentação
-    # global do topo do site + Janela de Serviço + status de chegada e
-    # técnico selecionados nesta aba).
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        detalhe.to_excel(writer, index=False, sheet_name="Detalhamento Chegada")
-
-    nome_arquivo_status = status_sel.lower() if status_sel != "Todos" else "todos"
-    st.download_button(
-        "⬇️ Baixar Excel filtrado",
-        data=buffer.getvalue(),
-        file_name=f"tlp_chegada_detalhamento_{nome_arquivo_status}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        key="chg_download_excel",
-    )
+    _bloco_detalhamento(df_chegada, janela_sel)

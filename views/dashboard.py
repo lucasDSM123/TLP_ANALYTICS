@@ -15,6 +15,143 @@ from services.analise_p import matriz_analise_p_cluster_cidade, matriz_analise_p
 import config
 
 
+@st.fragment
+def _bloco_producao(df):
+    """Matrizes de produção BA/TT + pareto. É um FRAGMENT: trocar a "Visão da produção"
+    (Cluster/Coordenador) reexecuta só este bloco, não a página inteira."""
+    # Um fragment reexecuta sem passar pelo app.py: reaplica o tema desta sessão
+    # (config guarda as cores em variáveis do módulo, compartilhadas entre sessões).
+    config.aplicar_tema_da_sessao()
+
+    _ctx_legenda = contexto_legenda_filtros()
+    _estado_legenda = _ctx_legenda["estado"]
+    _data_legenda = _ctx_legenda["data"]
+    _sufixo_legenda = _ctx_legenda["sufixo"]
+    _datas_sel = _ctx_legenda["datas_sel"]
+
+    VISOES_PRODUCAO = {
+        "Cluster": ("Cluster", "Cidade", "CLUSTER / CIDADE", "Cluster"),
+        "Coordenador": ("Coordenador", "Supervisor", "COORDENADOR / SUPERVISOR", "Coordenador"),
+    }
+    visao_prod = st.segmented_control(
+        "Visão da produção", options=list(VISOES_PRODUCAO), default="Cluster",
+        key="dashboard_visao_producao",
+    ) or "Cluster"
+    col_g, col_sg, rotulo_grupo, rotulo_clique = VISOES_PRODUCAO[visao_prod]
+    chave_visao = visao_prod.lower()
+    sufixo_visao = "" if visao_prod == "Cluster" else f" (POR {visao_prod.upper()})"
+
+    def _linha_total(df_matriz):
+        """Extrai a linha 'Total' da matriz flat (matriz_producao) como
+        dict pronto pra tabela expansível (troca a chave 'Cluster' —
+        nome fixo da coluna de rótulo em matriz_producao — por 'Nome')."""
+        if df_matriz.empty:
+            return None
+        linha = df_matriz[df_matriz["Cluster"] == "Total"]
+        if linha.empty:
+            return None
+        total = linha.iloc[0].to_dict()
+        total["Nome"] = total.pop("Cluster")
+        return total
+
+    for lado, cor in (("BA", "#00C9A7"), ("TT", config.TLP_ORANGE)):
+        matriz_lado = matriz_producao(df, lado=lado, coluna_grupo=col_g)
+        grupos_lado = matriz_producao_cluster_cidade(
+            df, lado=lado, coluna_grupo=col_g, coluna_subgrupo=col_sg
+        )
+        with area_com_print(
+            f"dashboard_matriz_{lado.lower()}_{chave_visao}",
+            nome_arquivo=f"producao_{lado.lower()}_{chave_visao}",
+            legenda_template=legenda_producao_ou_fechamento(
+                f"PRODUÇÃO + ESTEIRA + EFICÁCIA - {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
+                f"FECHAMENTO PRODUÇÃO {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
+                _datas_sel,
+            ),
+            legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
+        ):
+            tabela_matriz_expansivel(
+                grupos_lado, f"PRODUÇÃO {lado}", cor_titulo=cor,
+                total=_linha_total(matriz_lado), id_tabela=f"producao_{lado.lower()}_{chave_visao}",
+                rotulo_grupo=rotulo_grupo, rotulo_clique=rotulo_clique,
+            )
+            st.markdown(
+                f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
+                f"Pareto de Pendências — {lado}</p>",
+                unsafe_allow_html=True,
+            )
+            st.plotly_chart(
+                grafico_pareto_causa(df, lado), width='stretch',
+                config=opcoes_grafico(f"pareto_pendencias_{lado.lower()}"),
+            )
+
+        if lado == "BA":
+            st.write("")
+
+
+@st.fragment
+def _bloco_analise_p(df, indicadores):
+    """Análise P (Cluster/Cidade ou Coordenador/Supervisor/Técnico). FRAGMENT: trocar a
+    visão reexecuta só este bloco."""
+    config.aplicar_tema_da_sessao()
+
+    visao_p = st.segmented_control(
+        "Visão da Análise P",
+        options=["Cluster / Cidade", "Coordenador / Supervisor / Técnico"],
+        default="Cluster / Cidade", key="dashboard_visao_analise_p",
+    ) or "Cluster / Cidade"
+
+    # Mesmo escopo da Análise P dos cards/resumo (services.indicadores):
+    # Contratada = "TLP" e excluindo Supervisor = "BUCKET" — técnicos do
+    # bucket não entram na classificação P0..>P3 (obras não concluídas do
+    # bucket voltam como sobra pro balde, não contam produtividade do técnico).
+    df_analise_p = df
+    if "Contratada" in df_analise_p.columns:
+        df_analise_p = df_analise_p[df_analise_p["Contratada"] == "TLP"]
+    if "Supervisor" in df_analise_p.columns:
+        df_analise_p = df_analise_p[df_analise_p["Supervisor"] != "BUCKET"]
+
+    def _linha_total_p(df_resumo, chave_grupo="Cluster"):
+        """Extrai a linha 'Total Geral' de contagem/percentual como dict
+        pronto pra tabela expansível (troca a chave do agrupamento por
+        'Nome')."""
+        if df_resumo.empty:
+            return None
+        linha = df_resumo[df_resumo[chave_grupo] == "Total Geral"]
+        if linha.empty:
+            return None
+        total = linha.iloc[0].to_dict()
+        total["Nome"] = total.pop(chave_grupo)
+        return total
+
+    if visao_p == "Cluster / Cidade":
+        contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
+        grupos_analise_p = matriz_analise_p_cluster_cidade(df_analise_p)
+
+        with area_com_print(
+            "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
+            # PZERO parcial (hoje) / FECHAMENTO PZERO (data de ontem pra trás).
+            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
+        ):
+            tabela_analise_p_cluster_cidade(
+                grupos_analise_p, resumo=resumo_cluster,
+                total_contagem=_linha_total_p(contagem_cluster),
+                total_percentual=_linha_total_p(percentual_cluster),
+                id_tabela="dashboard_analise_p",
+            )
+    else:
+        _, _, resumo_coord = indicadores.analise_p_cluster(coluna_grupo="Coordenador")
+        grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_analise_p)
+
+        with area_com_print(
+            "dashboard_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico",
+            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
+        ):
+            tabela_analise_p_coordenador_supervisor_tecnico(
+                grupos_analise_p_cst, resumo=resumo_coord,
+                id_tabela="dashboard_analise_p_cst",
+            )
+
+
 def render(df, indicadores: Indicadores):
 
     hc_real = indicadores.hc_real()
@@ -157,63 +294,7 @@ def render(df, indicadores: Indicadores):
 
     # Cada visão usa a mesma matriz de produção, só muda o agrupamento:
     # (coluna do 1º nível, coluna do 2º nível, rótulo da coluna, rótulo do clique)
-    VISOES_PRODUCAO = {
-        "Cluster": ("Cluster", "Cidade", "CLUSTER / CIDADE", "Cluster"),
-        "Coordenador": ("Coordenador", "Supervisor", "COORDENADOR / SUPERVISOR", "Coordenador"),
-    }
-    visao_prod = st.segmented_control(
-        "Visão da produção", options=list(VISOES_PRODUCAO), default="Cluster",
-        key="dashboard_visao_producao",
-    ) or "Cluster"
-    col_g, col_sg, rotulo_grupo, rotulo_clique = VISOES_PRODUCAO[visao_prod]
-    chave_visao = visao_prod.lower()
-    sufixo_visao = "" if visao_prod == "Cluster" else f" (POR {visao_prod.upper()})"
-
-    def _linha_total(df_matriz):
-        """Extrai a linha 'Total' da matriz flat (matriz_producao) como
-        dict pronto pra tabela expansível (troca a chave 'Cluster' —
-        nome fixo da coluna de rótulo em matriz_producao — por 'Nome')."""
-        if df_matriz.empty:
-            return None
-        linha = df_matriz[df_matriz["Cluster"] == "Total"]
-        if linha.empty:
-            return None
-        total = linha.iloc[0].to_dict()
-        total["Nome"] = total.pop("Cluster")
-        return total
-
-    for lado, cor in (("BA", "#00C9A7"), ("TT", config.TLP_ORANGE)):
-        matriz_lado = matriz_producao(df, lado=lado, coluna_grupo=col_g)
-        grupos_lado = matriz_producao_cluster_cidade(
-            df, lado=lado, coluna_grupo=col_g, coluna_subgrupo=col_sg
-        )
-        with area_com_print(
-            f"dashboard_matriz_{lado.lower()}_{chave_visao}",
-            nome_arquivo=f"producao_{lado.lower()}_{chave_visao}",
-            legenda_template=legenda_producao_ou_fechamento(
-                f"PRODUÇÃO + ESTEIRA + EFICÁCIA - {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
-                f"FECHAMENTO PRODUÇÃO {lado}{sufixo_visao} | {{estado}}{{sufixo}} | {{data}} {{hora}}",
-                _datas_sel,
-            ),
-            legenda_vars={"estado": _estado_legenda, "data": _data_legenda, "sufixo": _sufixo_legenda},
-        ):
-            tabela_matriz_expansivel(
-                grupos_lado, f"PRODUÇÃO {lado}", cor_titulo=cor,
-                total=_linha_total(matriz_lado), id_tabela=f"producao_{lado.lower()}_{chave_visao}",
-                rotulo_grupo=rotulo_grupo, rotulo_clique=rotulo_clique,
-            )
-            st.markdown(
-                f"<p style='margin:14px 0 2px; font-size:13px; font-weight:600; color:{config.TEXT_MUTED};'>"
-                f"Pareto de Pendências — {lado}</p>",
-                unsafe_allow_html=True,
-            )
-            st.plotly_chart(
-                grafico_pareto_causa(df, lado), width='stretch',
-                config=opcoes_grafico(f"pareto_pendencias_{lado.lower()}"),
-            )
-
-        if lado == "BA":
-            st.write("")
+    _bloco_producao(df)
 
     st.divider()
 
@@ -232,62 +313,7 @@ def render(df, indicadores: Indicadores):
         "Distribuição de técnicos por faixa de produtividade (P0..P5/P≥6) — escolha a visão abaixo",
     )
 
-    visao_p = st.segmented_control(
-        "Visão da Análise P",
-        options=["Cluster / Cidade", "Coordenador / Supervisor / Técnico"],
-        default="Cluster / Cidade", key="dashboard_visao_analise_p",
-    ) or "Cluster / Cidade"
-
-    # Mesmo escopo da Análise P dos cards/resumo (services.indicadores):
-    # Contratada = "TLP" e excluindo Supervisor = "BUCKET" — técnicos do
-    # bucket não entram na classificação P0..>P3 (obras não concluídas do
-    # bucket voltam como sobra pro balde, não contam produtividade do técnico).
-    df_analise_p = df
-    if "Contratada" in df_analise_p.columns:
-        df_analise_p = df_analise_p[df_analise_p["Contratada"] == "TLP"]
-    if "Supervisor" in df_analise_p.columns:
-        df_analise_p = df_analise_p[df_analise_p["Supervisor"] != "BUCKET"]
-
-    def _linha_total_p(df_resumo, chave_grupo="Cluster"):
-        """Extrai a linha 'Total Geral' de contagem/percentual como dict
-        pronto pra tabela expansível (troca a chave do agrupamento por
-        'Nome')."""
-        if df_resumo.empty:
-            return None
-        linha = df_resumo[df_resumo[chave_grupo] == "Total Geral"]
-        if linha.empty:
-            return None
-        total = linha.iloc[0].to_dict()
-        total["Nome"] = total.pop(chave_grupo)
-        return total
-
-    if visao_p == "Cluster / Cidade":
-        contagem_cluster, percentual_cluster, resumo_cluster = indicadores.analise_p_cluster()
-        grupos_analise_p = matriz_analise_p_cluster_cidade(df_analise_p)
-
-        with area_com_print(
-            "dashboard_analise_p_cluster", nome_arquivo="analise_p_por_cluster",
-            # PZERO parcial (hoje) / FECHAMENTO PZERO (data de ontem pra trás).
-            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
-        ):
-            tabela_analise_p_cluster_cidade(
-                grupos_analise_p, resumo=resumo_cluster,
-                total_contagem=_linha_total_p(contagem_cluster),
-                total_percentual=_linha_total_p(percentual_cluster),
-                id_tabela="dashboard_analise_p",
-            )
-    else:
-        _, _, resumo_coord = indicadores.analise_p_cluster(coluna_grupo="Coordenador")
-        grupos_analise_p_cst = matriz_analise_p_coordenador_supervisor_tecnico(df_analise_p)
-
-        with area_com_print(
-            "dashboard_analise_p_coord_sup_tec", nome_arquivo="analise_p_coordenador_supervisor_tecnico",
-            **legenda_filtros("PZERO parcial", "FECHAMENTO PZERO", ligacao=" "),
-        ):
-            tabela_analise_p_coordenador_supervisor_tecnico(
-                grupos_analise_p_cst, resumo=resumo_coord,
-                id_tabela="dashboard_analise_p_cst",
-            )
+    _bloco_analise_p(df, indicadores)
 
     st.divider()
 

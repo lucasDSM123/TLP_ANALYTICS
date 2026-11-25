@@ -1,4 +1,5 @@
 import pandas as pd
+from services.cache_utils import cache_calculo
 
 # ------------------------------------------------------------------
 # ANÁLISE P — réplica das medidas DAX QTD_P0 / QTD_P1 / QTD_P2 / QTD_P3 /
@@ -169,6 +170,7 @@ def matriz_analise_p_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster", co
     return contagem.reset_index(), percentual.reset_index()
 
 
+@cache_calculo
 def matriz_analise_p_cluster_cidade(
     df: pd.DataFrame, coluna_grupo: str = "Cluster", coluna_subgrupo: str = "Cidade", coluna_tecnico: str = "Técnico"
 ) -> list[dict]:
@@ -223,6 +225,7 @@ def matriz_analise_p_cluster_cidade(
     return grupos
 
 
+@cache_calculo
 def matriz_analise_p_coordenador_supervisor_tecnico(
     df: pd.DataFrame, coluna_nivel1: str = "Coordenador", coluna_nivel2: str = "Supervisor",
     coluna_tecnico: str = "Técnico",

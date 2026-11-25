@@ -1,5 +1,6 @@
 import io
 import re
+import threading
 
 from sqlalchemy import bindparam, create_engine, text
 import pandas as pd
@@ -21,11 +22,31 @@ def _normalizar_url(url: str) -> str:
     return url
 
 
+_ENGINES: dict = {}
+_ENGINES_LOCK = threading.Lock()
+
+
 def obter_engine():
     """
-    Retorna a instância do engine do SQLAlchemy configurada com a URL do banco.
+    Retorna o engine do SQLAlchemy da URL do banco — UM ÚNICO por URL no processo.
+
+    Antes, cada chamada criava um engine novo (sem reaproveitar conexões): cada
+    consulta pagava um novo handshake TCP+TLS+login com o Neon. Agora o pool
+    reaproveita as conexões abertas entre chamadas e entre usuários.
+    - pool_pre_ping: testa a conexão antes de usar (o Neon fecha conexões ociosas).
+    - pool_recycle: renova conexões antigas antes de o servidor derrubá-las.
     """
-    return create_engine(_normalizar_url(config.DATABASE_URL))
+    url = _normalizar_url(config.DATABASE_URL)
+    engine = _ENGINES.get(url)
+    if engine is None:
+        with _ENGINES_LOCK:
+            engine = _ENGINES.get(url)
+            if engine is None:
+                engine = create_engine(
+                    url, pool_pre_ping=True, pool_recycle=300, pool_size=5, max_overflow=5
+                )
+                _ENGINES[url] = engine
+    return engine
 
 
 def _validar_identificador(nome: str) -> str:

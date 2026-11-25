@@ -16,6 +16,7 @@ from datetime import datetime, time, timedelta
 
 import pandas as pd
 
+from services.cache_utils import cache_calculo
 from services.chegada import (
     COL_JANELA,
     COL_STATUS,
@@ -82,6 +83,15 @@ def classificar_termino(janela, termino_real, data_os=None, agora: datetime | No
     return STATUS_DENTRO
 
 
+@cache_calculo
+def _classificar_termino_lote(entrada: pd.DataFrame, agora: datetime) -> list:
+    """Aplica `classificar_termino` a cada OS (mesma regra de sempre; só ganhou cache)."""
+    return [
+        classificar_termino(j, t, d, agora)
+        for j, t, d in zip(entrada["j"], entrada["t"], entrada["d"])
+    ]
+
+
 def calcular_indicador_termino(df: pd.DataFrame, agora: datetime | None = None) -> pd.DataFrame:
     """Recebe o dataframe base (com Janela e Término) e devolve uma cópia
     com a coluna adicional "Status Término". Mesmas exclusões de Status
@@ -98,11 +108,14 @@ def calcular_indicador_termino(df: pd.DataFrame, agora: datetime | None = None) 
         df[STATUS_COL] = STATUS_INDEFINIDO
         return df
 
-    coluna_data = df[COL_DATA] if COL_DATA in df.columns else [None] * len(df)
-    df[STATUS_COL] = [
-        classificar_termino(j, t, d, agora)
-        for j, t, d in zip(df[COL_JANELA], df[COL_TERMINO], coluna_data)
-    ]
+    coluna_data = df[COL_DATA] if COL_DATA in df.columns else pd.Series([None] * len(df), dtype=object)
+    entrada = pd.DataFrame({
+        "j": df[COL_JANELA].reset_index(drop=True),
+        "t": df[COL_TERMINO].reset_index(drop=True),
+        "d": coluna_data.reset_index(drop=True),
+    })
+    # em cache por (conteúdo das 3 colunas, minuto atual) — só hora/minuto/dia de `agora` importam
+    df[STATUS_COL] = _classificar_termino_lote(entrada, agora.replace(second=0, microsecond=0))
     return df
 
 

@@ -1,7 +1,8 @@
 import pandas as pd
 
 import config
-from services.indicadores import Indicadores
+from services.indicadores import Indicadores, enxugar
+from services.cache_utils import cache_calculo
 
 
 def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
@@ -70,6 +71,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
     }
 
 
+@cache_calculo
 def tabela_coordenadores(df: pd.DataFrame) -> list[dict]:
     """
     Monta a estrutura hierárquica Coordenador -> Supervisores -> subtotal,
@@ -82,6 +84,7 @@ def tabela_coordenadores(df: pd.DataFrame) -> list[dict]:
     if df.empty or not obrigatorias.issubset(df.columns):
         return []
 
+    df = enxugar(df, "Coordenador", "Supervisor", "Cluster")
     grupos = []
     coordenadores = sorted(c for c in df["Coordenador"].dropna().unique() if c != "BUCKET")
 
@@ -107,6 +110,7 @@ def tabela_coordenadores(df: pd.DataFrame) -> list[dict]:
     return grupos
 
 
+@cache_calculo
 def total_geral(df: pd.DataFrame) -> dict:
     """
     Calcula a linha "TOTAL GERAL" — mesmas métricas de _linha_metricas,
@@ -117,4 +121,4 @@ def total_geral(df: pd.DataFrame) -> dict:
         return {}
 
     df_sem_bucket = df[df["Coordenador"] != "BUCKET"] if "Coordenador" in df.columns else df
-    return _linha_metricas(df_sem_bucket, "TOTAL GERAL")
+    return _linha_metricas(enxugar(df_sem_bucket, "Coordenador"), "TOTAL GERAL")

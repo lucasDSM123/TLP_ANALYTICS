@@ -1,6 +1,7 @@
 import pandas as pd
 
-from services.indicadores import Indicadores
+from services.indicadores import Indicadores, enxugar
+from services.cache_utils import cache_calculo
 
 
 def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
@@ -13,6 +14,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
     if df.empty or coluna not in df.columns:
         return pd.DataFrame()
 
+    df = enxugar(df, coluna)
     linhas = []
     for valor in sorted(df[coluna].dropna().unique()):
         sub = df[df[coluna] == valor]
@@ -167,6 +169,7 @@ def _linha_resumo_soma(nome_linha: str, coluna_nome: str, sub_diario: pd.DataFra
     }
 
 
+@cache_calculo
 def resumo_mes_total(df: pd.DataFrame, coluna_data: str = "Data") -> dict:
     """
     Totais acumulados do mês (todo o período filtrado), SEM quebrar por
@@ -183,7 +186,7 @@ def resumo_mes_total(df: pd.DataFrame, coluna_data: str = "Data") -> dict:
     if df.empty or coluna_data not in df.columns:
         return None
 
-    serie = _parse_datas(df, coluna_data)
+    serie = _parse_datas(enxugar(df, coluna_data), coluna_data)
     if serie.empty:
         return None
 
@@ -201,6 +204,7 @@ def resumo_mes_total(df: pd.DataFrame, coluna_data: str = "Data") -> dict:
     return _linha_resumo_soma("Total", "Data", diario)
 
 
+@cache_calculo
 def serie_diaria_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado", coluna_data: str = "Data") -> pd.DataFrame:
     """
     Réplica do PAINEL de fechamento mensal (Excel/Power BI): para cada valor
@@ -215,7 +219,7 @@ def serie_diaria_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado", colun
     if df.empty or coluna_data not in df.columns or coluna_grupo not in df.columns:
         return pd.DataFrame()
 
-    serie = _parse_datas(df, coluna_data)
+    serie = _parse_datas(enxugar(df, coluna_data, coluna_grupo), coluna_data)
     if serie.empty:
         return pd.DataFrame()
 
@@ -231,6 +235,7 @@ def serie_diaria_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado", colun
     return pd.DataFrame(linhas)
 
 
+@cache_calculo
 def resumo_mes_por_grupo(df: pd.DataFrame, coluna_grupo: str = "Estado") -> pd.DataFrame:
     """
     Totais acumulados do mês (todo o período filtrado) por `coluna_grupo`
@@ -287,6 +292,7 @@ def resumo_mes_por_cluster(df: pd.DataFrame) -> pd.DataFrame:
     return resumo_mes_por_grupo(df, "Cluster")
 
 
+@cache_calculo
 def metricas_por_tecnico(df: pd.DataFrame) -> pd.DataFrame:
     """
     Matriz "Técnico -> seus indicadores": reaproveita `metricas_por_grupo`
@@ -326,6 +332,7 @@ def status_counts(df: pd.DataFrame) -> dict:
     return df["Status"].value_counts().to_dict()
 
 
+@cache_calculo
 def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") -> pd.DataFrame:
     """
     Monta a matriz de produção (igual ao Power BI) para um lado específico
@@ -345,6 +352,7 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
     if df.empty or "Lado" not in df.columns or "BA-TT-Real" not in df.columns:
         return pd.DataFrame()
 
+    df = enxugar(df, coluna_grupo)
     df_lado = df[df["Lado"] == lado]
     if df_lado.empty or coluna_grupo not in df_lado.columns:
         return pd.DataFrame()
@@ -423,6 +431,7 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
     return pd.DataFrame(linhas)
 
 
+@cache_calculo
 def matriz_geral_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster") -> pd.DataFrame:
     """
     Matriz GERAL por cluster: os mesmos indicadores dos cards de "Indicadores
@@ -441,6 +450,7 @@ def matriz_geral_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster") -> pd.
     if df.empty or coluna_grupo not in df.columns:
         return pd.DataFrame()
 
+    df = enxugar(df, coluna_grupo)
     def _linha(sub: pd.DataFrame, nome: str) -> dict:
         ind = Indicadores(sub)
         concluido = ind.concluido()
@@ -472,6 +482,7 @@ def matriz_geral_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster") -> pd.
     return pd.DataFrame(linhas)
 
 
+@cache_calculo
 def matriz_producao_cluster_cidade(
     df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster", coluna_subgrupo: str = "Cidade"
 ) -> list[dict]:
@@ -491,6 +502,7 @@ def matriz_producao_cluster_cidade(
     if df.empty or "Lado" not in df.columns or "BA-TT-Real" not in df.columns:
         return []
 
+    df = enxugar(df, coluna_grupo, coluna_subgrupo)
     df_lado = df[df["Lado"] == lado]
     if df_lado.empty or coluna_grupo not in df_lado.columns or coluna_subgrupo not in df_lado.columns:
         return []

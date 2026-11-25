@@ -1,3 +1,5 @@
+import functools
+
 import pandas as pd
 import streamlit as st
 
@@ -162,82 +164,25 @@ def _base_mes_anterior(ano: int, mes: int) -> pd.DataFrame:
     return _filtrar_mes(base, ano_ant, mes_ant)
 
 
-def render(df, indicadores):
+def _legenda_acumulado(mes_sel, titulo, titulo_fechamento=None, **kw):
+    """Legenda da aba: período = mês escolhido (ou as datas marcadas no topo);
+    vira FECHAMENTO se a data marcada é de ontem pra trás OU se o mês
+    escolhido já terminou (mês anterior ao atual)."""
+    hoje = agora_local()
+    mes_encerrado = bool(mes_sel) and tuple(mes_sel) < (hoje.year, hoje.month)
+    fechamento = mes_encerrado or not eh_legenda_producao()
+    periodo = None
+    if mes_sel and not st.session_state.get("filtro_sel_data"):
+        periodo = f"{_MESES_PT[mes_sel[1]]}/{mes_sel[0]}"
+    return legenda_filtros(titulo, titulo_fechamento, data=periodo, fechamento=fechamento, **kw)
 
-    secao_titulo("Acumulado Mês", "Fechamento mensal consolidado — réplica do PAINEL do Excel/Power BI")
 
-    # Seletor de mês: a base pode conter mais de um mês (ex.: Setembro
-    # inteiro + 01/10). Por padrão mostra o mês mais recente; dá pra
-    # escolher um mês anterior para ver o fechamento diário dele.
-    meses = _meses_disponiveis(df)
-    if meses:
-        rotulos_meses = {m: f"{_MESES_PT[m[1]].capitalize()}/{m[0]}" for m in meses}
-        mes_sel = st.radio(
-            "Mês", options=meses, format_func=lambda m: rotulos_meses[m],
-            horizontal=True, key="acumulado_mes_mes",
-        )
-        df = _filtrar_mes(df, *mes_sel)
-        indicadores = indicadores.__class__(df)
-    else:
-        mes_sel = None
-
-    def _leg(titulo, titulo_fechamento=None, **kw):
-        """Legenda da aba: período = mês escolhido (ou as datas marcadas no topo);
-        vira FECHAMENTO se a data marcada é de ontem pra trás OU se o mês
-        escolhido já terminou (mês anterior ao atual)."""
-        hoje = agora_local()
-        mes_encerrado = bool(mes_sel) and tuple(mes_sel) < (hoje.year, hoje.month)
-        fechamento = mes_encerrado or not eh_legenda_producao()
-        periodo = None
-        if mes_sel and not st.session_state.get("filtro_sel_data"):
-            periodo = f"{_MESES_PT[mes_sel[1]]}/{mes_sel[0]}"
-        return legenda_filtros(titulo, titulo_fechamento, data=periodo, fechamento=fechamento, **kw)
-
-    # ====== RESUMO GERAL DO PERÍODO FILTRADO ======
-    hc = indicadores.hc_real()
-    concluido = indicadores.concluido()
-    eficacia = indicadores.eficacia()
-
-    # PU e Atribuição do resumo geral seguem a MESMA regra do Total das
-    # tabelas abaixo (soma da Concluída/Caixa Total/Técnicos de cada dia e
-    # só então divide) — NÃO usar indicadores.pu()/media_atribuicao() direto
-    # aqui, pois eles contam Técnicos como únicos do período inteiro (um
-    # número bem menor que a soma diária), o que inflava o PU exibido no
-    # card muito acima do valor real (visto na matriz/Total logo abaixo).
-    total_geral = resumo_mes_total(df) or {}
-    pu_geral = total_geral.get("PU", 0.0)
-    atribuicao_geral = total_geral.get("Atribuição", 0.0)
-
-    # Acumulado do indicador de Chegada (% Dentro da Janela) no período
-    # filtrado — mesma lógica/tolerâncias já usadas na aba "Chegada"
-    # (services.chegada), só que aqui aparece como resumo acumulado do mês.
-    pct_chegada_geral = None
-    if "Janela" in df.columns and "Início" in df.columns:
-        resumo_chegada_geral = resumo_geral_chegada(calcular_indicador_chegada(df))
-        if resumo_chegada_geral["total"]:
-            pct_chegada_geral = resumo_chegada_geral["pct_dentro"]
-
-    with area_com_print("acumulado_mes_cards_resumo", nome_arquivo="resumo_geral_acumulado_mes",
-                        **_leg("ACUMULADO MÊS - RESUMO GERAL")):
-        colunas_cards = st.columns(7 if pct_chegada_geral is not None else 6)
-        col1, col2, col3, col4, col5, col6 = colunas_cards[:6]
-        with col1:
-            card("TÉCNICOS", hc["HC"], config.TLP_ORANGE, f"BA: {hc['BA']} | TT: {hc['TT']}")
-        with col2:
-            card("CONCLUÍDA", f"{concluido['OK']:,}".replace(",", "."), "#15803D")
-        with col3:
-            card("IMPRODUTIVA", f"{concluido['NOK']:,}".replace(",", "."), config.TLP_RED)
-        with col4:
-            card("EFICÁCIA", f"{eficacia['GERAL']:.0%}", config.TLP_GOLD, f"Meta: {config.META_EFICACIA_ALVO:.0%}")
-        with col5:
-            card("ATRIBUIÇÃO", f"{atribuicao_geral:.2f}", "#7B8CDE", f"Meta: {config.META_ATRIBUICAO_ALVO:.1f}")
-        with col6:
-            card("PU", f"{pu_geral:.2f}", "#00C9A7", f"Meta: {config.META_PU_ALVO:.1f}")
-        if pct_chegada_geral is not None:
-            with colunas_cards[6]:
-                card("% CHEGADA", f"{pct_chegada_geral:.1f}%", "#2E63C7", "Dentro da Janela")
-
-    st.divider()
+@st.fragment
+def _secao_por_dimensao(df, mes_sel):
+    """Seletor "Agrupar fechamento por" + Consolidado + Fechamento Diário. FRAGMENT: trocar a
+    dimensão (Estado/Cluster/Supervisor) reexecuta só esta parte, não a página inteira."""
+    config.aplicar_tema_da_sessao()
+    _leg = functools.partial(_legenda_acumulado, mes_sel)
 
     # ====== SELETOR DE DIMENSÃO (Estado ou Cluster) ======
     dimensoes_disponiveis = {rotulo: col for rotulo, col in DIMENSOES.items() if col in df.columns}
@@ -411,3 +356,73 @@ def render(df, indicadores):
                         key=f"acumulado_mes_produtividade_chart_{grupo}",
                         config=opcoes_grafico(f"produtividade_diaria_{grupo}"),
                     )
+
+
+def render(df, indicadores):
+
+    secao_titulo("Acumulado Mês", "Fechamento mensal consolidado — réplica do PAINEL do Excel/Power BI")
+
+    # Seletor de mês: a base pode conter mais de um mês (ex.: Setembro
+    # inteiro + 01/10). Por padrão mostra o mês mais recente; dá pra
+    # escolher um mês anterior para ver o fechamento diário dele.
+    meses = _meses_disponiveis(df)
+    if meses:
+        rotulos_meses = {m: f"{_MESES_PT[m[1]].capitalize()}/{m[0]}" for m in meses}
+        mes_sel = st.radio(
+            "Mês", options=meses, format_func=lambda m: rotulos_meses[m],
+            horizontal=True, key="acumulado_mes_mes",
+        )
+        df = _filtrar_mes(df, *mes_sel)
+        indicadores = indicadores.__class__(df)
+    else:
+        mes_sel = None
+
+    _leg = functools.partial(_legenda_acumulado, mes_sel)
+
+    # ====== RESUMO GERAL DO PERÍODO FILTRADO ======
+    hc = indicadores.hc_real()
+    concluido = indicadores.concluido()
+    eficacia = indicadores.eficacia()
+
+    # PU e Atribuição do resumo geral seguem a MESMA regra do Total das
+    # tabelas abaixo (soma da Concluída/Caixa Total/Técnicos de cada dia e
+    # só então divide) — NÃO usar indicadores.pu()/media_atribuicao() direto
+    # aqui, pois eles contam Técnicos como únicos do período inteiro (um
+    # número bem menor que a soma diária), o que inflava o PU exibido no
+    # card muito acima do valor real (visto na matriz/Total logo abaixo).
+    total_geral = resumo_mes_total(df) or {}
+    pu_geral = total_geral.get("PU", 0.0)
+    atribuicao_geral = total_geral.get("Atribuição", 0.0)
+
+    # Acumulado do indicador de Chegada (% Dentro da Janela) no período
+    # filtrado — mesma lógica/tolerâncias já usadas na aba "Chegada"
+    # (services.chegada), só que aqui aparece como resumo acumulado do mês.
+    pct_chegada_geral = None
+    if "Janela" in df.columns and "Início" in df.columns:
+        resumo_chegada_geral = resumo_geral_chegada(calcular_indicador_chegada(df))
+        if resumo_chegada_geral["total"]:
+            pct_chegada_geral = resumo_chegada_geral["pct_dentro"]
+
+    with area_com_print("acumulado_mes_cards_resumo", nome_arquivo="resumo_geral_acumulado_mes",
+                        **_leg("ACUMULADO MÊS - RESUMO GERAL")):
+        colunas_cards = st.columns(7 if pct_chegada_geral is not None else 6)
+        col1, col2, col3, col4, col5, col6 = colunas_cards[:6]
+        with col1:
+            card("TÉCNICOS", hc["HC"], config.TLP_ORANGE, f"BA: {hc['BA']} | TT: {hc['TT']}")
+        with col2:
+            card("CONCLUÍDA", f"{concluido['OK']:,}".replace(",", "."), "#15803D")
+        with col3:
+            card("IMPRODUTIVA", f"{concluido['NOK']:,}".replace(",", "."), config.TLP_RED)
+        with col4:
+            card("EFICÁCIA", f"{eficacia['GERAL']:.0%}", config.TLP_GOLD, f"Meta: {config.META_EFICACIA_ALVO:.0%}")
+        with col5:
+            card("ATRIBUIÇÃO", f"{atribuicao_geral:.2f}", "#7B8CDE", f"Meta: {config.META_ATRIBUICAO_ALVO:.1f}")
+        with col6:
+            card("PU", f"{pu_geral:.2f}", "#00C9A7", f"Meta: {config.META_PU_ALVO:.1f}")
+        if pct_chegada_geral is not None:
+            with colunas_cards[6]:
+                card("% CHEGADA", f"{pct_chegada_geral:.1f}%", "#2E63C7", "Dentro da Janela")
+
+    st.divider()
+
+    _secao_por_dimensao(df, mes_sel)
