@@ -4,6 +4,7 @@ import math
 import numpy as np
 import pandas as pd
 
+import config
 from services.analise_p import classificacao_tecnicos, FAIXAS_P, matriz_analise_p_cluster
 
 
@@ -12,8 +13,16 @@ from services.analise_p import classificacao_tecnicos, FAIXAS_P, matriz_analise_
 # filtro — trabalhar numa visão enxuta deixa cada filtro várias vezes mais rápido.
 COLUNAS_CALCULO = (
     "Status", "Contratada", "Lado", "BA-TT-Real", "Perfil Técnico", "Técnico",
-    "Tipo de Atividade", "CAUSA", "Esteira", "Peso",
+    "Tipo de Atividade", "CAUSA", "Esteira", "Peso", config.COL_DESLOC_MIN,
 )
+
+
+def formatar_hhmm(minutos) -> str:
+    """Minutos (float) -> "HH:MM" arredondado ao minuto; sem dado -> "—"."""
+    if minutos is None or pd.isna(minutos):
+        return "—"
+    total = int(round(float(minutos)))
+    return f"{total // 60:02d}:{total % 60:02d}"
 
 
 def enxugar(df: pd.DataFrame, *extras: str) -> pd.DataFrame:
@@ -84,6 +93,19 @@ class Indicadores:
         if chave not in self._fatias:
             self._fatias[chave] = self._d[self._d[coluna] == valor]
         return self._fatias[chave]
+
+    @_memoizar
+    def deslocamento_medio(self):
+        """Tempo médio de deslocamento (em minutos) das atividades do recorte.
+
+        Média simples sobre as atividades que têm o tempo preenchido, ignorando
+        Canceladas. Sem nenhum dado no recorte devolve None (a tela mostra "—").
+        """
+        col = config.COL_DESLOC_MIN
+        if col not in self._d.columns:
+            return None
+        valores = self._sem_canceladas(self._d)[col].dropna()
+        return float(valores.mean()) if not valores.empty else None
 
     def _to_int(self, val):
         """Converte numpy int para Python int"""

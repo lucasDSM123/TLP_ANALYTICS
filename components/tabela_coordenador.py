@@ -7,6 +7,7 @@ from components.estilo_tabela import (
     cor_faixa, cor_faixa_bg, wrapper_tabela,
 )
 from components.pu_vivo import pu_vivo_ativo
+from services.indicadores import formatar_hhmm
 
 
 def _seta(valor: float, alvo: float = config.META_PU_ALVO) -> str:
@@ -64,6 +65,7 @@ def _celula_linha(row: dict, negrito: bool = False, tamanho: str = "13px") -> st
         _cel_pu_vivo(row, chave="Projeção PU Vivo"),
         f"<td style='font-weight:{peso}; font-size:{tamanho};'>{row['Meta']}</td>",
         f"<td>{pill(txt_gap, '#15803D' if row['Gap'] >= 0 else config.TLP_RED, 'rgba(34,197,94,0.14)' if row['Gap'] >= 0 else 'rgba(240,68,56,0.10)')}</td>",
+        f"<td style='font-weight:{peso}; font-size:{tamanho}; color:{config.TEXT};'>{formatar_hhmm(row.get('Desloc. Médio'))}</td>",
     ])
 
 
@@ -110,6 +112,7 @@ def _celula_total_geral(row: dict) -> str:
         _cel_pu_vivo(row, total=True, chave="Projeção PU Vivo"),
         f"<td>{pill_total(row['Meta'])}</td>",
         f"<td>{pill_total(txt_gap)}</td>",
+        f"<td>{pill_total(formatar_hhmm(row.get('Desloc. Médio')))}</td>",
     ])
 
 
@@ -129,7 +132,7 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
     colunas_final = (
         ["INICIADA", "% EFICÁCIA", "PROJEÇÃO", "PROJEÇÃO PU"]
         + (["PROJEÇÃO PU VIVO"] if pu_vivo_ativo() else [])
-        + ["META", "GAP"]
+        + ["META", "GAP", "DESLOC. MÉDIO"]
     )
 
     linhas_html = []
@@ -186,7 +189,7 @@ def render_tabela_coordenadores(grupos: list, total: dict = None):
         linha_total_html = f"<tr style='{TOTAL_BG()}'>{_celula_total_geral(total)}</tr>"
 
     tabela = (
-        f"<table style='width:100%; min-width:1700px; table-layout:auto; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
+        f"<table style='width:100%; min-width:1800px; table-layout:auto; border-collapse:collapse; font-size:13px; color:{config.TEXT};'>"
         f"<thead>"
         f"<tr style='{CABECALHO_BG()}'>{linha_header_1}</tr>"
         f"<tr style='{CABECALHO_BG()}'>{linha_header_2}</tr>"

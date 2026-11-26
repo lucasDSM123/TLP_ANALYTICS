@@ -68,6 +68,7 @@ def _linha_metricas(sub: pd.DataFrame, nome: str) -> dict:
         "Projeção PU Vivo": projecao_pu_vivo,
         "Meta": meta,
         "Gap": gap,
+        "Desloc. Médio": ind.deslocamento_medio(),
     }
 
 

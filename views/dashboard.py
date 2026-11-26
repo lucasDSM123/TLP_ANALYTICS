@@ -9,7 +9,7 @@ from components.tabela_analise_p import tabela_analise_p_cluster_cidade, tabela_
 from components.tabela_coordenador import render_tabela_coordenadores
 from services.coordenador_tabela import tabela_coordenadores, total_geral
 from components.print_button import area_com_print, legenda_producao_ou_fechamento, contexto_legenda_filtros, legenda_filtros
-from services.indicadores import Indicadores
+from services.indicadores import Indicadores, formatar_hhmm
 from services.grupos import status_counts, matriz_producao, matriz_producao_cluster_cidade, matriz_geral_cluster, metricas_por_tecnico
 from services.analise_p import matriz_analise_p_cluster_cidade, matriz_analise_p_coordenador_supervisor_tecnico
 import config
@@ -326,10 +326,12 @@ def render(df, indicadores: Indicadores):
         matriz_tecnicos = matriz_tecnicos.sort_values("PU", ascending=False).copy()
         colunas_exibir = [c for c in [
             "Técnico", "Supervisor", "Classificação P", "Caixa Total", "Concluído OK", "Concluído NOK",
-            "Eficácia", "PU", "Esteira", "Iniciada", "Projeção", "Cluster",
+            "Eficácia", "PU", "Esteira", "Iniciada", "Projeção", "Desloc. Médio", "Cluster",
         ] if c in matriz_tecnicos.columns]
         matriz_fmt = matriz_tecnicos[colunas_exibir].copy()
         matriz_fmt["Eficácia"] = matriz_fmt["Eficácia"] * 100
+        if "Desloc. Médio" in matriz_fmt.columns:
+            matriz_fmt["Desloc. Médio"] = matriz_fmt["Desloc. Médio"].map(formatar_hhmm)
         with area_com_print(
             "dashboard_matriz_tecnicos", nome_arquivo="indicadores_por_tecnico",
             **legenda_filtros("INDICADORES POR TÉCNICO"),

@@ -8,6 +8,7 @@ from components.estilo_tabela import (
 )
 from components.tabela_expansivel import ativar_tabelas_expansiveis
 from components.pu_vivo import pu_vivo_ativo
+from services.indicadores import formatar_hhmm
 
 
 def _cel_pu_vivo(row: dict, peso: str = "600", total: bool = False, chave: str = "PU Vivo") -> str:
@@ -66,6 +67,9 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
     mostrar_proj_pu_vivo = mostrar_pu_vivo and "Proj. PU Vivo" in df_matriz.columns
     if mostrar_proj_pu_vivo:
         colunas.append("Proj. PU Vivo")
+    mostrar_desloc = "Desloc. Médio" in df_matriz.columns
+    if mostrar_desloc:
+        colunas.append("Desloc. Médio")
 
     # NOTA: todo o HTML abaixo é montado SEM indentação (linhas começando na
     # coluna 0) de propósito. Se strings HTML multi-linha passadas para
@@ -102,6 +106,7 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_proj = f"<td>{pill_total(row['Proj.'])}</td>"
             cel_proj_pu = f"<td>{pill_total(proj_pu_txt)}</td>"
             cel_proj_pu_vivo = _cel_pu_vivo(row, total=True, chave="Proj. PU Vivo") if mostrar_proj_pu_vivo else ""
+            cel_desloc = f"<td>{pill_total(formatar_hhmm(row['Desloc. Médio']))}</td>" if mostrar_desloc else ""
         else:
             bg = f"background:{config.CARD if i % 2 == 0 else config.SURFACE};"
             cor_texto = config.TEXT
@@ -120,11 +125,15 @@ def tabela_matriz(df_matriz: pd.DataFrame, titulo: str, cor_titulo: str = None):
             cel_proj = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>"
             cel_proj_pu = f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>"
             cel_proj_pu_vivo = _cel_pu_vivo(row, peso=peso, chave="Proj. PU Vivo") if mostrar_proj_pu_vivo else ""
+            cel_desloc = (
+                f"<td style='font-weight:{peso}; color:{cor_texto};'>{formatar_hhmm(row['Desloc. Médio'])}</td>"
+                if mostrar_desloc else ""
+            )
 
         celulas = "".join([
             cel_cluster, cel_hc, cel_caixa, cel_esteira, cel_bucket, cel_media,
             cel_pu, cel_pu_vivo, cel_ok, cel_nok, cel_iniciada, cel_efic, cel_proj, cel_proj_pu,
-            cel_proj_pu_vivo,
+            cel_proj_pu_vivo, cel_desloc,
         ])
 
         linhas_html.append(f"<tr style='{bg}'>{celulas}</tr>")
@@ -173,6 +182,7 @@ def _celulas_linha_matriz(row: dict, peso: str, cor_texto: str) -> str:
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj.']}</td>",
         f"<td style='font-weight:{peso}; color:{cor_texto};'>{row['Proj. PU']:.2f}</td>",
         cel_proj_pu_vivo,
+        f"<td style='font-weight:{peso}; color:{cor_texto};'>{formatar_hhmm(row.get('Desloc. Médio'))}</td>",
     ])
 
 
@@ -199,6 +209,7 @@ def _celulas_linha_matriz_total(row: dict) -> str:
         f"<td>{pill_total(row['Proj.'])}</td>",
         f"<td>{pill_total(proj_pu_txt)}</td>",
         cel_proj_pu_vivo,
+        f"<td>{pill_total(formatar_hhmm(row.get('Desloc. Médio')))}</td>",
     ])
 
 
@@ -239,6 +250,7 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
     colunas += ["OK", "NOK", "INICIADA", "EFICÁCIA", "PROJ.", "PROJ. PU"]
     if pu_vivo_ativo():
         colunas.append("PROJ. PU VIVO")
+    colunas.append("DESLOC. MÉDIO")
 
     id_tabela = sanitizar_id(id_tabela or titulo)
     ativar_tabelas_expansiveis()
@@ -280,7 +292,7 @@ def tabela_matriz_expansivel(grupos: list, titulo: str, cor_titulo: str = None,
     )
 
     tabela = (
-        f"<table style='width:100%; min-width:1200px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
+        f"<table style='width:100%; min-width:1300px; border-collapse:collapse; font-size:13.5px; color:{config.TEXT};'>"
         f"<thead><tr style='{CABECALHO_BG()}'>{header_html}</tr></thead>"
         f"<tbody style='text-align:center;'>{''.join(linhas_html)}{linha_total_html}</tbody>"
         f"</table>"

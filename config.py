@@ -165,6 +165,13 @@ SIGLAS_CLUSTER = {
     frozenset({"JOINVILLE"}): "JVE",
 }
 
+# Tempo de deslocamento: a base traz a coluna de texto "HH:MM"; o loader converte
+# para minutos (float) nesta coluna, e as matrizes mostram a MÉDIA em HH:MM.
+COL_DESLOC_TEXTO = "Tempo de Deslocamento"
+COL_DESLOC_MIN = "Deslocamento (min)"
+# True = trata "00:00" como sem informação (fora da média). False = conta como 0 min.
+DESLOC_IGNORAR_ZERO = False
+
 META_PU_ALVO = 3
 META_EFICACIA_ALVO = 0.70
 META_ATRIBUICAO_ALVO = 4.0

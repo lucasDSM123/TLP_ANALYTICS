@@ -47,6 +47,7 @@ def metricas_por_grupo(df: pd.DataFrame, coluna: str) -> pd.DataFrame:
                 "Esteira": esteira["TOTAL"],
                 "Iniciada": iniciada["TOTAL"],
                 "Projeção": projecao["GERAL"],
+                "Desloc. Médio": ind.deslocamento_medio(),
             }
         )
 
@@ -412,6 +413,7 @@ def matriz_producao(df: pd.DataFrame, lado: str, coluna_grupo: str = "Cluster") 
             "Proj.": projecao["GERAL"],
             "Proj. PU": projecao_pu,
             "Proj. PU Vivo": projecao_pu_vivo,
+            "Desloc. Médio": ind_lado.deslocamento_medio(),
         }
 
     linhas = []
@@ -470,6 +472,7 @@ def matriz_geral_cluster(df: pd.DataFrame, coluna_grupo: str = "Cluster") -> pd.
             "Proj.": ind.projecao()["GERAL"],
             "Proj. PU": ind.projecao_pu()["GERAL"],
             "Proj. PU Vivo": ind.projecao_pu_vivo()["GERAL"],
+            "Desloc. Médio": ind.deslocamento_medio(),
         }
 
     linhas = [
@@ -551,6 +554,7 @@ def matriz_producao_cluster_cidade(
             "Proj.": projecao["GERAL"],
             "Proj. PU": projecao_pu,
             "Proj. PU Vivo": projecao_pu_vivo,
+            "Desloc. Médio": ind_lado.deslocamento_medio(),
         }
 
     grupos = []
